@@ -1,0 +1,75 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:imlaa/data/lam_lesson.dart';
+import 'package:imlaa/lesson/lam_lesson_pages.dart';
+import 'package:imlaa/utils/arabic.dart';
+
+void main() {
+  group('lamTypeOf', () {
+    test('يميز القمرية والشمسية', () {
+      expect(lamTypeOf('الكتاب'), LamType.moon);
+      expect(lamTypeOf('السُّكَّر'), LamType.sun);
+      expect(lamTypeOf('الليل'), LamType.sun);
+      expect(lamTypeOf('الأرض'), LamType.moon);
+    });
+
+    test('مجموعتا الحروف تغطيان ١٤ + ١٤ حرفًا بلا تكرار', () {
+      expect(solarLetters.length, 14);
+      expect(lunarLetters.length, 14);
+      expect(
+        solarLetters
+            .split('')
+            .toSet()
+            .intersection(lunarLetters.split('').toSet()),
+        isEmpty,
+      );
+    });
+  });
+
+  test('alPrefixLength يشمل تشكيل اللام', () {
+    expect(alPrefixLength('الكتاب'), 2);
+    expect(alPrefixLength('الْكتاب'), 3);
+    expect(alPrefixLength('كتاب'), 0);
+  });
+
+  test('normalizeAnswer يتجاهل التشكيل وصور الألف', () {
+    expect(normalizeAnswer(' المُدرِّبُ '), 'المدرب');
+    expect(normalizeAnswer('الأرض'), normalizeAnswer('الارض'));
+  });
+
+  test('كل جملة تحدٍّ فيها كلمة قمرية وكلمة شمسية فقط', () {
+    expect(challengeSentences.length, 10);
+    for (final s in challengeSentences) {
+      final words = normalizeAnswer(s.spoken).split(' ');
+      final alWords = words.where((w) => w.startsWith('ال')).toList();
+      expect(alWords.length, 2, reason: s.spoken);
+      expect(words, contains(normalizeAnswer(s.moon)), reason: s.spoken);
+      expect(words, contains(normalizeAnswer(s.sun)), reason: s.spoken);
+      expect(lamTypeOf(s.moon), LamType.moon, reason: s.moon);
+      expect(lamTypeOf(s.sun), LamType.sun, reason: s.sun);
+    }
+  });
+
+  test('إجابات الصور تبدأ بـ (الـ)', () {
+    expect(pictureItems.length, 8);
+    for (final p in pictureItems) {
+      expect(p.answer.startsWith('ال'), isTrue);
+      expect(normalizeAnswer(p.spoken), p.answer);
+    }
+    expect(pictureItems.first.answer.split(''), ['ا', 'ل', 'د', 'ب']);
+  });
+
+  test('أمثلة الإضافة والحذف متسقة', () {
+    for (final e in lamExamples) {
+      expect(e.add ? 'ال${e.from}' : e.from.substring(2), e.result);
+    }
+    for (final w in removeAlWords) {
+      expect(w.startsWith('ال'), isTrue);
+    }
+  });
+
+  test('بناء صفحات الدرس', () {
+    final pages = buildLamLessonPages();
+    expect(pages.length, 7);
+    expect(addAlWordBank.toSet().length, addAlWordBank.length);
+  });
+}
