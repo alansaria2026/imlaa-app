@@ -6,7 +6,7 @@ import '../theme.dart';
 
 enum MascotMood { happy, thinking, sad }
 
-/// «بومة» تميمة التطبيق، مرسومة بالكامل بالشيفرة مع حركة تنفّس خفيفة.
+/// «قلم» تميمة التطبيق يكتب الإملاء، مرسوم بالكامل بالشيفرة مع حركة كتابة خفيفة.
 class Mascot extends StatefulWidget {
   const Mascot({
     super.key,
@@ -26,7 +26,7 @@ class Mascot extends StatefulWidget {
 class _MascotState extends State<Mascot> with SingleTickerProviderStateMixin {
   late final _c = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1600),
+    duration: const Duration(milliseconds: 2400),
   );
 
   @override
@@ -34,9 +34,11 @@ class _MascotState extends State<Mascot> with SingleTickerProviderStateMixin {
     super.didChangeDependencies();
     // احترام إعداد «تقليل الحركة» في الجهاز.
     if (widget.animate && !MediaQuery.disableAnimationsOf(context)) {
-      if (!_c.isAnimating) _c.repeat(reverse: true);
+      if (!_c.isAnimating) _c.repeat();
     } else {
-      _c.stop();
+      _c
+        ..stop()
+        ..value = 0;
     }
   }
 
@@ -52,185 +54,215 @@ class _MascotState extends State<Mascot> with SingleTickerProviderStateMixin {
       child: AnimatedBuilder(
         animation: _c,
         builder: (context, child) {
-          final t = Curves.easeInOut.transform(_c.value);
-          return Transform.translate(
-            offset: Offset(0, -widget.size * 0.03 * t),
+          // تمايل حول رأس القلم كأنه يكتب.
+          // يبدأ ويتوقف قائمًا (الزاوية صفر عند القيمة صفر).
+          return Transform.rotate(
+            angle: math.sin(_c.value * 2 * math.pi) * 0.06,
+            alignment: const Alignment(0, 0.78),
             child: child,
           );
         },
         child: CustomPaint(
           size: Size.square(widget.size),
-          painter: _OwlPainter(widget.mood),
+          painter: _PencilPainter(widget.mood),
         ),
       ),
     );
   }
 }
 
-class _OwlPainter extends CustomPainter {
-  _OwlPainter(this.mood);
+class _PencilPainter extends CustomPainter {
+  _PencilPainter(this.mood);
   final MascotMood mood;
+
+  static const _wood = Color(0xFFF4DDB8);
+  static const _eraser = Color(0xFFF2A7A0);
+  static const _eraserDark = Color(0xFFD9867F);
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
     Offset p(double x, double y) => Offset(x * s, y * s);
-    final fill = Paint()..style = PaintingStyle.fill;
+    Paint fill(Color c) => Paint()..color = c;
+    Paint stroke(Color c, double w) => Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * s
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = c;
 
     // الظل.
     canvas.drawOval(
-      Rect.fromCenter(center: p(.5, .97), width: .56 * s, height: .06 * s),
-      fill..color = AppColors.ink.withValues(alpha: .08),
+      Rect.fromCenter(center: p(.55, .95), width: .62 * s, height: .05 * s),
+      fill(AppColors.ink.withValues(alpha: .08)),
     );
 
-    // الخصلتان.
-    for (final dir in [-1, 1]) {
-      final path = Path()
-        ..moveTo(.5 * s + dir * .2 * s, .3 * s)
-        ..lineTo(.5 * s + dir * .34 * s, .14 * s)
-        ..lineTo(.5 * s + dir * .36 * s, .36 * s)
-        ..close();
-      canvas.drawPath(path, fill..color = AppColors.primaryDark);
+    // أثر الكتابة خلف رأس القلم (الكتابة العربية من اليمين إلى اليسار).
+    final trail = Path()..moveTo(.53 * s, .9 * s);
+    for (var i = 0; i < 4; i++) {
+      final x = .53 + i * .095;
+      trail.quadraticBezierTo(
+        (x + .025) * s,
+        (i.isEven ? .85 : .93) * s,
+        (x + .095) * s,
+        .9 * s,
+      );
+    }
+    canvas.drawPath(
+      trail,
+      stroke(AppColors.primary.withValues(alpha: .7), .022),
+    );
+    // نقطة حمراء كنقطة حرف.
+    canvas.drawCircle(p(.74, .83), .018 * s, fill(AppColors.al));
+
+    // الذراعان.
+    final arm = stroke(AppColors.sandDark, .032);
+    if (mood == MascotMood.happy) {
+      canvas.drawLine(p(.31, .5), p(.17, .36), arm);
+      canvas.drawLine(p(.69, .5), p(.83, .36), arm);
+    } else if (mood == MascotMood.thinking) {
+      canvas.drawLine(p(.31, .52), p(.22, .6), arm);
+      canvas.drawLine(p(.69, .5), p(.6, .47), arm);
+    } else {
+      canvas.drawLine(p(.31, .5), p(.24, .62), arm);
+      canvas.drawLine(p(.69, .5), p(.76, .62), arm);
     }
 
-    // الجسم.
-    final body = RRect.fromRectAndRadius(
-      Rect.fromLTRB(.14 * s, .2 * s, .86 * s, .94 * s),
-      Radius.circular(.34 * s),
+    // الممحاة.
+    final eraser = RRect.fromRectAndCorners(
+      Rect.fromLTRB(.32 * s, .03 * s, .68 * s, .15 * s),
+      topLeft: Radius.circular(.08 * s),
+      topRight: Radius.circular(.08 * s),
     );
-    canvas.drawRRect(
-      body.shift(Offset(0, .025 * s)),
-      fill..color = AppColors.primaryDark,
+    canvas.drawRRect(eraser, fill(_eraser));
+    canvas.drawRect(
+      Rect.fromLTRB(.32 * s, .12 * s, .68 * s, .15 * s),
+      fill(_eraserDark),
     );
-    canvas.drawRRect(body, fill..color = AppColors.primary);
 
-    // الجناحان.
-    for (final dir in [-1, 1]) {
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: p(.5 + dir * .33, .66),
-          width: .16 * s,
-          height: .32 * s,
-        ),
-        fill..color = AppColors.primaryDark,
+    // الحلقة المعدنية.
+    canvas.drawRect(
+      Rect.fromLTRB(.31 * s, .14 * s, .69 * s, .21 * s),
+      fill(AppColors.primaryDark),
+    );
+    for (final y in [.165, .19]) {
+      canvas.drawLine(
+        p(.32, y),
+        p(.68, y),
+        stroke(AppColors.primarySoft.withValues(alpha: .6), .01),
       );
     }
 
-    // البطن بنقوش ريش.
-    canvas.drawOval(
-      Rect.fromLTRB(.3 * s, .52 * s, .7 * s, .92 * s),
-      fill..color = AppColors.primarySoft,
+    // الجسم بأوجهه.
+    canvas.drawRect(
+      Rect.fromLTRB(.32 * s, .21 * s, .68 * s, .66 * s),
+      fill(AppColors.sand),
     );
-    final feather = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = .018 * s
-      ..strokeCap = StrokeCap.round
-      ..color = AppColors.primary.withValues(alpha: .35);
-    for (final (x, y) in [(.42, .68), (.58, .68), (.5, .78)]) {
-      canvas.drawArc(
-        Rect.fromCenter(center: p(x, y), width: .1 * s, height: .07 * s),
-        .2,
-        math.pi - .4,
-        false,
-        feather,
-      );
+    canvas.drawRect(
+      Rect.fromLTRB(.56 * s, .21 * s, .68 * s, .66 * s),
+      fill(AppColors.sandDark.withValues(alpha: .45)),
+    );
+    canvas.drawRect(
+      Rect.fromLTRB(.32 * s, .21 * s, .37 * s, .66 * s),
+      fill(Colors.white.withValues(alpha: .25)),
+    );
+
+    // البري الخشبي ورأس الرصاص.
+    final cone = Path()
+      ..moveTo(.32 * s, .66 * s)
+      ..lineTo(.68 * s, .66 * s)
+      ..lineTo(.5 * s, .89 * s)
+      ..close();
+    canvas.drawPath(cone, fill(_wood));
+    // حافة البري المتموجة.
+    final scallop = Path()..moveTo(.32 * s, .66 * s);
+    for (var i = 0; i < 3; i++) {
+      final x = .32 + i * .12;
+      scallop.quadraticBezierTo((x + .06) * s, .7 * s, (x + .12) * s, .66 * s);
     }
+    canvas.drawPath(scallop..close(), fill(AppColors.sand));
+    final tip = Path()
+      ..moveTo(.455 * s, .83 * s)
+      ..lineTo(.545 * s, .83 * s)
+      ..lineTo(.5 * s, .9 * s)
+      ..close();
+    canvas.drawPath(tip, fill(AppColors.ink));
 
     // الوجنتان.
-    for (final x in [.25, .75]) {
+    for (final x in [.39, .61]) {
       canvas.drawCircle(
-        p(x, .55),
-        .045 * s,
-        fill..color = const Color(0xFFF2A7A0).withValues(alpha: .7),
+        p(x, .47),
+        .032 * s,
+        fill(_eraser.withValues(alpha: .8)),
       );
     }
 
     // العينان.
-    for (final x in [.37, .63]) {
-      canvas.drawCircle(p(x, .44), .135 * s, fill..color = Colors.white);
-      final ring = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = .02 * s
-        ..color = AppColors.primaryDark;
-      canvas.drawCircle(p(x, .44), .135 * s, ring);
+    for (final x in [.42, .58]) {
       switch (mood) {
         case MascotMood.happy:
           canvas.drawArc(
-            Rect.fromCenter(center: p(x, .47), width: .14 * s, height: .1 * s),
+            Rect.fromCenter(center: p(x, .37), width: .08 * s, height: .06 * s),
             math.pi,
             math.pi,
             false,
-            Paint()
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = .03 * s
-              ..strokeCap = StrokeCap.round
-              ..color = AppColors.ink,
+            stroke(AppColors.ink, .022),
           );
         case MascotMood.thinking:
         case MascotMood.sad:
-          final look = mood == MascotMood.thinking ? -.025 : .02;
+          canvas.drawCircle(p(x, .365), .052 * s, fill(Colors.white));
+          final look = mood == MascotMood.thinking ? -.012 : .012;
           canvas.drawCircle(
-            p(x + .015, .44 + look),
-            .065 * s,
-            fill..color = AppColors.ink,
+            p(x + .01, .365 + look),
+            .028 * s,
+            fill(AppColors.ink),
           );
           canvas.drawCircle(
-            p(x + .035, .42 + look),
-            .02 * s,
-            fill..color = Colors.white,
+            p(x + .02, .355 + look),
+            .009 * s,
+            fill(Colors.white),
           );
       }
     }
     if (mood == MascotMood.sad) {
-      final brow = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = .025 * s
-        ..strokeCap = StrokeCap.round
-        ..color = AppColors.primaryDark;
-      canvas.drawLine(p(.28, .29), p(.42, .32), brow);
-      canvas.drawLine(p(.72, .29), p(.58, .32), brow);
-    }
-
-    // المنقار.
-    final beak = Path()
-      ..moveTo(.45 * s, .55 * s)
-      ..lineTo(.55 * s, .55 * s)
-      ..lineTo(.5 * s, .63 * s)
-      ..close();
-    canvas.drawPath(beak, fill..color = AppColors.sand);
-
-    // القدمان.
-    for (final x in [.4, .6]) {
-      canvas.drawOval(
-        Rect.fromCenter(center: p(x, .94), width: .12 * s, height: .06 * s),
-        fill..color = AppColors.sandDark,
+      canvas.drawLine(
+        p(.37, .3),
+        p(.45, .32),
+        stroke(AppColors.sandDark, .016),
+      );
+      canvas.drawLine(
+        p(.63, .3),
+        p(.55, .32),
+        stroke(AppColors.sandDark, .016),
       );
     }
 
-    // قبعة التخرج.
-    final cap = Path()
-      ..moveTo(.5 * s, .07 * s)
-      ..lineTo(.78 * s, .17 * s)
-      ..lineTo(.5 * s, .27 * s)
-      ..lineTo(.22 * s, .17 * s)
-      ..close();
-    canvas.drawRect(
-      Rect.fromLTRB(.36 * s, .17 * s, .64 * s, .27 * s),
-      fill..color = const Color(0xFF2B3A42),
-    );
-    canvas.drawPath(cap, fill..color = AppColors.ink);
-    final tassel = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = .018 * s
-      ..strokeCap = StrokeCap.round
-      ..color = AppColors.sand;
-    canvas.drawLine(p(.5, .17), p(.74, .2), tassel);
-    canvas.drawLine(p(.74, .2), p(.74, .32), tassel);
-    canvas.drawCircle(p(.74, .33), .025 * s, fill..color = AppColors.sand);
+    // الفم.
+    final mouth = stroke(AppColors.ink, .02);
+    switch (mood) {
+      case MascotMood.happy:
+        canvas.drawArc(
+          Rect.fromCenter(center: p(.5, .45), width: .11 * s, height: .08 * s),
+          .15,
+          math.pi - .3,
+          false,
+          mouth,
+        );
+      case MascotMood.thinking:
+        canvas.drawCircle(p(.52, .48), .016 * s, mouth);
+      case MascotMood.sad:
+        canvas.drawArc(
+          Rect.fromCenter(center: p(.5, .5), width: .1 * s, height: .06 * s),
+          math.pi + .25,
+          math.pi - .5,
+          false,
+          mouth,
+        );
+    }
   }
 
   @override
-  bool shouldRepaint(_OwlPainter old) => old.mood != mood;
+  bool shouldRepaint(_PencilPainter old) => old.mood != mood;
 }
 
 /// فقاعة كلام بجانب التميمة.
