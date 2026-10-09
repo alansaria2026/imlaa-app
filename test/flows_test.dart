@@ -93,24 +93,39 @@ void main() {
     expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
   });
 
-  testWidgets('حذف (الـ): تمييز الخطأ ثم الإكمال', (t) async {
-    await pumpScreen(t, _single(5));
+  testWidgets('حذف (الـ): أي خطأ يعيد الكلمات بترتيب جديد', (t) async {
+    final state = await pumpScreen(t, _single(5));
     final fields = find.byType(TextField);
-    expect(fields, findsNWidgets(removeAlWords.length));
-    for (var i = 0; i < removeAlWords.length; i++) {
-      await t.enterText(
-        fields.at(i),
-        i == 0 ? 'خطأ' : removeAlWords[i].substring(2),
-      );
-    }
-    await _submit(t);
-    expect(find.textContaining('صحّح المربعات'), findsOneWidget);
-    await _settle(t);
+    List<String> group() =>
+        _visibleTexts(t).where(removeAlWords.contains).toList();
+    String answer(String w) => w.substring(2);
 
-    await t.enterText(fields.at(0), removeAlWords[0].substring(2));
+    expect(fields, findsNWidgets(3));
+    final first = group();
+    await t.enterText(fields.at(0), 'خطأ');
+    await t.enterText(fields.at(1), answer(first[1]));
+    await t.enterText(fields.at(2), answer(first[2]));
     await _submit(t);
-    expect(find.textContaining('أنهيت هذا التطبيق'), findsOneWidget);
-    await _settle(t);
+    expect(find.textContaining('لا يُسمح بالخطأ'), findsOneWidget);
+    expect(find.text('٩٠٪'), findsOneWidget);
+    await t.pump(const Duration(milliseconds: 2000));
+    await t.pumpAndSettle();
+    expect(find.text('٠/٩'), findsOneWidget);
+
+    final seen = <String>[];
+    for (var round = 0; round < 3; round++) {
+      final words = group();
+      expect(words.length, 3);
+      seen.addAll(words);
+      for (var i = 0; i < 3; i++) {
+        await t.enterText(fields.at(i), answer(words[i]));
+      }
+      await _submit(t);
+      await _settle(t);
+    }
+    expect(seen.toSet(), removeAlWords.toSet());
+    expect(find.text('٩/٩'), findsOneWidget);
+    expect(state.points, 81); // ٩ × ١٠ × ٩٠٪
   });
 
   testWidgets('إضافة (الـ): أي خطأ يعيد الكلمات بترتيب جديد', (t) async {
