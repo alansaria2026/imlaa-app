@@ -24,9 +24,6 @@ class _LearnTabState extends State<LearnTab> {
   /// للعرض فقط (العناوين والأيقونات)؛ يُبنى الدرس من جديد عند فتحه.
   final List<LessonPageSpec> _stations = buildLamLessonPages();
 
-  /// إزاحة كل محطة أفقيًا لرسم مسار متعرّج.
-  static const _offsets = [0.0, 0.42, 0.62, 0.25, -0.3, -0.58, -0.15];
-
   void _open(int page) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -47,6 +44,7 @@ class _LearnTabState extends State<LearnTab> {
     final done = [for (var i = 0; i < n; i++) app.isPageDone(lamLessonId, i)];
     final current = done.indexOf(false); // -1 = أنهى الدرس كله
     final doneCount = done.where((d) => d).length;
+    final t = Theme.of(context).textTheme;
 
     return CustomScrollView(
       slivers: [
@@ -62,41 +60,73 @@ class _LearnTabState extends State<LearnTab> {
           ),
         ),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
-          sliver: SliverList.list(
-            children: [
-              for (var i = 0; i <= n; i++)
-                _PathRow(
-                  offset: _offsets[i % _offsets.length],
-                  side: i == 2
-                      ? _Side.mascot(current == -1 || current > 2)
-                      : null,
-                  child: i == n
-                      ? _TrophyNode(
-                          earned: current == -1,
-                          onTap: current == -1 ? () => _open(0) : null,
-                        )
-                      : _StationNode(
-                          spec: _stations[i],
-                          state: done[i]
-                              ? _NodeState.done
-                              : i == current
-                              ? _NodeState.current
-                              : _NodeState.locked,
-                          onTap: () {
-                            if (done[i] || i == current) {
-                              _open(i);
-                            } else {
-                              showFeedback(
-                                context,
-                                'أكمل المحطات السابقة أولًا لفتح «${_stations[i].title}»',
-                                tone: FeedbackTone.hint,
-                              );
-                            }
-                          },
-                        ),
+          padding: const EdgeInsets.fromLTRB(16, 22, 16, 4),
+          sliver: SliverToBoxAdapter(
+            child: Row(
+              children: [
+                Text(
+                  'محطات الدرس',
+                  style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
-            ],
+                const Spacer(),
+                Text(
+                  'اسحب لرؤية المزيد',
+                  style: t.labelMedium?.copyWith(color: AppColors.muted),
+                ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.swipe_rounded,
+                  size: 18,
+                  color: AppColors.muted,
+                ),
+              ],
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: _StationStrip(
+            count: n,
+            current: current,
+            nodeAt: (i) => i == n
+                ? Padding(
+                    // محاذاة مركز الكأس مع مراكز الدوائر.
+                    padding: const EdgeInsets.only(top: 33),
+                    child: _TrophyNode(
+                      earned: current == -1,
+                      onTap: current == -1 ? () => _open(0) : null,
+                    ),
+                  )
+                : _StationNode(
+                    spec: _stations[i],
+                    state: done[i]
+                        ? _NodeState.done
+                        : i == current
+                        ? _NodeState.current
+                        : _NodeState.locked,
+                    onTap: () {
+                      if (done[i] || i == current) {
+                        _open(i);
+                      } else {
+                        showFeedback(
+                          context,
+                          'أكمل المحطات السابقة أولًا لفتح «${_stations[i].title}»',
+                          tone: FeedbackTone.hint,
+                        );
+                      }
+                    },
+                  ),
+            reached: (i) => i < n && (done[i] || i == current),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          sliver: SliverToBoxAdapter(
+            child: _NextUp(
+              finished: current == -1,
+              title: current == -1 ? null : _stations[current].title,
+              started: doneCount > 0,
+              onTap: () => _open(current == -1 ? 0 : current),
+            ),
           ),
         ),
         const SliverPadding(
@@ -111,6 +141,200 @@ class _LearnTabState extends State<LearnTab> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// شريط المحطات الأفقي: يبدأ من اليمين ويتموّج صعودًا وهبوطًا، وتربطه خطوط.
+class _StationStrip extends StatefulWidget {
+  const _StationStrip({
+    required this.count,
+    required this.current,
+    required this.nodeAt,
+    required this.reached,
+  });
+
+  /// عدد المحطات (تُضاف بعدها كأس نهاية الدرس).
+  final int count;
+  final int current;
+  final Widget Function(int index) nodeAt;
+
+  /// هل وصل الطالب إلى المحطة (منجزة أو حالية) لتلوين الخط قبلها.
+  final bool Function(int index) reached;
+
+  static const itemWidth = 98.0;
+  static const slotHeight = 144.0;
+  static const wave = 26.0;
+  static const pad = 12.0;
+
+  /// مركز الدائرة من أعلى الخانة: فقاعة «ابدأ» ٣٤ + نصف الدائرة مع حافتها.
+  static const circleCenter = 34 + 40.0;
+
+  @override
+  State<_StationStrip> createState() => _StationStripState();
+}
+
+class _StationStripState extends State<_StationStrip> {
+  final _scroll = ScrollController();
+  int? _scrolledTo;
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// إظهار المحطة الحالية في منتصف الشريط.
+  void _revealCurrent() {
+    final target = widget.current == -1 ? widget.count : widget.current;
+    if (_scrolledTo == target || !_scroll.hasClients) return;
+    _scrolledTo = target;
+    final viewport = _scroll.position.viewportDimension;
+    final offset =
+        _StationStrip.pad +
+        target * _StationStrip.itemWidth -
+        (viewport - _StationStrip.itemWidth) / 2;
+    _scroll.jumpTo(offset.clamp(0.0, _scroll.position.maxScrollExtent));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _revealCurrent());
+    final items = widget.count + 1;
+    final width = _StationStrip.pad * 2 + items * _StationStrip.itemWidth;
+    const height = _StationStrip.slotHeight + _StationStrip.wave + 8;
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    double top(int i) => i.isOdd ? _StationStrip.wave : 0;
+
+    final centers = [
+      for (var i = 0; i < items; i++)
+        Offset(() {
+          final fromStart =
+              _StationStrip.pad +
+              i * _StationStrip.itemWidth +
+              _StationStrip.itemWidth / 2;
+          return rtl ? width - fromStart : fromStart;
+        }(), top(i) + _StationStrip.circleCenter),
+    ];
+
+    return SingleChildScrollView(
+      controller: _scroll,
+      scrollDirection: Axis.horizontal,
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _ConnectorPainter(
+                  centers: centers,
+                  reached: [for (var i = 0; i < items; i++) widget.reached(i)],
+                ),
+              ),
+            ),
+            for (var i = 0; i < items; i++)
+              PositionedDirectional(
+                start: _StationStrip.pad + i * _StationStrip.itemWidth,
+                top: top(i),
+                width: _StationStrip.itemWidth,
+                height: _StationStrip.slotHeight,
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: widget.nodeAt(i),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ConnectorPainter extends CustomPainter {
+  _ConnectorPainter({required this.centers, required this.reached});
+  final List<Offset> centers;
+  final List<bool> reached;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var i = 0; i < centers.length - 1; i++) {
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 8
+        ..strokeCap = StrokeCap.round
+        ..color = reached[i + 1] ? AppColors.sand : AppColors.locked;
+      canvas.drawLine(centers[i], centers[i + 1], paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConnectorPainter old) =>
+      old.centers != centers || old.reached.toString() != reached.toString();
+}
+
+/// بطاقة «المحطة التالية» مع القلم وزر البدء.
+class _NextUp extends StatelessWidget {
+  const _NextUp({
+    required this.finished,
+    required this.title,
+    required this.started,
+    required this.onTap,
+  });
+
+  final bool finished;
+  final String? title;
+  final bool started;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.line, width: 2),
+      ),
+      child: Row(
+        children: [
+          Mascot(
+            size: 84,
+            mood: finished ? MascotMood.happy : MascotMood.thinking,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  finished ? 'أحسنت! أتممت الدرس 🎉' : 'المحطة التالية',
+                  style: t.labelLarge?.copyWith(color: AppColors.muted),
+                ),
+                if (!finished)
+                  Text(
+                    title!,
+                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                const SizedBox(height: 10),
+                AppButton(
+                  label: finished
+                      ? 'أعد الدرس'
+                      : started
+                      ? 'تابع'
+                      : 'ابدأ الآن',
+                  icon: finished
+                      ? Icons.replay_rounded
+                      : Icons.play_arrow_rounded,
+                  height: 46,
+                  onTap: onTap,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -299,40 +523,6 @@ class _UnitBanner extends StatelessWidget {
 
 enum _NodeState { done, current, locked }
 
-class _Side {
-  const _Side.mascot(this.happy);
-  final bool happy;
-}
-
-class _PathRow extends StatelessWidget {
-  const _PathRow({required this.offset, required this.child, this.side});
-
-  final double offset;
-  final Widget child;
-  final _Side? side;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          if (side != null)
-            Align(
-              alignment: Alignment(offset > 0 ? -0.95 : 0.95, 0),
-              child: Mascot(
-                size: 92,
-                mood: side!.happy ? MascotMood.happy : MascotMood.thinking,
-              ),
-            ),
-          Align(alignment: Alignment(offset, 0), child: child),
-        ],
-      ),
-    );
-  }
-}
-
 class _StationNode extends StatefulWidget {
   const _StationNode({
     required this.spec,
@@ -391,7 +581,7 @@ class _StationNodeState extends State<_StationNode>
       _NodeState.current => (AppColors.primary, AppColors.primaryDark),
       _NodeState.locked => (AppColors.locked, AppColors.lineDark),
     };
-    const size = 72.0;
+    const size = 68.0;
 
     final node = Pressable(
       onTap: widget.onTap,
@@ -440,7 +630,7 @@ class _StationNodeState extends State<_StationNode>
           children: [
             // فقاعة «ابدأ» داخل حدود المحطة لتبقى قابلة للضغط.
             SizedBox(
-              height: state == _NodeState.current ? 36 : 0,
+              height: 34,
               child: state == _NodeState.current
                   ? Container(
                       padding: const EdgeInsets.symmetric(
@@ -463,8 +653,8 @@ class _StationNodeState extends State<_StationNode>
                   : null,
             ),
             SizedBox(
-              width: size + 20,
-              height: size + 20,
+              width: size + 12,
+              height: size + 12,
               child: Stack(
                 alignment: Alignment.center,
                 clipBehavior: Clip.none,

@@ -97,24 +97,23 @@ class _PencilPainter extends CustomPainter {
       fill(AppColors.ink.withValues(alpha: .08)),
     );
 
-    // حرف «ض» يكتبه القلم؛ رأس القلم عند نهاية ذيل الحرف.
-    final letter = TextPainter(
-      text: TextSpan(
-        text: 'ض',
-        style: TextStyle(
-          fontFamily: 'NotoNaskhArabic',
-          fontSize: .3 * s,
-          fontWeight: FontWeight.w700,
-          color: AppColors.primary,
-          height: 1,
-        ),
-      ),
-      textDirection: TextDirection.rtl,
-    )..layout();
-    final baseline = letter.computeDistanceToActualBaseline(
-      TextBaseline.alphabetic,
+    // أثر الكتابة خلف رأس القلم (الكتابة العربية من اليمين إلى اليسار).
+    final trail = Path()..moveTo(.53 * s, .9 * s);
+    for (var i = 0; i < 4; i++) {
+      final x = .53 + i * .095;
+      trail.quadraticBezierTo(
+        (x + .025) * s,
+        (i.isEven ? .85 : .93) * s,
+        (x + .095) * s,
+        .9 * s,
+      );
+    }
+    canvas.drawPath(
+      trail,
+      stroke(AppColors.primary.withValues(alpha: .7), .022),
     );
-    letter.paint(canvas, Offset(.54 * s, .88 * s - baseline));
+    // نقطة حمراء كنقطة حرف.
+    canvas.drawCircle(p(.74, .83), .018 * s, fill(AppColors.al));
 
     // الذراعان.
     final arm = stroke(AppColors.sandDark, .032);
