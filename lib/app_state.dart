@@ -29,8 +29,16 @@ class AppState extends ChangeNotifier {
   String? _lastDay;
   int _lessonsCompleted;
 
-  static Future<AppState> load() async =>
-      AppState._(await SharedPreferences.getInstance());
+  static Future<AppState> load() async {
+    try {
+      return AppState._(await SharedPreferences.getInstance());
+    } catch (_) {
+      // التخزين محجوب (نافذة خاصة في المتصفح مثلًا): نعمل بذاكرة مؤقتة.
+      // ignore: invalid_use_of_visible_for_testing_member
+      SharedPreferences.setMockInitialValues({});
+      return AppState._(await SharedPreferences.getInstance());
+    }
+  }
 
   int get points => _points;
   double get speechRate => _speechRate;
