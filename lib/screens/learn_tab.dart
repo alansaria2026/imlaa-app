@@ -313,8 +313,8 @@ class _PathRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 162,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -440,7 +440,7 @@ class _StationNodeState extends State<_StationNode>
           children: [
             // فقاعة «ابدأ» داخل حدود المحطة لتبقى قابلة للضغط.
             SizedBox(
-              height: 36,
+              height: state == _NodeState.current ? 36 : 0,
               child: state == _NodeState.current
                   ? Container(
                       padding: const EdgeInsets.symmetric(
@@ -463,8 +463,8 @@ class _StationNodeState extends State<_StationNode>
                   : null,
             ),
             SizedBox(
-              width: size + 28,
-              height: size + 28,
+              width: size + 20,
+              height: size + 20,
               child: Stack(
                 alignment: Alignment.center,
                 clipBehavior: Clip.none,
@@ -475,8 +475,8 @@ class _StationNodeState extends State<_StationNode>
                       builder: (context, _) {
                         final v = _pulse.value;
                         return Container(
-                          width: size + 10 + 18 * v,
-                          height: size + 10 + 18 * v,
+                          width: size + 8 + 12 * v,
+                          height: size + 8 + 12 * v,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(

@@ -35,7 +35,7 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
     LessonPageSpec(
       tag: 'تطبيق',
       title: 'أضف (الـ)',
-      emoji: '➕',
+      emoji: '✍️',
       builder: (h) => EquationPage(
         handle: h,
         rounds: addRounds,
