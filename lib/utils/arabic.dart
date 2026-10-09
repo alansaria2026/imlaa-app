@@ -7,11 +7,9 @@ String stripDiacritics(String s) => s.replaceAll(_diacritics, '');
 
 /// توحيد الإجابة للمقارنة: بدون تشكيل أو مسافات زائدة، وتوحيد صور الألف
 /// (الدرس عن اللام وليس عن الهمزات).
-String normalizeAnswer(String s) =>
-    stripDiacritics(s)
-        .trim()
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .replaceAll(RegExp('[أإآ]'), 'ا');
+String normalizeAnswer(String s) => stripDiacritics(
+  s,
+).trim().replaceAll(RegExp(r'\s+'), ' ').replaceAll(RegExp('[أإآ]'), 'ا');
 
 /// الحروف الشمسية الأربعة عشر.
 const solarLetters = 'تثدذرزسشصضطظلن';

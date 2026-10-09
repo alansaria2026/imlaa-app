@@ -7,7 +7,6 @@ import '../../theme.dart';
 import '../../utils/arabic.dart';
 import '../../widgets/common.dart';
 import '../page_handle.dart';
-import 'classify_page.dart';
 
 /// ص ٦: اسمع الجملة واستخرج كلمة بلام قمرية وأخرى بلام شمسية.
 class ChallengePage extends StatefulWidget {
@@ -241,8 +240,9 @@ class _AnswerField extends StatelessWidget {
             Flexible(
               child: Text(
                 '${arDigits(number)}. كلمة بها ',
-                style: Theme.of(context).textTheme.titleSmall
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
             LamChip(type, dense: true),

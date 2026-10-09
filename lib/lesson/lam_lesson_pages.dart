@@ -1,10 +1,8 @@
 import 'dart:math';
 
 import '../data/lam_lesson.dart';
-import '../utils/arabic.dart';
 import 'page_handle.dart';
 import 'pages/challenge_page.dart';
-import 'pages/classify_page.dart';
 import 'pages/equation_page.dart';
 import 'pages/intro_pages.dart';
 import 'pages/picture_page.dart';
@@ -18,13 +16,6 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
   final addRounds = [
     for (var i = 0; i < addWords.length; i += 3) addWords.sublist(i, i + 3),
   ];
-
-  final withAl = [for (final w in addAlWordBank) 'ال$w'];
-  final moon = withAl.where((w) => lamTypeOf(w) == LamType.moon).toList()
-    ..shuffle(rnd);
-  final sun = withAl.where((w) => lamTypeOf(w) == LamType.sun).toList()
-    ..shuffle(rnd);
-  final classify = [...moon.take(5), ...sun.take(5)]..shuffle(rnd);
 
   final sentences = [...challengeSentences]..shuffle(rnd);
 
@@ -47,11 +38,8 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
         add: true,
         tag: 'تطبيق',
         title: 'أضف (الـ) إلى الكلمة واكتب الناتج',
+        strict: true,
       ),
-    ),
-    LessonPageSpec(
-      tag: 'تدريب',
-      builder: (h) => ClassifyPage(handle: h, words: classify),
     ),
     LessonPageSpec(
       tag: 'تطبيق',

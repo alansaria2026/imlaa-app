@@ -94,8 +94,9 @@ class _Diagram extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           'كلتاهما تُكتب',
-          style: Theme.of(context).textTheme.labelLarge
-              ?.copyWith(color: AppColors.muted),
+          style: Theme.of(
+            context,
+          ).textTheme.labelLarge?.copyWith(color: AppColors.muted),
         ),
       ],
     );
@@ -197,8 +198,9 @@ class _RuleLine extends StatelessWidget {
         children: [
           Text(
             moon ? 'اللام القمرية' : 'اللام الشمسية',
-            style: Theme.of(context).textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const AlBox(size: 18),
           Text('=', style: Theme.of(context).textTheme.titleMedium),
@@ -282,8 +284,10 @@ class _LettersGroup extends StatelessWidget {
       children: [
         Text(
           moon ? 'الحروف القمرية' : 'الحروف الشمسية',
-          style: Theme.of(context).textTheme.labelLarge
-              ?.copyWith(color: AppColors.muted, fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: AppColors.muted,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(height: 6),
         Wrap(
@@ -323,8 +327,9 @@ void showRuleSheet(BuildContext context) {
           Text(
             'القاعدة',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 16),
           const RuleContent(),

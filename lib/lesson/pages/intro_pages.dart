@@ -126,8 +126,10 @@ class _ExampleEquation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final op = Theme.of(context).textTheme.titleLarge
-        ?.copyWith(color: AppColors.muted, fontWeight: FontWeight.w700);
+    final op = Theme.of(context).textTheme.titleLarge?.copyWith(
+      color: AppColors.muted,
+      fontWeight: FontWeight.w700,
+    );
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(

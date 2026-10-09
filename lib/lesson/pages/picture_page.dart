@@ -8,7 +8,6 @@ import '../../utils/arabic.dart';
 import '../../widgets/common.dart';
 import '../../widgets/letter_boxes.dart';
 import '../page_handle.dart';
-import 'classify_page.dart';
 
 /// ص ٥: اكتب اسم ما تراه في الصورة مع (الـ) داخل المربعات.
 class PicturePage extends StatefulWidget {

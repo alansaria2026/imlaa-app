@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
@@ -8,6 +10,9 @@ import '../../widgets/common.dart';
 import '../page_handle.dart';
 
 /// تطبيق المعادلات: كلمة + الـ = ؟ (ص ٣) أو كلمة − الـ = ؟ (ص ٧).
+///
+/// في الوضع الصارم [strict] (تعليمات ص ٤): لا يُسمح بأي خطأ؛ أي خطأ يعيد
+/// جميع الكلمات بترتيب مختلف، ومؤشر النتيجة يبدأ ممتلئًا وينقص مع كل خطأ.
 class EquationPage extends StatefulWidget {
   const EquationPage({
     super.key,
@@ -16,6 +21,7 @@ class EquationPage extends StatefulWidget {
     required this.add,
     required this.tag,
     required this.title,
+    this.strict = false,
   });
 
   final PageHandle handle;
@@ -25,6 +31,10 @@ class EquationPage extends StatefulWidget {
   final bool add;
   final String tag;
   final String title;
+  final bool strict;
+
+  /// مقدار نقص مؤشر النتيجة مع كل خطأ في الوضع الصارم.
+  static const levelStep = 10;
 
   @override
   State<EquationPage> createState() => _EquationPageState();
@@ -33,16 +43,26 @@ class EquationPage extends StatefulWidget {
 enum _RowState { open, wrong, right }
 
 class _EquationPageState extends State<EquationPage> {
+  late List<List<String>> _rounds = widget.rounds;
+  final _random = Random();
+  int _mistakes = 0;
+  bool _restarting = false;
   int _round = 0;
   int _solved = 0;
   late List<TextEditingController> _ctrls;
+
+  /// المتحكمات القديمة تبقى حتى إغلاق الصفحة لأن الحركة الانتقالية
+  /// ما زالت تعرض الحقول القديمة.
+  final List<TextEditingController> _retired = [];
+  int _generation = 0;
   late List<_RowState> _states;
   late List<int> _attempts;
   late List<String?> _hints;
   int _shake = 0;
 
-  List<String> get _words => widget.rounds[_round];
-  int get _total => widget.rounds.fold(0, (a, r) => a + r.length);
+  List<String> get _words => _rounds[_round];
+  int get _total => _rounds.fold(0, (a, r) => a + r.length);
+  int get _level => max(0, 100 - _mistakes * EquationPage.levelStep);
 
   String _answer(String w) => widget.add ? 'ال$w' : w.substring(2);
 
@@ -56,9 +76,40 @@ class _EquationPageState extends State<EquationPage> {
         _words.join('، '),
         rate: AppScope.read(context).speechRate,
       );
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => widget.handle.setProgress(0, _total),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.handle.setProgress(0, _total);
+      if (widget.strict) widget.handle.setLevel(100);
+    });
+  }
+
+  /// يعيد جميع الكلمات من البداية بترتيب يختلف عن السابق.
+  void _restartShuffled() {
+    final perRound = _rounds.first.length;
+    final previous = _rounds.expand((r) => r).toList();
+    var words = [...previous];
+    if (words.length > 1) {
+      do {
+        words.shuffle(_random);
+      } while (_listEquals(words, previous));
+    }
+    _retired.addAll(_ctrls);
+    _rounds = [
+      for (var i = 0; i < words.length; i += perRound)
+        words.sublist(i, min(i + perRound, words.length)),
+    ];
+    _round = 0;
+    _solved = 0;
+    _generation++;
+    _restarting = false;
+    _setupRound();
+    widget.handle.setProgress(0, _total);
+  }
+
+  static bool _listEquals(List<String> a, List<String> b) {
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   void _setupRound() {
@@ -70,7 +121,7 @@ class _EquationPageState extends State<EquationPage> {
 
   @override
   void dispose() {
-    for (final c in _ctrls) {
+    for (final c in [..._retired, ..._ctrls]) {
       c.dispose();
     }
     super.dispose();
@@ -89,8 +140,13 @@ class _EquationPageState extends State<EquationPage> {
   }
 
   void _check() {
+    if (_restarting) return;
     FocusScope.of(context).unfocus();
     final app = AppScope.read(context);
+    if (widget.strict) {
+      _checkStrict();
+      return;
+    }
     var newlySolved = 0;
     var anyWrong = false;
     var anyEmpty = false;
@@ -139,9 +195,7 @@ class _EquationPageState extends State<EquationPage> {
         Future.delayed(const Duration(milliseconds: 900), () {
           if (!mounted) return;
           setState(() {
-            for (final c in _ctrls) {
-              c.dispose();
-            }
+            _retired.addAll(_ctrls);
             _round++;
             _setupRound();
           });
@@ -153,22 +207,95 @@ class _EquationPageState extends State<EquationPage> {
     }
   }
 
+  void _checkStrict() {
+    // يضغط «إدخال» بعد الفراغ من الإجابة عن الأسئلة كلها.
+    final open = [
+      for (var i = 0; i < _words.length; i++)
+        if (_states[i] != _RowState.right) i,
+    ];
+    if (open.any((i) => _ctrls[i].text.trim().isEmpty)) {
+      showFeedback(
+        context,
+        'أجب عن جميع الأسئلة ثم اضغط «إدخال»',
+        tone: FeedbackTone.error,
+      );
+      return;
+    }
+    var anyWrong = false;
+    setState(() {
+      for (final i in open) {
+        final ok =
+            normalizeAnswer(_ctrls[i].text) ==
+            normalizeAnswer(_answer(_words[i]));
+        _states[i] = ok ? _RowState.right : _RowState.wrong;
+        if (ok) {
+          _solved++;
+        } else {
+          anyWrong = true;
+        }
+      }
+      if (anyWrong) {
+        _shake++;
+        _mistakes++;
+        _restarting = true;
+      }
+    });
+
+    if (anyWrong) {
+      widget.handle
+        ..setLevel(_level)
+        ..setProgress(_solved, _total);
+      showFeedback(
+        context,
+        'لا يُسمح بالخطأ! ستُعاد جميع الكلمات بترتيب مختلف',
+        tone: FeedbackTone.error,
+      );
+      Future.delayed(const Duration(milliseconds: 1800), () {
+        if (mounted) setState(_restartShuffled);
+      });
+      return;
+    }
+
+    widget.handle.setProgress(_solved, _total);
+    if (_round < _rounds.length - 1) {
+      showFeedback(context, 'أحسنت! إلى الأسئلة التالية');
+      _restarting = true;
+      Future.delayed(const Duration(milliseconds: 900), () {
+        if (!mounted) return;
+        setState(() {
+          _retired.addAll(_ctrls);
+          _restarting = false;
+          _round++;
+          _setupRound();
+        });
+      });
+    } else {
+      // النقاط حسب المستوى المتبقي في المؤشر.
+      AppScope.read(context).addPoints((_total * 10 * _level / 100).round());
+      showFeedback(context, 'ممتاز! أنهيت هذا التطبيق 🎉');
+      widget.handle.markComplete();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final roundsLabel = widget.rounds.length > 1
-        ? 'المجموعة ${arDigits(_round + 1)} من ${arDigits(widget.rounds.length)}'
+    final roundsLabel = _rounds.length > 1
+        ? 'المجموعة ${arDigits(_round + 1)} من ${arDigits(_rounds.length)}'
         : null;
+    final subtitle = widget.strict
+        ? '${roundsLabel ?? ''} • أي خطأ يعيد جميع الكلمات بترتيب جديد'
+        : roundsLabel;
     return PageCard(
       tag: widget.tag,
       title: widget.title,
-      subtitle: roundsLabel,
+      subtitle: subtitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: Column(
-              key: ValueKey(_round),
+              key: ValueKey('$_generation-$_round'),
               children: [
                 for (var i = 0; i < _words.length; i++) ...[
                   _row(i),
@@ -179,7 +306,7 @@ class _EquationPageState extends State<EquationPage> {
           ),
           const SizedBox(height: 6),
           FilledButton.icon(
-            onPressed: _states.every((s) => s == _RowState.right)
+            onPressed: _restarting || _states.every((s) => s == _RowState.right)
                 ? null
                 : _check,
             icon: const Icon(Icons.keyboard_return_rounded),
@@ -194,8 +321,10 @@ class _EquationPageState extends State<EquationPage> {
     final word = _words[i];
     final state = _states[i];
     final right = state == _RowState.right;
-    final op = Theme.of(context).textTheme.titleLarge
-        ?.copyWith(color: AppColors.muted, fontWeight: FontWeight.w700);
+    final op = Theme.of(context).textTheme.titleLarge?.copyWith(
+      color: AppColors.muted,
+      fontWeight: FontWeight.w700,
+    );
     final field = TextField(
       controller: _ctrls[i],
       enabled: !right,

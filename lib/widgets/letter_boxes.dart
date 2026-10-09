@@ -174,8 +174,9 @@ class _Key extends StatelessWidget {
                     ? Icon(icon, size: 20, color: AppColors.primary)
                     : Text(
                         label!,
-                        style: AppTheme.word(19)
-                            .copyWith(height: 1.1, fontWeight: FontWeight.w600),
+                        style: AppTheme.word(
+                          19,
+                        ).copyWith(height: 1.1, fontWeight: FontWeight.w600),
                       ),
               ),
             ),

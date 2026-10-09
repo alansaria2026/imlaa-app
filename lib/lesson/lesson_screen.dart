@@ -131,8 +131,9 @@ class _LessonScreenState extends State<LessonScreen> {
           children: [
             Text(
               'عنوان الدرس',
-              style: Theme.of(context).textTheme.labelSmall
-                  ?.copyWith(color: AppColors.muted),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: AppColors.muted),
             ),
             Text(widget.title),
           ],
@@ -260,6 +261,18 @@ class _StatusBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final fraction = handle.total == 0 ? null : handle.done / handle.total;
+    // المؤشر العكسي: يبدأ ممتلئًا وينقص مع كل خطأ.
+    final level = handle.level;
+    final barValue = level != null ? level / 100 : fraction ?? 1;
+    final barColor = level != null
+        ? level >= 70
+              ? AppColors.success
+              : level >= 40
+              ? AppColors.sand
+              : AppColors.error
+        : handle.complete || fraction == null
+        ? AppColors.success
+        : AppColors.sand;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       child: Column(
@@ -313,16 +326,28 @@ class _StatusBar extends StatelessWidget {
                       Expanded(
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(6),
-                          child: LinearProgressIndicator(
-                            value: fraction ?? 1,
-                            minHeight: 6,
-                            color: handle.complete || fraction == null
-                                ? AppColors.success
-                                : AppColors.sand,
-                            backgroundColor: AppColors.line,
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween(end: barValue),
+                            duration: const Duration(milliseconds: 400),
+                            builder: (context, v, _) => LinearProgressIndicator(
+                              value: v,
+                              minHeight: 6,
+                              color: barColor,
+                              backgroundColor: AppColors.line,
+                            ),
                           ),
                         ),
                       ),
+                      if (level != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          '${arDigits(level)}٪',
+                          style: t.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: barColor,
+                          ),
+                        ),
+                      ],
                       if (handle.total > 0) ...[
                         const SizedBox(width: 8),
                         Text(
@@ -408,8 +433,9 @@ class _ToolButton extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 label,
-                style: Theme.of(context).textTheme.labelMedium
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ],
           ),

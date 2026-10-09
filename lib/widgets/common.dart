@@ -379,3 +379,31 @@ class _ShakeOnChangeState extends State<ShakeOnChange>
     );
   }
 }
+
+/// رسالة إكمال مشتركة لصفحات التمارين.
+class PageDoneMessage extends StatelessWidget {
+  const PageDoneMessage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Column(
+        children: [
+          const Text('🎉', style: TextStyle(fontSize: 54)),
+          const SizedBox(height: 8),
+          Text(
+            'أحسنت! أنهيت هذا التمرين',
+            style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'اضغط «التالي» للمتابعة',
+            style: t.bodyMedium?.copyWith(color: AppColors.muted),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -7,7 +7,7 @@ import '../lesson/lesson_screen.dart';
 import '../theme.dart';
 import '../utils/arabic.dart';
 
-const _lamPageCount = 7;
+const _lamPageCount = 6;
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

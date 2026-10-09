@@ -9,6 +9,14 @@ class PageHandle extends ChangeNotifier {
   int total = 0;
   bool complete = false;
 
+  /// مؤشر عكسي (٠–١٠٠) يبدأ ممتلئًا وينقص مع الأخطاء؛ null إن لم يُستخدم.
+  int? level;
+
+  void setLevel(int value) {
+    level = value;
+    notifyListeners();
+  }
+
   void setProgress(int done, int total) {
     this.done = done;
     this.total = total;

@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:imlaa/data/lam_lesson.dart';
 import 'package:imlaa/lesson/lam_lesson_pages.dart';
 import 'package:imlaa/lesson/lesson_screen.dart';
-import 'package:imlaa/utils/arabic.dart';
 
 import 'helpers/harness.dart';
 
@@ -17,6 +16,11 @@ String _visibleText(WidgetTester t, bool Function(String) where) => t
     .widgetList<Text>(find.byType(Text))
     .map((w) => w.textSpan?.toPlainText() ?? w.data ?? '')
     .firstWhere(where);
+
+List<String> _visibleTexts(WidgetTester t) => t
+    .widgetList<Text>(find.byType(Text))
+    .map((w) => w.textSpan?.toPlainText() ?? w.data ?? '')
+    .toList();
 
 Future<void> _submit(WidgetTester t) async {
   // انتظار انتهاء تمرير الحقل المُركَّز قبل الوصول إلى الزر.
@@ -37,7 +41,7 @@ void main() {
   setUp(mockPlatform);
 
   testWidgets('تحدي الجمل: خطأ ثم إكمال العشر', (t) async {
-    final state = await pumpScreen(t, _single(5));
+    final state = await pumpScreen(t, _single(4));
 
     await t.enterText(find.byType(TextField).first, 'كلمة');
     await t.tap(find.text('إدخال'));
@@ -55,12 +59,12 @@ void main() {
       await t.tap(find.text('إدخال'));
       await _settle(t);
     }
-    expect(find.text('أحسنت! صنّفت جميع الكلمات'), findsOneWidget);
+    expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
     expect(state.points, 10 + 9 * 20);
   });
 
   testWidgets('الصور: خطأ يعيد السؤال ثم إكمال الثمانية', (t) async {
-    await pumpScreen(t, _single(4));
+    await pumpScreen(t, _single(3));
     Future<void> type(String word) async {
       for (final l in word.split('')) {
         await t.tap(find.text(l).last);
@@ -86,11 +90,11 @@ void main() {
     }
     // الدب أعيد إلى آخر الطابور.
     expect(answered.last, 'الدب');
-    expect(find.text('أحسنت! صنّفت جميع الكلمات'), findsOneWidget);
+    expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
   });
 
   testWidgets('حذف (الـ): تمييز الخطأ ثم الإكمال', (t) async {
-    await pumpScreen(t, _single(6));
+    await pumpScreen(t, _single(5));
     final fields = find.byType(TextField);
     expect(fields, findsNWidgets(removeAlWords.length));
     for (var i = 0; i < removeAlWords.length; i++) {
@@ -109,16 +113,41 @@ void main() {
     await _settle(t);
   });
 
-  testWidgets('تصنيف اللام', (t) async {
-    await pumpScreen(t, _single(3));
-    for (var i = 0; i < 10; i++) {
-      final word = _visibleText(
-        t,
-        (s) => s.startsWith('ال') && !s.contains(' '),
-      );
-      await t.tap(find.text(lamTypeOf(word).label).last);
+  testWidgets('إضافة (الـ): أي خطأ يعيد الكلمات بترتيب جديد', (t) async {
+    final state = await pumpScreen(t, _single(2));
+    final fields = find.byType(TextField);
+    // الكلمات الظاهرة في المجموعة الحالية بترتيبها.
+    List<String> group() =>
+        _visibleTexts(t).where(addAlWordBank.contains).toList();
+
+    // «إدخال» قبل الإجابة عن الأسئلة الثلاثة لا يُحتسب خطأ.
+    await t.enterText(fields.at(0), 'ال${group()[0]}');
+    await _submit(t);
+    expect(find.textContaining('أجب عن جميع الأسئلة'), findsOneWidget);
+    await _settle(t);
+
+    final before = group();
+    await t.enterText(fields.at(0), 'ال${before[0]}');
+    await t.enterText(fields.at(1), 'خطأ');
+    await t.enterText(fields.at(2), 'ال${before[2]}');
+    await _submit(t);
+    expect(find.textContaining('لا يُسمح بالخطأ'), findsOneWidget);
+    expect(find.text('٩٠٪'), findsOneWidget);
+    await t.pump(const Duration(milliseconds: 2000));
+    await t.pumpAndSettle();
+    // أعيدت جميع الكلمات من البداية.
+    expect(find.text('٠/١٢'), findsOneWidget);
+
+    for (var round = 0; round < 4; round++) {
+      final words = group();
+      expect(words.length, 3);
+      for (var i = 0; i < 3; i++) {
+        await t.enterText(fields.at(i), 'ال${words[i]}');
+      }
+      await _submit(t);
       await _settle(t);
     }
-    expect(find.text('أحسنت! صنّفت جميع الكلمات'), findsOneWidget);
+    expect(find.text('١٢/١٢'), findsOneWidget);
+    expect(state.points, 108); // ١٢ × ١٠ × ٩٠٪
   });
 }

@@ -69,7 +69,7 @@ void main() {
 
   test('بناء صفحات الدرس', () {
     final pages = buildLamLessonPages();
-    expect(pages.length, 7);
+    expect(pages.length, 6);
     expect(addAlWordBank.toSet().length, addAlWordBank.length);
   });
 }
