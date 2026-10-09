@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../theme.dart';
+import 'pressable.dart';
 
 /// مربعات بعدد حروف (الـ + الكلمة)، يكون مربعا (الـ) باللون الأحمر.
 class LetterBoxes extends StatelessWidget {
@@ -25,7 +25,7 @@ class LetterBoxes extends StatelessWidget {
         const gap = 8.0;
         final size = ((c.maxWidth - gap * (length - 1)) / length).clamp(
           30.0,
-          54.0,
+          50.0,
         );
         return Wrap(
           alignment: WrapAlignment.center,
@@ -75,7 +75,7 @@ class _Box extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       width: size,
-      height: size * 1.15,
+      height: size * 1.1,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: isAl
@@ -117,7 +117,7 @@ class ArabicKeyboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+      padding: const EdgeInsets.fromLTRB(2, 6, 2, 6),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(20),
@@ -157,28 +157,23 @@ class _Key extends StatelessWidget {
       flex: flex,
       child: Padding(
         padding: const EdgeInsets.all(2.5),
-        child: Material(
+        child: Pressable(
+          onTap: onTap,
           color: icon != null ? AppColors.primarySoft : AppColors.surface,
-          borderRadius: BorderRadius.circular(10),
-          elevation: 0,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(10),
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onTap();
-            },
-            child: SizedBox(
-              height: 46,
-              child: Center(
-                child: icon != null
-                    ? Icon(icon, size: 20, color: AppColors.primary)
-                    : Text(
-                        label!,
-                        style: AppTheme.word(
-                          19,
-                        ).copyWith(height: 1.1, fontWeight: FontWeight.w600),
-                      ),
-              ),
+          edgeColor: icon != null ? AppColors.primary : AppColors.lineDark,
+          radius: 10,
+          depth: 3,
+          child: SizedBox(
+            height: 40,
+            child: Center(
+              child: icon != null
+                  ? Icon(icon, size: 20, color: AppColors.primary)
+                  : Text(
+                      label!,
+                      style: AppTheme.word(
+                        19,
+                      ).copyWith(height: 1.1, fontWeight: FontWeight.w600),
+                    ),
             ),
           ),
         ),

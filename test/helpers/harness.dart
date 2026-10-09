@@ -46,6 +46,10 @@ Future<AppState> pumpScreen(WidgetTester tester, Widget home) async {
   tester.view.physicalSize = const Size(1080, 2340);
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
+  // «تقليل الحركة» يوقف الحركات المتكررة (التميمة ونبض المحطة).
+  tester.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
+  addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
   final state = await AppState.load();
   await tester.pumpWidget(
     AppScope(

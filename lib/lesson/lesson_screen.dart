@@ -5,6 +5,7 @@ import '../services/speaker.dart';
 import '../theme.dart';
 import '../utils/arabic.dart';
 import '../widgets/common.dart';
+import '../widgets/pressable.dart';
 import 'lesson_complete_screen.dart';
 import 'page_handle.dart';
 import 'rule_content.dart';
@@ -17,18 +18,20 @@ class LessonScreen extends StatefulWidget {
     required this.lessonId,
     required this.title,
     required this.pages,
+    this.initialPage = 0,
   });
 
   final String lessonId;
   final String title;
   final List<LessonPageSpec> pages;
+  final int initialPage;
 
   @override
   State<LessonScreen> createState() => _LessonScreenState();
 }
 
 class _LessonScreenState extends State<LessonScreen> {
-  final _pager = PageController();
+  late final _pager = PageController(initialPage: widget.initialPage);
   late final List<PageHandle> _handles = [
     for (final _ in widget.pages) PageHandle(),
   ];
@@ -37,7 +40,7 @@ class _LessonScreenState extends State<LessonScreen> {
       widget.pages[i].builder(_handles[i]),
   ];
   late final int _startPoints;
-  int _page = 0;
+  late int _page = widget.initialPage;
 
   @override
   void initState() {
@@ -104,7 +107,8 @@ class _LessonScreenState extends State<LessonScreen> {
     if (_page < widget.pages.length - 1) {
       _goTo(_page + 1);
     } else {
-      final earned = AppScope.read(context).points - _startPoints;
+      final app = AppScope.read(context)..markLessonCompleted();
+      final earned = app.points - _startPoints;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) =>
@@ -119,120 +123,119 @@ class _LessonScreenState extends State<LessonScreen> {
     final app = AppScope.of(context);
     final handle = _handles[_page];
     final last = _page == widget.pages.length - 1;
+    final t = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'رجوع',
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: _back,
-        ),
-        title: Column(
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            Text(
-              'عنوان الدرس',
-              style: Theme.of(
-                context,
-              ).textTheme.labelSmall?.copyWith(color: AppColors.muted),
-            ),
-            Text(widget.title),
-          ],
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'الصفحة الرئيسية',
-            icon: const Icon(Icons.home_rounded),
-            onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: Column(
-        children: [
-          _StatusBar(
-            pageCount: widget.pages.length,
-            page: _page,
-            isDone: (i) => _canAdvance(i) && widget.pages[i].needsCompletion,
-            handle: handle,
-            points: app.points,
-            onJump: (i) {
-              if (i <= _page || _canAdvance(i - 1)) _goTo(i);
-            },
-          ),
-          Expanded(
-            child: PageView(
-              controller: _pager,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                for (final p in _built)
-                  _KeepAlive(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      child: p,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+              child: Row(
+                children: [
+                  RoundIconButton(
+                    tooltip: 'رجوع',
+                    icon: Icons.arrow_back_rounded,
+                    size: 44,
+                    onTap: _back,
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          'عنوان الدرس',
+                          style: t.labelSmall?.copyWith(color: AppColors.muted),
+                        ),
+                        Text(
+                          widget.title,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: t.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.ink.withValues(alpha: 0.06),
-                blurRadius: 16,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              _ToolButton(
-                icon: Icons.menu_book_rounded,
-                label: 'القاعدة',
-                onTap: () => showRuleSheet(context),
-              ),
-              _ToolButton(
-                icon: Icons.lightbulb_outline_rounded,
-                label: 'تلميح',
-                onTap: () => handle.onHint?.call(),
-              ),
-              _ToolButton(
-                icon: Icons.volume_up_rounded,
-                label: 'استمع',
-                onTap: () => handle.onListen?.call(),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 2,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _canAdvance(_page)
-                        ? AppColors.primary
-                        : AppColors.primary.withValues(alpha: 0.4),
+                  RoundIconButton(
+                    tooltip: 'الصفحة الرئيسية',
+                    icon: Icons.home_rounded,
+                    size: 44,
+                    onTap: () =>
+                        Navigator.of(context).popUntil((r) => r.isFirst),
                   ),
-                  onPressed: _next,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(last ? 'إنهاء' : 'التالي'),
-                      const SizedBox(width: 6),
-                      Icon(
-                        last ? Icons.flag_rounded : Icons.arrow_forward_rounded,
-                        size: 20,
+                ],
+              ),
+            ),
+            _ScoreBar(
+              page: _page,
+              pageCount: widget.pages.length,
+              handle: handle,
+              points: app.points,
+            ),
+            Expanded(
+              child: PageView(
+                controller: _pager,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  for (final p in _built)
+                    _KeepAlive(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        child: p,
                       ),
-                    ],
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(top: BorderSide(color: AppColors.line, width: 2)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            child: Row(
+              children: [
+                _ToolButton(
+                  icon: Icons.menu_book_rounded,
+                  label: 'القاعدة',
+                  onTap: () => showRuleSheet(context),
+                ),
+                _ToolButton(
+                  icon: Icons.lightbulb_rounded,
+                  label: 'تلميح',
+                  color: AppColors.sand,
+                  onTap: () => handle.onHint?.call(),
+                ),
+                _ToolButton(
+                  icon: Icons.volume_up_rounded,
+                  label: 'استمع',
+                  color: AppColors.moon,
+                  onTap: () => handle.onListen?.call(),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: AppButton(
+                    label: last ? 'إنهاء' : 'التالي',
+                    icon: last
+                        ? Icons.flag_rounded
+                        : Icons.arrow_forward_rounded,
+                    enabled: _canAdvance(_page),
+                    onTap: _next,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -240,22 +243,19 @@ class _LessonScreenState extends State<LessonScreen> {
   }
 }
 
-class _StatusBar extends StatelessWidget {
-  const _StatusBar({
-    required this.pageCount,
+/// مؤشر النتيجة والنقاط المكتسبة.
+class _ScoreBar extends StatelessWidget {
+  const _ScoreBar({
     required this.page,
-    required this.isDone,
+    required this.pageCount,
     required this.handle,
     required this.points,
-    required this.onJump,
   });
 
-  final int pageCount;
   final int page;
-  final bool Function(int) isDone;
+  final int pageCount;
   final PageHandle handle;
   final int points;
-  final ValueChanged<int> onJump;
 
   @override
   Widget build(BuildContext context) {
@@ -263,8 +263,8 @@ class _StatusBar extends StatelessWidget {
     final fraction = handle.total == 0 ? null : handle.done / handle.total;
     // المؤشر العكسي: يبدأ ممتلئًا وينقص مع كل خطأ.
     final level = handle.level;
-    final barValue = level != null ? level / 100 : fraction ?? 1;
-    final barColor = level != null
+    final value = level != null ? level / 100 : fraction ?? 1;
+    final color = level != null
         ? level >= 70
               ? AppColors.success
               : level >= 40
@@ -272,134 +272,58 @@ class _StatusBar extends StatelessWidget {
               : AppColors.error
         : handle.complete || fraction == null
         ? AppColors.success
-        : AppColors.sand;
+        : AppColors.primary;
+    final caption = [
+      'الصفحة ${arDigits(page + 1)} من ${arDigits(pageCount)}',
+      if (handle.total > 0)
+        'أنجزت ${arDigits(handle.done)}/${arDigits(handle.total)}',
+      if (level != null) 'المستوى ${arDigits(level)}٪',
+    ].join('  ·  ');
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Column(
         children: [
           Row(
             children: [
-              for (var i = 0; i < pageCount; i++)
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => onJump(i),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      height: 6,
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      decoration: BoxDecoration(
-                        color: i == page
-                            ? AppColors.primary
-                            : isDone(i) || i < page
-                            ? AppColors.primary.withValues(alpha: 0.35)
-                            : AppColors.line,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              // مؤشر النتيجة
               Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        'الصفحة ${arDigits(page + 1)}/${arDigits(pageCount)}',
-                        style: t.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: TweenAnimationBuilder<double>(
-                            tween: Tween(end: barValue),
-                            duration: const Duration(milliseconds: 400),
-                            builder: (context, v, _) => LinearProgressIndicator(
-                              value: v,
-                              minHeight: 6,
-                              color: barColor,
-                              backgroundColor: AppColors.line,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (level != null) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          '${arDigits(level)}٪',
-                          style: t.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: barColor,
-                          ),
-                        ),
-                      ],
-                      if (handle.total > 0) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          '${arDigits(handle.done)}/${arDigits(handle.total)}',
-                          style: t.labelMedium?.copyWith(
-                            color: AppColors.muted,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+                child: ChunkyProgress(value: value, color: color),
               ),
-              const SizedBox(width: 8),
-              // النقاط المكتسبة
+              const SizedBox(width: 12),
               Tooltip(
                 message: 'النقاط المكتسبة',
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.sandSoft,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.star_rounded,
-                        size: 18,
-                        color: AppColors.sand,
-                      ),
-                      const SizedBox(width: 4),
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
-                        transitionBuilder: (c, a) =>
-                            ScaleTransition(scale: a, child: c),
-                        child: Text(
-                          arDigits(points),
-                          key: ValueKey(points),
-                          style: t.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF9A6A1E),
-                          ),
+                child: Row(
+                  children: [
+                    const Text('⭐', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 4),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      transitionBuilder: (c, a) =>
+                          ScaleTransition(scale: a, child: c),
+                      child: Text(
+                        arDigits(points),
+                        key: ValueKey(points),
+                        style: t.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.sandDark,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              caption,
+              style: t.labelMedium?.copyWith(
+                color: AppColors.muted,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),
@@ -412,34 +336,31 @@ class _ToolButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.color = AppColors.primary,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: AppColors.primary),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ],
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          RoundIconButton(icon: icon, iconColor: color, size: 42, onTap: onTap),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: AppColors.muted,
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -158,7 +158,7 @@ class _PicturePageState extends State<PicturePage> {
                   duration: const Duration(milliseconds: 300),
                   child: Container(
                     key: ValueKey(_queue.first),
-                    height: 150,
+                    height: 108,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: AppColors.background,
@@ -166,13 +166,13 @@ class _PicturePageState extends State<PicturePage> {
                     ),
                     child: Text(
                       item.emoji,
-                      style: const TextStyle(fontSize: 84),
+                      style: const TextStyle(fontSize: 64),
                     ),
                   ),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
                 SizedBox(
-                  height: 76,
+                  height: 68,
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 350),
                     transitionBuilder: (c, a) => ScaleTransition(
@@ -197,7 +197,7 @@ class _PicturePageState extends State<PicturePage> {
                           ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 ArabicKeyboard(onLetter: _onLetter, onBackspace: _onBackspace),
               ],
             ),

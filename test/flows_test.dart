@@ -44,8 +44,7 @@ void main() {
     final state = await pumpScreen(t, _single(4));
 
     await t.enterText(find.byType(TextField).first, 'كلمة');
-    await t.tap(find.text('إدخال'));
-    await t.pump();
+    await _submit(t);
     expect(find.text('هذه الكلمة ليست في الجملة'), findsOneWidget);
     expect(find.text('اكتب الكلمة'), findsOneWidget);
     await _settle(t);
@@ -56,7 +55,7 @@ void main() {
       // الإجابة مقبولة مع التشكيل أيضًا.
       await t.enterText(find.byType(TextField).at(0), s.moon);
       await t.enterText(find.byType(TextField).at(1), s.sun);
-      await t.tap(find.text('إدخال'));
+      await _submit(t);
       await _settle(t);
     }
     expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
@@ -107,10 +106,10 @@ void main() {
     await t.enterText(fields.at(2), answer(first[2]));
     await _submit(t);
     expect(find.textContaining('لا يُسمح بالخطأ'), findsOneWidget);
-    expect(find.text('٩٠٪'), findsOneWidget);
+    expect(find.textContaining('المستوى ٩٠٪'), findsOneWidget);
     await t.pump(const Duration(milliseconds: 2000));
     await t.pumpAndSettle();
-    expect(find.text('٠/٩'), findsOneWidget);
+    expect(find.textContaining('أنجزت ٠/٩'), findsOneWidget);
 
     final seen = <String>[];
     for (var round = 0; round < 3; round++) {
@@ -124,7 +123,7 @@ void main() {
       await _settle(t);
     }
     expect(seen.toSet(), removeAlWords.toSet());
-    expect(find.text('٩/٩'), findsOneWidget);
+    expect(find.textContaining('أنجزت ٩/٩'), findsOneWidget);
     expect(state.points, 81); // ٩ × ١٠ × ٩٠٪
   });
 
@@ -147,11 +146,11 @@ void main() {
     await t.enterText(fields.at(2), 'ال${before[2]}');
     await _submit(t);
     expect(find.textContaining('لا يُسمح بالخطأ'), findsOneWidget);
-    expect(find.text('٩٠٪'), findsOneWidget);
+    expect(find.textContaining('المستوى ٩٠٪'), findsOneWidget);
     await t.pump(const Duration(milliseconds: 2000));
     await t.pumpAndSettle();
     // أعيدت جميع الكلمات من البداية.
-    expect(find.text('٠/١٢'), findsOneWidget);
+    expect(find.textContaining('أنجزت ٠/١٢'), findsOneWidget);
 
     for (var round = 0; round < 4; round++) {
       final words = group();
@@ -162,7 +161,7 @@ void main() {
       await _submit(t);
       await _settle(t);
     }
-    expect(find.text('١٢/١٢'), findsOneWidget);
+    expect(find.textContaining('أنجزت ١٢/١٢'), findsOneWidget);
     expect(state.points, 108); // ١٢ × ١٠ × ٩٠٪
   });
 }

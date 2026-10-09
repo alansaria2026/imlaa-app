@@ -2,19 +2,34 @@ import 'package:flutter/material.dart';
 
 /// لوحة ألوان هادئة: أخضر مائل للزرقة، رملي دافئ، وخلفية كريمية.
 class AppColors {
-  static const primary = Color(0xFF3F7D7A);
-  static const primarySoft = Color(0xFFD9EBE7);
-  static const sand = Color(0xFFE3B66B);
-  static const sandSoft = Color(0xFFF7EBD3);
-  static const background = Color(0xFFF6F3EC);
+  static const primary = Color(0xFF3E8E87);
+  static const primaryDark = Color(0xFF2C6D67);
+  static const primarySoft = Color(0xFFDCEEEA);
+  static const sand = Color(0xFFE8B45F);
+  static const sandDark = Color(0xFFC48F3A);
+  static const sandSoft = Color(0xFFF8EBD2);
+  static const background = Color(0xFFF7F5EF);
   static const surface = Colors.white;
   static const ink = Color(0xFF22313A);
-  static const muted = Color(0xFF6E7D82);
-  static const line = Color(0xFFE6E1D6);
-  static const success = Color(0xFF5E9E6E);
-  static const successSoft = Color(0xFFE3F1E5);
-  static const error = Color(0xFFC9665A);
-  static const errorSoft = Color(0xFFF8E3DF);
+  static const muted = Color(0xFF718086);
+  static const line = Color(0xFFE7E2D7);
+  static const lineDark = Color(0xFFD3CCBE);
+  static const success = Color(0xFF58A86B);
+  static const successDark = Color(0xFF3F8752);
+  static const successSoft = Color(0xFFE2F3E5);
+  static const error = Color(0xFFD06B5E);
+  static const errorDark = Color(0xFFAA4F43);
+  static const errorSoft = Color(0xFFF9E4E0);
+  static const streak = Color(0xFFF08A3C);
+  static const locked = Color(0xFFE3DED3);
+
+  /// نسخة أغمق من اللون لحافة الأزرار ثلاثية الأبعاد.
+  static Color darken(Color c, [double amount = 0.18]) {
+    final hsl = HSLColor.fromColor(c);
+    return hsl
+        .withLightness((hsl.lightness - amount).clamp(0.0, 1.0))
+        .toColor();
+  }
 
   /// اللون الأحمر لتمييز (الـ) كما في تصميم الدرس.
   static const al = Color(0xFFD64545);
@@ -84,7 +99,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.background,
+        fillColor: AppColors.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 12,
@@ -94,12 +109,16 @@ class AppTheme {
           borderSide: const BorderSide(color: AppColors.line),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.line, width: 1.5),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.line, width: 2),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.line, width: 2),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2.5),
         ),
       ),
       snackBarTheme: SnackBarThemeData(

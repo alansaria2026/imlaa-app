@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../theme.dart';
 import '../utils/arabic.dart';
+import 'mascot.dart';
 
 /// نص عربي يميّز (الـ) في بداية كل كلمة باللون الأحمر.
 class AlText extends StatelessWidget {
@@ -71,50 +72,27 @@ class PageCard extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.line,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.05),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: t.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        height: 1.4,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle!,
-                        style: t.bodyMedium?.copyWith(color: AppColors.muted),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: AppColors.line, width: 2),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
-                  vertical: 6,
+                  vertical: 5,
                 ),
                 decoration: BoxDecoration(
                   color: AppColors.sandSoft,
@@ -123,16 +101,32 @@ class PageCard extends StatelessWidget {
                 child: Text(
                   tag,
                   style: t.labelLarge?.copyWith(
-                    color: const Color(0xFF9A6A1E),
+                    color: AppColors.sandDark,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: t.titleMedium?.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                height: 1.35,
+              ),
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                subtitle!,
+                style: t.bodyMedium?.copyWith(color: AppColors.muted),
+              ),
             ],
-          ),
-          const SizedBox(height: 18),
-          child,
-        ],
+            const SizedBox(height: 16),
+            child,
+          ],
+        ),
       ),
     );
   }
@@ -212,9 +206,9 @@ void showFeedback(
       HapticFeedback.selectionClick();
   }
   final (color, icon) = switch (tone) {
-    FeedbackTone.success => (AppColors.success, Icons.check_circle_rounded),
-    FeedbackTone.error => (AppColors.error, Icons.info_rounded),
-    FeedbackTone.hint => (AppColors.primary, Icons.lightbulb_rounded),
+    FeedbackTone.success => (AppColors.success, '🎉'),
+    FeedbackTone.error => (AppColors.error, '🤔'),
+    FeedbackTone.hint => (AppColors.primary, '💡'),
   };
   hideFeedback();
   late final OverlayEntry entry;
@@ -248,7 +242,7 @@ class _Toast extends StatefulWidget {
   });
 
   final Color color;
-  final IconData icon;
+  final String icon;
   final String message;
   final Duration duration;
   final VoidCallback onDone;
@@ -302,20 +296,44 @@ class _ToastState extends State<_Toast> with SingleTickerProviderStateMixin {
               begin: const Offset(0, -0.4),
               end: Offset.zero,
             ).animate(CurvedAnimation(parent: _c, curve: Curves.easeOut)),
-            child: Material(
-              color: widget.color,
-              elevation: 6,
-              shadowColor: AppColors.ink.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(16),
-              child: Padding(
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.darken(widget.color),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.ink.withValues(alpha: 0.18),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: widget.color,
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 14,
                 ),
                 child: Row(
                   children: [
-                    Icon(widget.icon, color: Colors.white),
-                    const SizedBox(width: 10),
+                    Container(
+                      width: 36,
+                      height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.22),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        widget.icon,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         widget.message,
@@ -391,8 +409,8 @@ class PageDoneMessage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
         children: [
-          const Text('🎉', style: TextStyle(fontSize: 54)),
-          const SizedBox(height: 8),
+          const Mascot(size: 96, mood: MascotMood.happy),
+          const SizedBox(height: 14),
           Text(
             'أحسنت! أنهيت هذا التمرين',
             style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),

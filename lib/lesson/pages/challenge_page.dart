@@ -6,6 +6,7 @@ import '../../services/speaker.dart';
 import '../../theme.dart';
 import '../../utils/arabic.dart';
 import '../../widgets/common.dart';
+import '../../widgets/pressable.dart';
 import '../page_handle.dart';
 
 /// ص ٦: اسمع الجملة واستخرج كلمة بلام قمرية وأخرى بلام شمسية.
@@ -53,10 +54,11 @@ class _ChallengePageState extends State<ChallengePage> {
     super.dispose();
   }
 
-  void _speak() {
+  void _speak({bool slow = false}) {
     final s = _s;
     if (s != null) {
-      Speaker.instance.speak(s.spoken, rate: AppScope.read(context).speechRate);
+      final rate = AppScope.read(context).speechRate;
+      Speaker.instance.speak(s.spoken, rate: slow ? rate * 0.6 : rate);
     }
   }
 
@@ -123,7 +125,6 @@ class _ChallengePageState extends State<ChallengePage> {
   @override
   Widget build(BuildContext context) {
     final s = _s;
-    final t = Theme.of(context).textTheme;
     return PageCard(
       tag: 'تحدي',
       title: 'اسمع الجملة واستخرج منها ما يلي',
@@ -135,47 +136,50 @@ class _ChallengePageState extends State<ChallengePage> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: Material(
-                    key: ValueKey(_index),
-                    color: AppColors.sandSoft,
-                    borderRadius: BorderRadius.circular(22),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(22),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    RoundIconButton(
+                      tooltip: 'استمع',
+                      icon: Icons.volume_up_rounded,
+                      size: 76,
+                      color: AppColors.moon,
+                      iconColor: Colors.white,
                       onTap: _speak,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
-                        child: Column(
-                          children: [
-                            AlText(
-                              '( ${s.spoken} )',
-                              size: 26,
-                              highlight: _solvedCurrent,
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.headphones_rounded,
-                                  size: 18,
-                                  color: Color(0xFF9A6A1E),
-                                ),
-                                const SizedBox(width: 6),
-                                Flexible(
-                                  child: Text(
-                                    'اضغط لتسمع الجملة',
-                                    style: t.labelLarge?.copyWith(
-                                      color: const Color(0xFF9A6A1E),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                    ),
+                    const SizedBox(width: 14),
+                    Pressable(
+                      onTap: () => _speak(slow: true),
+                      color: AppColors.moonSoft,
+                      shape: BoxShape.circle,
+                      child: const SizedBox(
+                        width: 54,
+                        height: 54,
+                        child: Center(
+                          child: Text('🐢', style: TextStyle(fontSize: 26)),
                         ),
                       ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Container(
+                    key: ValueKey(_index),
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.sandSoft,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: AppColors.sand.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                    ),
+                    child: AlText(
+                      '( ${s.spoken} )',
+                      size: 26,
+                      highlight: _solvedCurrent,
                     ),
                   ),
                 ),
@@ -199,10 +203,12 @@ class _ChallengePageState extends State<ChallengePage> {
                   onSubmitted: _submit,
                 ),
                 const SizedBox(height: 20),
-                FilledButton.icon(
-                  onPressed: _solvedCurrent ? null : _submit,
-                  icon: const Icon(Icons.keyboard_return_rounded),
-                  label: const Text('إدخال'),
+                AppButton(
+                  label: 'إدخال',
+                  icon: Icons.keyboard_return_rounded,
+                  style: AppButtonStyle.secondary,
+                  enabled: !_solvedCurrent,
+                  onTap: _solvedCurrent ? null : _submit,
                 ),
               ],
             ),

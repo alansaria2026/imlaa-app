@@ -7,6 +7,7 @@ import '../../services/speaker.dart';
 import '../../theme.dart';
 import '../../utils/arabic.dart';
 import '../../widgets/common.dart';
+import '../../widgets/pressable.dart';
 import '../page_handle.dart';
 
 /// تطبيق المعادلات: كلمة + الـ = ؟ (ص ٣) أو كلمة − الـ = ؟ (ص ٧).
@@ -305,12 +306,18 @@ class _EquationPageState extends State<EquationPage> {
             ),
           ),
           const SizedBox(height: 6),
-          FilledButton.icon(
-            onPressed: _restarting || _states.every((s) => s == _RowState.right)
-                ? null
-                : _check,
-            icon: const Icon(Icons.keyboard_return_rounded),
-            label: const Text('إدخال'),
+          Builder(
+            builder: (context) {
+              final active =
+                  !_restarting && !_states.every((s) => s == _RowState.right);
+              return AppButton(
+                label: 'إدخال',
+                icon: Icons.keyboard_return_rounded,
+                style: AppButtonStyle.secondary,
+                enabled: active,
+                onTap: active ? _check : null,
+              );
+            },
           ),
         ],
       ),

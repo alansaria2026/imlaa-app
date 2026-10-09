@@ -33,11 +33,17 @@ class PageHandle extends ChangeNotifier {
 class LessonPageSpec {
   const LessonPageSpec({
     required this.tag,
+    required this.title,
+    required this.emoji,
     required this.builder,
     this.needsCompletion = true,
   });
 
   final String tag;
+
+  /// اسم المحطة وأيقونتها في مسار التعلّم.
+  final String title;
+  final String emoji;
   final bool needsCompletion;
   final Widget Function(PageHandle handle) builder;
 }

@@ -6,9 +6,18 @@ class AppState extends ChangeNotifier {
   AppState._(this._prefs)
     : _points = _prefs.getInt(_kPoints) ?? 0,
       _donePages = (_prefs.getStringList(_kDone) ?? const []).toSet(),
-      _speechRate = _prefs.getDouble(_kRate) ?? 0.42;
+      _speechRate = _prefs.getDouble(_kRate) ?? 0.42,
+      _streak = _prefs.getInt(_kStreak) ?? 0,
+      _lastDay = _prefs.getString(_kLastDay),
+      _lessonsCompleted = _prefs.getInt(_kLessons) ?? 0;
+
+  /// قابل للاستبدال في الاختبارات.
+  static DateTime Function() clock = DateTime.now;
 
   static const _kPoints = 'points';
+  static const _kStreak = 'streak';
+  static const _kLastDay = 'last_day';
+  static const _kLessons = 'lessons_completed';
   static const _kDone = 'done_pages';
   static const _kRate = 'speech_rate';
 
@@ -16,6 +25,9 @@ class AppState extends ChangeNotifier {
   int _points;
   final Set<String> _donePages;
   double _speechRate;
+  int _streak;
+  String? _lastDay;
+  int _lessonsCompleted;
 
   static Future<AppState> load() async =>
       AppState._(await SharedPreferences.getInstance());
@@ -23,9 +35,44 @@ class AppState extends ChangeNotifier {
   int get points => _points;
   double get speechRate => _speechRate;
 
+  int get lessonsCompleted => _lessonsCompleted;
+  int get totalDonePages => _donePages.length;
+
+  static String _day(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  /// أيام التعلّم المتتالية (تنقطع إذا مرّ يوم كامل دون تعلّم).
+  int get streak {
+    if (_lastDay == null) return 0;
+    final now = clock();
+    final today = _day(now);
+    final yesterday = _day(now.subtract(const Duration(days: 1)));
+    return _lastDay == today || _lastDay == yesterday ? _streak : 0;
+  }
+
+  bool get learnedToday => _lastDay == _day(clock());
+
+  void _touchStreak() {
+    final now = clock();
+    final today = _day(now);
+    if (_lastDay == today) return;
+    final yesterday = _day(now.subtract(const Duration(days: 1)));
+    _streak = _lastDay == yesterday ? _streak + 1 : 1;
+    _lastDay = today;
+    _prefs.setInt(_kStreak, _streak);
+    _prefs.setString(_kLastDay, today);
+  }
+
   void addPoints(int value) {
     _points += value;
     _prefs.setInt(_kPoints, _points);
+    _touchStreak();
+    notifyListeners();
+  }
+
+  void markLessonCompleted() {
+    _lessonsCompleted++;
+    _prefs.setInt(_kLessons, _lessonsCompleted);
     notifyListeners();
   }
 
@@ -50,9 +97,13 @@ class AppState extends ChangeNotifier {
 
   Future<void> reset() async {
     _points = 0;
+    _streak = 0;
+    _lastDay = null;
+    _lessonsCompleted = 0;
     _donePages.clear();
-    await _prefs.remove(_kPoints);
-    await _prefs.remove(_kDone);
+    for (final k in [_kPoints, _kDone, _kStreak, _kLastDay, _kLessons]) {
+      await _prefs.remove(k);
+    }
     notifyListeners();
   }
 }

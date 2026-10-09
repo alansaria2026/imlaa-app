@@ -20,16 +20,22 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
   return [
     LessonPageSpec(
       tag: 'مثال القاعدة',
+      title: 'القاعدة',
+      emoji: '📖',
       needsCompletion: false,
       builder: (h) => RulePage(handle: h),
     ),
     LessonPageSpec(
       tag: 'مثال',
+      title: 'أمثلة',
+      emoji: '💡',
       needsCompletion: false,
       builder: (h) => ExamplesPage(handle: h),
     ),
     LessonPageSpec(
       tag: 'تطبيق',
+      title: 'أضف (الـ)',
+      emoji: '➕',
       builder: (h) => EquationPage(
         handle: h,
         rounds: addRounds,
@@ -41,14 +47,20 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
     ),
     LessonPageSpec(
       tag: 'تطبيق',
+      title: 'سمِّ الصورة',
+      emoji: '🖼️',
       builder: (h) => PicturePage(handle: h),
     ),
     LessonPageSpec(
       tag: 'تحدي',
+      title: 'تحدي الاستماع',
+      emoji: '🎧',
       builder: (h) => ChallengePage(handle: h, sentences: sentences),
     ),
     LessonPageSpec(
       tag: 'تطبيق',
+      title: 'احذف (الـ)',
+      emoji: '✂️',
       builder: (h) => EquationPage(
         handle: h,
         rounds: _groupsOfThree(removeAlWords),
