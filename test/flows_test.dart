@@ -22,12 +22,10 @@ List<String> _visibleTexts(WidgetTester t) => t
     .map((w) => w.textSpan?.toPlainText() ?? w.data ?? '')
     .toList();
 
+/// «التالي» يصحّح الإجابات قبل إكمال الصفحة.
 Future<void> _submit(WidgetTester t) async {
-  // انتظار انتهاء تمرير الحقل المُركَّز قبل الوصول إلى الزر.
   await t.pumpAndSettle();
-  await t.ensureVisible(find.text('إدخال'));
-  await t.pumpAndSettle();
-  await t.tap(find.text('إدخال'));
+  await t.tap(nextButton());
   await t.pump();
 }
 
@@ -49,9 +47,10 @@ void main() {
     expect(find.text('اكتب الكلمة'), findsOneWidget);
     await _settle(t);
 
+    // الجملة مسموعة فقط ولا تُعرض قبل الإجابة.
+    expect(find.textContaining('( '), findsNothing);
     for (var i = 0; i < challengeSentences.length; i++) {
-      final shown = _visibleText(t, (s) => s.startsWith('( '));
-      final s = challengeSentences.firstWhere((c) => shown.contains(c.spoken));
+      final s = challengeSentences.firstWhere((c) => c.spoken == lastSpoken);
       // الإجابة مقبولة مع التشكيل أيضًا.
       await t.enterText(find.byType(TextField).at(0), s.moon);
       await t.enterText(find.byType(TextField).at(1), s.sun);
@@ -106,10 +105,10 @@ void main() {
     await t.enterText(fields.at(2), answer(first[2]));
     await _submit(t);
     expect(find.textContaining('لا يُسمح بالخطأ'), findsOneWidget);
-    expect(find.textContaining('المستوى ٩٠٪'), findsOneWidget);
+    expect(scoreLabel('النتيجة ٩٠٪'), findsOneWidget);
     await t.pump(const Duration(milliseconds: 2000));
     await t.pumpAndSettle();
-    expect(find.textContaining('أنجزت ٠/٩'), findsOneWidget);
+    expect(scoreLabel('بقيت ٩ أسئلة'), findsOneWidget);
 
     final seen = <String>[];
     for (var round = 0; round < 3; round++) {
@@ -123,7 +122,7 @@ void main() {
       await _settle(t);
     }
     expect(seen.toSet(), removeAlWords.toSet());
-    expect(find.textContaining('أنجزت ٩/٩'), findsOneWidget);
+    expect(scoreLabel('لم يبقَ شيء'), findsOneWidget);
     expect(state.points, 81); // ٩ × ١٠ × ٩٠٪
   });
 
@@ -134,7 +133,7 @@ void main() {
     List<String> group() =>
         _visibleTexts(t).where(addAlWordBank.contains).toList();
 
-    // «إدخال» قبل الإجابة عن الأسئلة الثلاثة لا يُحتسب خطأ.
+    // «التالي» قبل الإجابة عن الأسئلة الثلاثة لا يُحتسب خطأ.
     await t.enterText(fields.at(0), 'ال${group()[0]}');
     await _submit(t);
     expect(find.textContaining('أجب عن جميع الأسئلة'), findsOneWidget);
@@ -146,11 +145,11 @@ void main() {
     await t.enterText(fields.at(2), 'ال${before[2]}');
     await _submit(t);
     expect(find.textContaining('لا يُسمح بالخطأ'), findsOneWidget);
-    expect(find.textContaining('المستوى ٩٠٪'), findsOneWidget);
+    expect(scoreLabel('النتيجة ٩٠٪'), findsOneWidget);
     await t.pump(const Duration(milliseconds: 2000));
     await t.pumpAndSettle();
     // أعيدت جميع الكلمات من البداية.
-    expect(find.textContaining('أنجزت ٠/١٢'), findsOneWidget);
+    expect(scoreLabel('بقي ١٢ سؤالًا'), findsOneWidget);
 
     for (var round = 0; round < 4; round++) {
       final words = group();
@@ -161,7 +160,7 @@ void main() {
       await _submit(t);
       await _settle(t);
     }
-    expect(find.textContaining('أنجزت ١٢/١٢'), findsOneWidget);
+    expect(scoreLabel('لم يبقَ شيء'), findsOneWidget);
     expect(state.points, 108); // ١٢ × ١٠ × ٩٠٪
   });
 }

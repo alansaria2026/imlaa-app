@@ -52,17 +52,18 @@ class AlText extends StatelessWidget {
   }
 }
 
-/// بطاقة الصفحة مع وسم في الزاوية (مثال، تطبيق، تحدي...).
+/// محتوى الصفحة: السؤال بخط النسخ وبحجم كبير، ثم التمرين.
+/// الوسم (مثال، تحدي...) اختياري وصغير.
 class PageCard extends StatelessWidget {
   const PageCard({
     super.key,
-    required this.tag,
+    this.tag,
     required this.title,
     required this.child,
     this.subtitle,
   });
 
-  final String tag;
+  final String? tag;
   final String title;
   final String? subtitle;
   final Widget child;
@@ -70,64 +71,36 @@ class PageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.line,
-        borderRadius: BorderRadius.circular(28),
-      ),
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: AppColors.line, width: 2),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.sandSoft,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Text(
-                  tag,
-                  style: t.labelLarge?.copyWith(
-                    color: AppColors.sandDark,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (tag != null)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              tag!,
+              style: t.labelMedium?.copyWith(
+                color: AppColors.muted,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: t.titleMedium?.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                height: 1.35,
-              ),
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 6),
-              Text(
-                subtitle!,
-                style: t.bodyMedium?.copyWith(color: AppColors.muted),
-              ),
-            ],
-            const SizedBox(height: 16),
-            child,
-          ],
+          ),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: AppTheme.word(26).copyWith(height: 1.5),
         ),
-      ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            subtitle!,
+            textAlign: TextAlign.center,
+            style: t.bodyMedium?.copyWith(color: AppColors.muted),
+          ),
+        ],
+        const SizedBox(height: 16),
+        child,
+      ],
     );
   }
 }
@@ -148,19 +121,17 @@ class LamChip extends StatelessWidget {
         vertical: dense ? 3 : 6,
       ),
       decoration: BoxDecoration(
-        color: moon ? AppColors.moonSoft : AppColors.sunSoft,
         borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: moon ? AppColors.moon : AppColors.sun),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(moon ? '🌙' : '☀️', style: TextStyle(fontSize: dense ? 11 : 14)),
-          const SizedBox(width: 4),
           Text(
             type.label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               fontWeight: FontWeight.w800,
-              color: moon ? AppColors.moon : const Color(0xFF9A6A1E),
+              color: moon ? AppColors.moon : AppColors.sun,
             ),
           ),
         ],
@@ -179,8 +150,8 @@ class AlBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.al.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.al, width: 1.2),
       ),
       child: Text('الـ', style: AppTheme.word(size, color: AppColors.al)),
     );

@@ -78,7 +78,7 @@ class _ExamplesPageState extends State<ExamplesPage> {
     setState(() => _playing = i);
     final e = lamExamples[i];
     await Speaker.instance.speak(
-      '${e.from}، ${e.result}',
+      '${spokenForm(e.from)}، ${spokenForm(e.result)}',
       rate: AppScope.read(context).speechRate,
     );
     if (mounted && _playing == i) setState(() => _playing = null);
@@ -134,6 +134,7 @@ class _ExampleEquation extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: active ? AppColors.primarySoft : AppColors.background,
+        border: Border.all(color: active ? AppColors.ink : AppColors.line),
         borderRadius: BorderRadius.circular(18),
       ),
       child: InkWell(
@@ -143,14 +144,22 @@ class _ExampleEquation extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: Row(
             children: [
-              Expanded(child: AlText(row.from, size: 22)),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AlText(row.from, size: 30),
+                ),
+              ),
               Text(row.add ? '+' : '−', style: op),
               const SizedBox(width: 8),
-              const AlBox(size: 18),
+              const AlBox(size: 22),
               const SizedBox(width: 8),
               Text('=', style: op),
               Expanded(
-                child: AlText(row.result, size: 22, color: AppColors.primary),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AlText(row.result, size: 30, color: AppColors.blue),
+                ),
               ),
             ],
           ),

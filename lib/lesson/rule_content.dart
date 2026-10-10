@@ -52,10 +52,6 @@ class RuleContent extends StatelessWidget {
           type: LamType.sun,
           onTap: () => say('السُّكَّر'),
         ),
-        const SizedBox(height: 20),
-        const _LettersGroup(type: LamType.moon, letters: lunarLetters),
-        const SizedBox(height: 10),
-        const _LettersGroup(type: LamType.sun, letters: solarLetters),
       ],
     );
   }
@@ -85,9 +81,8 @@ class _Diagram extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.al.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.al.withValues(alpha: 0.3)),
+            border: Border.all(color: AppColors.al),
           ),
           child: Text('الـ', style: AppTheme.word(30, color: AppColors.al)),
         ),
@@ -114,13 +109,11 @@ class _Branch extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: moon ? AppColors.moonSoft : AppColors.sunSoft,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.line, width: 1.5),
       ),
       child: Column(
         children: [
-          Text(moon ? '🌙' : '☀️', style: const TextStyle(fontSize: 28)),
-          const SizedBox(height: 4),
           Text(
             type.label,
             style: t.titleSmall?.copyWith(fontWeight: FontWeight.w800),
@@ -131,6 +124,7 @@ class _Branch extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: AppColors.line),
             ),
             child: FittedBox(
               fit: BoxFit.scaleDown,
@@ -207,14 +201,14 @@ class _RuleLine extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.sandSoft,
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.line),
             ),
             child: Text(
               type.rule,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF9A6A1E),
+                color: moon ? AppColors.moon : AppColors.sun,
               ),
             ),
           ),
@@ -252,7 +246,7 @@ class _ExampleTile extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   spacing: 10,
                   children: [
-                    AlText(word, size: 26),
+                    AlText(word, size: 32),
                     Text('=', style: Theme.of(context).textTheme.titleMedium),
                     LamChip(type),
                   ],
@@ -267,47 +261,6 @@ class _ExampleTile extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _LettersGroup extends StatelessWidget {
-  const _LettersGroup({required this.type, required this.letters});
-  final LamType type;
-  final String letters;
-
-  @override
-  Widget build(BuildContext context) {
-    final moon = type == LamType.moon;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          moon ? 'الحروف القمرية' : 'الحروف الشمسية',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: AppColors.muted,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final l in letters.split(''))
-              Container(
-                width: 34,
-                height: 38,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: moon ? AppColors.moonSoft : AppColors.sunSoft,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(l, style: AppTheme.word(17).copyWith(height: 1.2)),
-              ),
-          ],
-        ),
-      ],
     );
   }
 }

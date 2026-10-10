@@ -3,11 +3,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
+import '../../data/lam_lesson.dart';
 import '../../services/speaker.dart';
 import '../../theme.dart';
 import '../../utils/arabic.dart';
 import '../../widgets/common.dart';
-import '../../widgets/pressable.dart';
 import '../page_handle.dart';
 
 /// تطبيق المعادلات: كلمة + الـ = ؟ (ص ٣) أو كلمة − الـ = ؟ (ص ٧).
@@ -20,9 +20,10 @@ class EquationPage extends StatefulWidget {
     required this.handle,
     required this.rounds,
     required this.add,
-    required this.tag,
+    this.tag,
     required this.title,
     this.strict = false,
+    this.showLamType = true,
   });
 
   final PageHandle handle;
@@ -30,9 +31,12 @@ class EquationPage extends StatefulWidget {
   /// كل جولة مجموعة كلمات تظهر معًا.
   final List<List<String>> rounds;
   final bool add;
-  final String tag;
+  final String? tag;
   final String title;
   final bool strict;
+
+  /// إظهار نوع اللام (قمرية/شمسية) بعد الإجابة الصحيحة.
+  final bool showLamType;
 
   /// مقدار نقص مؤشر النتيجة مع كل خطأ في الوضع الصارم.
   static const levelStep = 10;
@@ -73,8 +77,9 @@ class _EquationPageState extends State<EquationPage> {
     _setupRound();
     widget.handle
       ..onHint = _hint
+      ..onSubmit = _check
       ..onListen = () => Speaker.instance.speak(
-        _words.join('، '),
+        _words.map(spokenForm).join('، '),
         rate: AppScope.read(context).speechRate,
       );
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -192,7 +197,7 @@ class _EquationPageState extends State<EquationPage> {
     }
     if (_states.every((s) => s == _RowState.right)) {
       if (_round < widget.rounds.length - 1) {
-        showFeedback(context, 'أحسنت! إلى الكلمات التالية');
+        showFeedback(context, 'أحسنت! ${remainingText(_total - _solved)}');
         Future.delayed(const Duration(milliseconds: 900), () {
           if (!mounted) return;
           setState(() {
@@ -217,7 +222,7 @@ class _EquationPageState extends State<EquationPage> {
     if (open.any((i) => _ctrls[i].text.trim().isEmpty)) {
       showFeedback(
         context,
-        'أجب عن جميع الأسئلة ثم اضغط «إدخال»',
+        'أجب عن جميع الأسئلة ثم اضغط «التالي»',
         tone: FeedbackTone.error,
       );
       return;
@@ -259,7 +264,7 @@ class _EquationPageState extends State<EquationPage> {
 
     widget.handle.setProgress(_solved, _total);
     if (_round < _rounds.length - 1) {
-      showFeedback(context, 'أحسنت! إلى الأسئلة التالية');
+      showFeedback(context, 'أحسنت! ${remainingText(_total - _solved)}');
       _restarting = true;
       Future.delayed(const Duration(milliseconds: 900), () {
         if (!mounted) return;
@@ -280,16 +285,10 @@ class _EquationPageState extends State<EquationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final roundsLabel = _rounds.length > 1
-        ? 'المجموعة ${arDigits(_round + 1)} من ${arDigits(_rounds.length)}'
-        : null;
-    final subtitle = widget.strict
-        ? '${roundsLabel ?? ''} • أي خطأ يعيد جميع الكلمات بترتيب جديد'
-        : roundsLabel;
     return PageCard(
       tag: widget.tag,
       title: widget.title,
-      subtitle: subtitle,
+      subtitle: widget.strict ? 'أي خطأ يعيد جميع الكلمات بترتيب جديد' : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -304,20 +303,6 @@ class _EquationPageState extends State<EquationPage> {
                 ],
               ],
             ),
-          ),
-          const SizedBox(height: 6),
-          Builder(
-            builder: (context) {
-              final active =
-                  !_restarting && !_states.every((s) => s == _RowState.right);
-              return AppButton(
-                label: 'إدخال',
-                icon: Icons.keyboard_return_rounded,
-                style: AppButtonStyle.secondary,
-                enabled: active,
-                onTap: active ? _check : null,
-              );
-            },
           ),
         ],
       ),
@@ -338,9 +323,11 @@ class _EquationPageState extends State<EquationPage> {
       textAlign: TextAlign.center,
       textDirection: TextDirection.rtl,
       style: AppTheme.word(
-        20,
+        26,
         color: right ? AppColors.success : AppColors.ink,
       ).copyWith(height: 1.3),
+      // يبقى السطر كاملًا ظاهرًا فوق لوحة المفاتيح.
+      scrollPadding: const EdgeInsets.fromLTRB(20, 80, 20, 60),
       textInputAction: i == _words.length - 1
           ? TextInputAction.done
           : TextInputAction.next,
@@ -368,7 +355,7 @@ class _EquationPageState extends State<EquationPage> {
             : null,
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.success, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.success, width: 2),
         ),
       ),
     );
@@ -381,29 +368,22 @@ class _EquationPageState extends State<EquationPage> {
           Row(
             children: [
               SizedBox(
-                width: 92,
-                child: AlText(word, size: 21, highlight: true),
+                width: 100,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AlText(word, size: 30, highlight: true),
+                ),
               ),
               Text(widget.add ? '+' : '−', style: op),
-              const SizedBox(width: 6),
-              const AlBox(size: 16),
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
+              const AlBox(size: 18),
+              const SizedBox(width: 4),
               Text('=', style: op),
-              const SizedBox(width: 8),
-              Expanded(child: field),
               const SizedBox(width: 6),
-              SizedBox(
-                width: 26,
-                child: right
-                    ? const Icon(
-                        Icons.check_circle_rounded,
-                        color: AppColors.success,
-                      )
-                    : null,
-              ),
+              Expanded(child: field),
             ],
           ),
-          if (right)
+          if (right && widget.showLamType)
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Align(

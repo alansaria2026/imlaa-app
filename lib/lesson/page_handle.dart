@@ -1,9 +1,16 @@
 import 'package:flutter/widgets.dart';
 
-/// قناة بين صفحة الدرس وشريط الأدوات: تلميح، استمع، مؤشر التقدم، الإكمال.
+/// قناة بين صفحة الدرس وهيكلها: القائمة (استمع، مساعدة)، زر «التالي»،
+/// مؤشر النتيجة، الإكمال.
 class PageHandle extends ChangeNotifier {
   VoidCallback? onHint;
   VoidCallback? onListen;
+
+  /// تصحيح الإجابات الحالية؛ يستدعيه زر «التالي» قبل إكمال الصفحة.
+  VoidCallback? onSubmit;
+
+  /// يُستدعى عند ظهور الصفحة (لتشغيل الصوت تلقائيًا مثلًا).
+  VoidCallback? onEnter;
 
   int done = 0;
   int total = 0;
@@ -32,14 +39,14 @@ class PageHandle extends ChangeNotifier {
 
 class LessonPageSpec {
   const LessonPageSpec({
-    required this.tag,
+    this.tag,
     required this.title,
     required this.emoji,
     required this.builder,
     this.needsCompletion = true,
   });
 
-  final String tag;
+  final String? tag;
 
   /// اسم المحطة وأيقونتها في مسار التعلّم.
   final String title;

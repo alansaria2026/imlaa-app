@@ -100,7 +100,10 @@ class _PicturePageState extends State<PicturePage> {
     final item = pictureItems[idx];
     if (_typed.join() == item.answer) {
       AppScope.read(context).addPoints(_penalty.contains(idx) ? 5 : 10);
-      showFeedback(context, 'أحسنت! ${lamTypeOf(item.answer).label}');
+      showFeedback(
+        context,
+        'أحسنت! ${remainingText(pictureItems.length - _solved - 1)}',
+      );
       Speaker.instance.speak(
         item.spoken,
         rate: AppScope.read(context).speechRate,
@@ -145,10 +148,7 @@ class _PicturePageState extends State<PicturePage> {
   Widget build(BuildContext context) {
     final item = _item;
     return PageCard(
-      tag: 'تطبيق',
-      title: 'اكتب اسم ما تراه في الصورة باللام القمرية أو اللام الشمسية',
-      subtitle:
-          'السؤال ${arDigits((_solved + 1).clamp(1, pictureItems.length))} من ${arDigits(pictureItems.length)}',
+      title: 'اكتب اسم ما تراه في الصورة',
       child: item == null
           ? const PageDoneMessage()
           : Column(
@@ -161,8 +161,8 @@ class _PicturePageState extends State<PicturePage> {
                     height: 108,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: AppColors.background,
                       borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: AppColors.line, width: 1.5),
                     ),
                     child: Text(
                       item.emoji,
@@ -182,7 +182,7 @@ class _PicturePageState extends State<PicturePage> {
                     child: _showWord
                         ? Center(
                             key: const ValueKey('word'),
-                            child: AlText(item.answer, size: 40),
+                            child: AlText(item.answer, size: 44),
                           )
                         : ShakeOnChange(
                             key: const ValueKey('boxes'),

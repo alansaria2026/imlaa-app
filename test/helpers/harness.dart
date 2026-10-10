@@ -31,15 +31,31 @@ Future<void> loadAppFonts() async {
   ]);
 }
 
+/// آخر نص طُلب نطقه.
+String? lastSpoken;
+
 void mockPlatform() {
   SharedPreferences.setMockInitialValues({});
+  lastSpoken = null;
   // محاكاة قناة النطق حتى لا تفشل الاختبارات.
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-        const MethodChannel('flutter_tts'),
-        (call) async => 1,
-      );
+      .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
+        call,
+      ) async {
+        if (call.method == 'speak') lastSpoken = call.arguments as String;
+        return 1;
+      });
 }
+
+/// زر «التالي» (أو «إنهاء» في آخر صفحة).
+Finder nextButton() => find.byWidgetPredicate(
+  (w) => w is Tooltip && (w.message == 'التالي' || w.message == 'إنهاء'),
+);
+
+/// مؤشر النتيجة يحمل وصفًا نصيًا (النتيجة والأسئلة المتبقية).
+Finder scoreLabel(String text) => find.byWidgetPredicate(
+  (w) => w is Semantics && (w.properties.label ?? '').contains(text),
+);
 
 /// يعرض [home] على شاشة جوال بعرض ٣٦٠.
 Future<AppState> pumpScreen(WidgetTester tester, Widget home) async {
