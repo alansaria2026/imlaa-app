@@ -98,11 +98,11 @@ void main() {
         _visibleTexts(t).where(removeAlWords.contains).toList();
     String answer(String w) => w.substring(2);
 
-    expect(fields, findsNWidgets(3));
+    // سؤالان في كل شاشة.
+    expect(fields, findsNWidgets(2));
     final first = group();
     await t.enterText(fields.at(0), 'خطأ');
     await t.enterText(fields.at(1), answer(first[1]));
-    await t.enterText(fields.at(2), answer(first[2]));
     await _submit(t);
     expect(find.textContaining('لا يُسمح بالخطأ'), findsOneWidget);
     expect(scoreLabel('النتيجة ٩٠٪'), findsOneWidget);
@@ -111,11 +111,12 @@ void main() {
     expect(scoreLabel('بقيت ٩ أسئلة'), findsOneWidget);
 
     final seen = <String>[];
-    for (var round = 0; round < 3; round++) {
+    // ٩ كلمات: أربع شاشات بكلمتين ثم شاشة بكلمة.
+    for (var round = 0; round < 5; round++) {
       final words = group();
-      expect(words.length, 3);
+      expect(words.length, round < 4 ? 2 : 1);
       seen.addAll(words);
-      for (var i = 0; i < 3; i++) {
+      for (var i = 0; i < words.length; i++) {
         await t.enterText(fields.at(i), answer(words[i]));
       }
       await _submit(t);
@@ -133,7 +134,7 @@ void main() {
     List<String> group() =>
         _visibleTexts(t).where(addAlWordBank.contains).toList();
 
-    // «التالي» قبل الإجابة عن الأسئلة الثلاثة لا يُحتسب خطأ.
+    // «التالي» قبل الإجابة عن السؤالين لا يُحتسب خطأ.
     await t.enterText(fields.at(0), 'ال${group()[0]}');
     await _submit(t);
     expect(find.textContaining('أجب عن جميع الأسئلة'), findsOneWidget);
@@ -142,7 +143,6 @@ void main() {
     final before = group();
     await t.enterText(fields.at(0), 'ال${before[0]}');
     await t.enterText(fields.at(1), 'خطأ');
-    await t.enterText(fields.at(2), 'ال${before[2]}');
     await _submit(t);
     expect(find.textContaining('لا يُسمح بالخطأ'), findsOneWidget);
     expect(scoreLabel('النتيجة ٩٠٪'), findsOneWidget);
@@ -151,10 +151,10 @@ void main() {
     // أعيدت جميع الكلمات من البداية.
     expect(scoreLabel('بقي ١٢ سؤالًا'), findsOneWidget);
 
-    for (var round = 0; round < 4; round++) {
+    for (var round = 0; round < 6; round++) {
       final words = group();
-      expect(words.length, 3);
-      for (var i = 0; i < 3; i++) {
+      expect(words.length, 2);
+      for (var i = 0; i < 2; i++) {
         await t.enterText(fields.at(i), 'ال${words[i]}');
       }
       await _submit(t);

@@ -13,7 +13,7 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
 
   final bank = [...addAlWordBank]..shuffle(rnd);
   final addWords = bank.take(12).toList();
-  final addRounds = _groupsOfThree(addWords);
+  final addRounds = _groupsOfTwo(addWords);
 
   final sentences = [...challengeSentences]..shuffle(rnd);
 
@@ -59,7 +59,7 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
       emoji: '✂️',
       builder: (h) => EquationPage(
         handle: h,
-        rounds: _groupsOfThree(removeAlWords),
+        rounds: _groupsOfTwo(removeAlWords),
         add: false,
         title: 'احذف (الـ) من الكلمة واكتب الناتج',
         strict: true,
@@ -69,8 +69,8 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
   ];
 }
 
-/// ثلاثة أسئلة في كل شاشة (تعليمات ص ٤).
-List<List<String>> _groupsOfThree(List<String> words) => [
-  for (var i = 0; i < words.length; i += 3)
-    words.sublist(i, min(i + 3, words.length)),
+/// سؤالان في كل شاشة.
+List<List<String>> _groupsOfTwo(List<String> words) => [
+  for (var i = 0; i < words.length; i += 2)
+    words.sublist(i, min(i + 2, words.length)),
 ];
