@@ -189,8 +189,9 @@ void showFeedback(
       color: color,
       icon: icon,
       message: message,
+      // رسائل الخطأ والمساعدة أطول ظهورًا لتُقرأ كاملة.
       duration:
-          duration ?? Duration(seconds: tone == FeedbackTone.hint ? 4 : 2),
+          duration ?? Duration(seconds: tone == FeedbackTone.success ? 2 : 4),
       onDone: () {
         if (_toast == entry) hideFeedback();
       },
