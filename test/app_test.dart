@@ -47,6 +47,14 @@ void main() {
     expect(find.textContaining('أجب عن جميع الأسئلة'), findsOneWidget);
     await t.pumpAndSettle(const Duration(seconds: 3));
 
+    // أثناء الكتابة تُخفى أزرار التنقل لتتسع المساحة فوق لوحة المفاتيح.
+    t.view.viewInsets = const FakeViewPadding(bottom: 900);
+    await t.pump();
+    expect(find.byTooltip('رجوع'), findsNothing);
+    t.view.resetViewInsets();
+    await t.pump();
+    expect(find.byTooltip('رجوع'), findsOneWidget);
+
     // القائمة المنسدلة ← القاعدة.
     await t.tap(find.byTooltip('القائمة'));
     await t.pumpAndSettle();

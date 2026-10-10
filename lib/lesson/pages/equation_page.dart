@@ -207,7 +207,7 @@ class _EquationPageState extends State<EquationPage> {
           });
         });
       } else {
-        showFeedback(context, 'ممتاز! أنهيت هذا التطبيق 🎉');
+        showFeedback(context, 'ممتاز! أنهيت هذا التمرين');
         widget.handle.markComplete();
       }
     }
@@ -278,7 +278,7 @@ class _EquationPageState extends State<EquationPage> {
     } else {
       // النقاط حسب المستوى المتبقي في المؤشر.
       AppScope.read(context).addPoints((_total * 10 * _level / 100).round());
-      showFeedback(context, 'ممتاز! أنهيت هذا التطبيق 🎉');
+      showFeedback(context, 'ممتاز! أنهيت هذا التمرين');
       widget.handle.markComplete();
     }
   }

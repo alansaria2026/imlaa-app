@@ -177,9 +177,9 @@ void showFeedback(
       HapticFeedback.selectionClick();
   }
   final (color, icon) = switch (tone) {
-    FeedbackTone.success => (AppColors.success, '🎉'),
-    FeedbackTone.error => (AppColors.error, '🤔'),
-    FeedbackTone.hint => (AppColors.primary, '💡'),
+    FeedbackTone.success => (AppColors.success, Icons.check_rounded),
+    FeedbackTone.error => (AppColors.error, Icons.close_rounded),
+    FeedbackTone.hint => (AppColors.primary, Icons.help_outline_rounded),
   };
   hideFeedback();
   late final OverlayEntry entry;
@@ -213,7 +213,7 @@ class _Toast extends StatefulWidget {
   });
 
   final Color color;
-  final String icon;
+  final IconData icon;
   final String message;
   final Duration duration;
   final VoidCallback onDone;
@@ -299,10 +299,7 @@ class _ToastState extends State<_Toast> with SingleTickerProviderStateMixin {
                         color: Colors.white.withValues(alpha: 0.22),
                         shape: BoxShape.circle,
                       ),
-                      child: Text(
-                        widget.icon,
-                        style: const TextStyle(fontSize: 18),
-                      ),
+                      child: Icon(widget.icon, color: Colors.white, size: 22),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
