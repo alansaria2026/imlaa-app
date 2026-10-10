@@ -25,7 +25,7 @@ class LetterBoxes extends StatelessWidget {
         const gap = 8.0;
         final size = ((c.maxWidth - gap * (length - 1)) / length).clamp(
           30.0,
-          50.0,
+          58.0,
         );
         return Wrap(
           alignment: WrapAlignment.center,

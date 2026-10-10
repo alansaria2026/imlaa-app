@@ -41,6 +41,8 @@ class _ChallengePageState extends State<ChallengePage> {
     super.initState();
     widget.handle
       ..onListen = _speak
+      ..onEnter = _speak
+      ..onSubmit = _submit
       ..onHint = _hint;
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => widget.handle.setProgress(0, widget.sentences.length),
@@ -102,7 +104,10 @@ class _ChallengePageState extends State<ChallengePage> {
       return;
     }
     AppScope.read(context).addPoints(_usedHelp ? 10 : 20);
-    showFeedback(context, 'إجابة رائعة! +${arDigits(_usedHelp ? 10 : 20)}');
+    showFeedback(
+      context,
+      'إجابة رائعة! ${remainingText(widget.sentences.length - _index - 1)}',
+    );
     setState(() => _solvedCurrent = true);
     widget.handle.setProgress(_index + 1, widget.sentences.length);
     Future.delayed(const Duration(milliseconds: 1100), () {
@@ -127,10 +132,7 @@ class _ChallengePageState extends State<ChallengePage> {
     final s = _s;
     return PageCard(
       tag: 'تحدي',
-      title: 'اسمع الجملة واستخرج منها ما يلي',
-      subtitle: s == null
-          ? null
-          : 'الجملة ${arDigits(_index + 1)} من ${arDigits(widget.sentences.length)}',
+      title: 'اسمع الجملة واكتب منها ما يلي',
       child: s == null
           ? const PageDoneMessage()
           : Column(
@@ -143,14 +145,15 @@ class _ChallengePageState extends State<ChallengePage> {
                       tooltip: 'استمع',
                       icon: Icons.volume_up_rounded,
                       size: 76,
-                      color: AppColors.moon,
+                      color: AppColors.ink,
                       iconColor: Colors.white,
                       onTap: _speak,
                     ),
                     const SizedBox(width: 14),
                     Pressable(
                       onTap: () => _speak(slow: true),
-                      color: AppColors.moonSoft,
+                      color: AppColors.surface,
+                      borderColor: AppColors.ink,
                       shape: BoxShape.circle,
                       child: const SizedBox(
                         width: 54,
@@ -162,27 +165,10 @@ class _ChallengePageState extends State<ChallengePage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: Container(
-                    key: ValueKey(_index),
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.sandSoft,
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: AppColors.sand.withValues(alpha: 0.5),
-                        width: 2,
-                      ),
-                    ),
-                    child: AlText(
-                      '( ${s.spoken} )',
-                      size: 26,
-                      highlight: _solvedCurrent,
-                    ),
-                  ),
-                ),
+                if (_solvedCurrent) ...[
+                  const SizedBox(height: 16),
+                  AlText('( ${s.spoken} )', size: 30),
+                ],
                 const SizedBox(height: 20),
                 _AnswerField(
                   number: 1,
@@ -201,14 +187,6 @@ class _ChallengePageState extends State<ChallengePage> {
                   done: _solvedCurrent,
                   onChanged: () => setState(() => _sunError = null),
                   onSubmitted: _submit,
-                ),
-                const SizedBox(height: 20),
-                AppButton(
-                  label: 'إدخال',
-                  icon: Icons.keyboard_return_rounded,
-                  style: AppButtonStyle.secondary,
-                  enabled: !_solvedCurrent,
-                  onTap: _solvedCurrent ? null : _submit,
                 ),
               ],
             ),
@@ -246,9 +224,7 @@ class _AnswerField extends StatelessWidget {
             Flexible(
               child: Text(
                 '${arDigits(number)}. كلمة بها ',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                style: AppTheme.word(22),
               ),
             ),
             LamChip(type, dense: true),
@@ -261,9 +237,10 @@ class _AnswerField extends StatelessWidget {
           textDirection: TextDirection.rtl,
           textAlign: TextAlign.center,
           style: AppTheme.word(
-            20,
+            28,
             color: done ? AppColors.success : AppColors.ink,
           ).copyWith(height: 1.3),
+          scrollPadding: const EdgeInsets.fromLTRB(20, 90, 20, 60),
           textInputAction: onSubmitted == null
               ? TextInputAction.next
               : TextInputAction.done,
@@ -274,11 +251,7 @@ class _AnswerField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: moon ? 'مثل: القمر' : 'مثل: الشمس',
             errorText: error,
-            fillColor: done
-                ? AppColors.successSoft
-                : moon
-                ? AppColors.moonSoft.withValues(alpha: 0.5)
-                : AppColors.sunSoft.withValues(alpha: 0.5),
+            fillColor: done ? AppColors.successSoft : AppColors.surface,
           ),
         ),
       ],

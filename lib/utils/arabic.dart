@@ -64,3 +64,12 @@ String arDigits(int n) {
       .map((c) => c == '-' ? c : digits[int.parse(c)])
       .join();
 }
+
+/// «بقي سؤال واحد / سؤالان / ٣ أسئلة / ١١ سؤالًا».
+String remainingText(int n) {
+  if (n <= 0) return 'لم يبقَ شيء';
+  if (n == 1) return 'بقي سؤال واحد';
+  if (n == 2) return 'بقي سؤالان';
+  if (n <= 10) return 'بقيت ${arDigits(n)} أسئلة';
+  return 'بقي ${arDigits(n)} سؤالًا';
+}

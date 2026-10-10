@@ -23,27 +23,37 @@ void main() {
 
     await t.tap(find.text('ابدأ'));
     await t.pumpAndSettle();
-    expect(find.text('عنوان الدرس'), findsOneWidget);
-    expect(find.textContaining('الصفحة ١ من ٦'), findsOneWidget);
+    expect(find.text('عنوان الدرس'), findsNothing);
+    expect(find.text('اللام القمرية واللام الشمسية'), findsOneWidget);
+    // أزرار الشاشة: القائمة والرئيسية أعلى، والرجوع والتالي أسفل فقط.
+    expect(find.byTooltip('القائمة'), findsOneWidget);
+    expect(find.byTooltip('رجوع'), findsOneWidget);
+    expect(find.text('الحروف الشمسية'), findsNothing);
 
     // ص ١ ← ص ٢ ← ص ٣
-    await t.tap(find.text('التالي'));
+    await t.tap(nextButton());
     await t.pumpAndSettle();
     expect(find.text('أضف (الـ) أو احذفها'), findsOneWidget);
-    await t.tap(find.text('التالي'));
+    await t.tap(nextButton());
     await t.pumpAndSettle();
     expect(find.text('أضف (الـ) إلى الكلمة واكتب الناتج'), findsOneWidget);
+    expect(find.text('تطبيق'), findsNothing);
+    // مربع لكل سؤال تحت مؤشر النتيجة.
+    expect(find.byKey(const ValueKey('q11')), findsOneWidget);
 
-    // لا يمكن التقدم قبل الإجابة.
-    await t.tap(find.text('التالي'));
+    // «التالي» قبل الإجابة يطلب إكمال الأسئلة ولا ينتقل.
+    await t.tap(nextButton());
     await t.pump();
-    expect(find.textContaining('أجب عن جميع الفقرات'), findsOneWidget);
+    expect(find.textContaining('أجب عن جميع الأسئلة'), findsOneWidget);
     await t.pumpAndSettle(const Duration(seconds: 3));
 
-    // نافذة القاعدة.
-    await t.tap(find.byIcon(Icons.menu_book_rounded));
+    // القائمة المنسدلة ← القاعدة.
+    await t.tap(find.byTooltip('القائمة'));
     await t.pumpAndSettle();
-    expect(find.text('الحروف الشمسية'), findsWidgets);
+    expect(find.text('مساعدة'), findsOneWidget);
+    await t.tap(find.text('القاعدة'));
+    await t.pumpAndSettle();
+    expect(find.text('كلتاهما تُكتب'), findsWidgets);
     await t.tapAt(const Offset(20, 20));
     await t.pumpAndSettle();
 

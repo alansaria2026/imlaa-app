@@ -72,4 +72,19 @@ void main() {
     expect(pages.length, 6);
     expect(addAlWordBank.toSet().length, addAlWordBank.length);
   });
+
+  test('النطق مشكول: سكون للقمرية وشدة للشمسية', () {
+    expect(spokenForm('كتاب'), 'كِتاب');
+    expect(spokenForm('الكتاب'), 'الْكِتاب');
+    // الشدة تُضاف بعد الحرف مباشرة ثم حركته.
+    expect(spokenForm('الشعر'), 'الش\u0651\u064Eعْر');
+    expect(spokenForm('الظل'), 'الظ\u0651\u0650لّ');
+    for (final w in [...addAlWordBank, ...removeAlWords]) {
+      expect(spokenForm(w), isNot(w), reason: w);
+      expect(normalizeAnswer(spokenForm(w)), normalizeAnswer(w), reason: w);
+    }
+    for (final e in lamExamples) {
+      expect(normalizeAnswer(spokenForm(e.result)), normalizeAnswer(e.result));
+    }
+  });
 }

@@ -1,27 +1,31 @@
 import 'package:flutter/material.dart';
 
-/// لوحة ألوان هادئة: أخضر مائل للزرقة، رملي دافئ، وخلفية كريمية.
+/// لوحة ألوان مقتصدة: أبيض وأسود، والأحمر والأزرق لتمييز الحروف فقط.
 class AppColors {
-  static const primary = Color(0xFF3E8E87);
-  static const primaryDark = Color(0xFF2C6D67);
-  static const primarySoft = Color(0xFFDCEEEA);
-  static const sand = Color(0xFFE8B45F);
-  static const sandDark = Color(0xFFC48F3A);
-  static const sandSoft = Color(0xFFF8EBD2);
-  static const background = Color(0xFFF7F5EF);
+  static const black = Color(0xFF111111);
+  static const red = Color(0xFFD32F2F);
+  static const blue = Color(0xFF1E5BD8);
+
+  static const primary = black;
+  static const primaryDark = Color(0xFF000000);
+  static const primarySoft = Color(0xFFF1F1F1);
+  static const sand = black;
+  static const sandDark = black;
+  static const sandSoft = Color(0xFFF1F1F1);
+  static const background = Colors.white;
   static const surface = Colors.white;
-  static const ink = Color(0xFF22313A);
-  static const muted = Color(0xFF718086);
-  static const line = Color(0xFFE7E2D7);
-  static const lineDark = Color(0xFFD3CCBE);
-  static const success = Color(0xFF58A86B);
-  static const successDark = Color(0xFF3F8752);
-  static const successSoft = Color(0xFFE2F3E5);
-  static const error = Color(0xFFD06B5E);
-  static const errorDark = Color(0xFFAA4F43);
-  static const errorSoft = Color(0xFFF9E4E0);
-  static const streak = Color(0xFFF08A3C);
-  static const locked = Color(0xFFE3DED3);
+  static const ink = black;
+  static const muted = Color(0xFF6B6B6B);
+  static const line = Color(0xFFE0E0E0);
+  static const lineDark = Color(0xFFBDBDBD);
+  static const success = blue;
+  static const successDark = Color(0xFF16449F);
+  static const successSoft = Color(0xFFEAF0FC);
+  static const error = red;
+  static const errorDark = Color(0xFFA32424);
+  static const errorSoft = Color(0xFFFCECEC);
+  static const streak = black;
+  static const locked = Color(0xFFEDEDED);
 
   /// نسخة أغمق من اللون لحافة الأزرار ثلاثية الأبعاد.
   static Color darken(Color c, [double amount = 0.18]) {
@@ -32,12 +36,12 @@ class AppColors {
   }
 
   /// اللون الأحمر لتمييز (الـ) كما في تصميم الدرس.
-  static const al = Color(0xFFD64545);
+  static const al = red;
 
-  static const moon = Color(0xFF6C7BB8);
-  static const moonSoft = Color(0xFFE5E8F5);
-  static const sun = Color(0xFFDB9A35);
-  static const sunSoft = Color(0xFFFBEED6);
+  static const moon = blue;
+  static const moonSoft = Color(0xFFF1F1F1);
+  static const sun = red;
+  static const sunSoft = Color(0xFFF1F1F1);
 }
 
 class AppTheme {
