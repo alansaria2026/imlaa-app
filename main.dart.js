@@ -26047,7 +26047,7 @@ r=A.a6(B.TT,t.k3)
 B.b.Ca(r,B.kT)
 return A.b([new A.kq("\u0627\u0644\u0642\u0627\u0639\u062f\u0629","\ud83d\udcd6",!1,new A.axW()),new A.kq("\u0623\u0645\u062b\u0644\u0629","\ud83d\udca1",!1,new A.axX()),new A.kq("\u0623\u0636\u0641 (\u0627\u0644\u0640)","\u270d\ufe0f",!0,new A.axY(s)),new A.kq("\u0633\u0645\u0650\u0651 \u0627\u0644\u0635\u0648\u0631\u0629","\ud83d\uddbc\ufe0f",!0,new A.axZ()),new A.kq("\u062a\u062d\u062f\u064a \u0627\u0644\u0627\u0633\u062a\u0645\u0627\u0639","\ud83c\udfa7",!0,new A.ay_(r)),new A.kq("\u0627\u062d\u0630\u0641 (\u0627\u0644\u0640)","\u2702\ufe0f",!0,new A.ay0())],t.YY)},
 aIV(a){var s,r,q,p=A.b([],t.rj)
-for(s=0;r=a.length,s<r;s=q){q=s+3
+for(s=0;r=a.length,s<r;s=q){q=s+2
 p.push(B.b.dj(a,s,Math.min(q,r)))}return p},
 axW:function axW(){},
 axX:function axX(){},
