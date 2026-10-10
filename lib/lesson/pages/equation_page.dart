@@ -255,8 +255,10 @@ class _EquationPageState extends State<EquationPage> {
         context,
         'لا يُسمح بالخطأ! ستُعاد جميع الكلمات بترتيب مختلف',
         tone: FeedbackTone.error,
+        duration: const Duration(seconds: 5),
       );
-      Future.delayed(const Duration(milliseconds: 1800), () {
+      // وقت كافٍ لقراءة الرسالة ورؤية الإجابات الخاطئة قبل الإعادة.
+      Future.delayed(const Duration(milliseconds: 3500), () {
         if (mounted) setState(_restartShuffled);
       });
       return;

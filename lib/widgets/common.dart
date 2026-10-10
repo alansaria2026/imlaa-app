@@ -167,6 +167,7 @@ void showFeedback(
   BuildContext context,
   String message, {
   FeedbackTone tone = FeedbackTone.success,
+  Duration? duration,
 }) {
   switch (tone) {
     case FeedbackTone.success:
@@ -188,7 +189,8 @@ void showFeedback(
       color: color,
       icon: icon,
       message: message,
-      duration: Duration(seconds: tone == FeedbackTone.hint ? 4 : 2),
+      duration:
+          duration ?? Duration(seconds: tone == FeedbackTone.hint ? 4 : 2),
       onDone: () {
         if (_toast == entry) hideFeedback();
       },

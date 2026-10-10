@@ -106,7 +106,7 @@ void main() {
     await _submit(t);
     expect(find.textContaining('لا يُسمح بالخطأ'), findsOneWidget);
     expect(scoreLabel('النتيجة ٩٠٪'), findsOneWidget);
-    await t.pump(const Duration(milliseconds: 2000));
+    await t.pump(const Duration(milliseconds: 3600));
     await t.pumpAndSettle();
     expect(scoreLabel('بقيت ٩ أسئلة'), findsOneWidget);
 
@@ -146,7 +146,7 @@ void main() {
     await _submit(t);
     expect(find.textContaining('لا يُسمح بالخطأ'), findsOneWidget);
     expect(scoreLabel('النتيجة ٩٠٪'), findsOneWidget);
-    await t.pump(const Duration(milliseconds: 2000));
+    await t.pump(const Duration(milliseconds: 3600));
     await t.pumpAndSettle();
     // أعيدت جميع الكلمات من البداية.
     expect(scoreLabel('بقي ١٢ سؤالًا'), findsOneWidget);
