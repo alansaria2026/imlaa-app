@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:imlaa/data/bi_lesson.dart';
 import 'package:imlaa/data/lam_lesson.dart';
 import 'package:imlaa/data/li_lesson.dart';
+import 'package:imlaa/data/review_lesson.dart';
 import 'package:imlaa/lesson/lam_lesson_pages.dart';
 import 'package:imlaa/lesson/lesson_screen.dart';
 import 'package:imlaa/lesson/pages/picture_page.dart';
@@ -289,5 +290,62 @@ void main() {
       await _settle(t);
     }
     expect(scoreLabel('لم يبقَ شيء'), findsOneWidget);
+  });
+
+  Future<void> typeLetters(WidgetTester t, String word) async {
+    for (final l in word.split('')) {
+      await t.tap(find.text(l).last);
+      await t.pump();
+    }
+  }
+
+  testWidgets('اسمع الكلمة واكتبها: لام وباء مختلطتان', (t) async {
+    await pumpScreen(t, _single(10));
+    final bySpoken = {
+      for (final w in liWordBank) liSpoken(w): liForm(w),
+      for (final w in biWordBank) biSpoken(w): biForm(w),
+    };
+
+    // «إدخال» قبل إكمال الكلمة لا يُحتسب.
+    await t.tap(find.text('إدخال'));
+    await t.pump();
+    expect(find.textContaining('أكمل كتابة الكلمة'), findsOneWidget);
+    await _settle(t);
+
+    // خطأ شائع: «بلـ» بدل «بال» أو ثلاث لامات.
+    final first = bySpoken[lastSpoken]!;
+    await typeLetters(t, 'ل' * first.length);
+    await t.tap(find.text('إدخال'));
+    await t.pump();
+    expect(find.textContaining('سيعاد هذا السؤال'), findsOneWidget);
+    await _settle(t);
+
+    final answers = <String>[];
+    for (var i = 0; i < 10; i++) {
+      final answer = bySpoken[lastSpoken]!;
+      answers.add(answer);
+      await typeLetters(t, answer);
+      await t.tap(find.text('إدخال'));
+      await _settle(t);
+    }
+    expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
+    expect(answers.where((a) => a.startsWith('بال')).length, 5);
+  });
+
+  testWidgets('اسمع واكتب الكلمة الناقصة', (t) async {
+    await pumpScreen(t, _single(11));
+    final bySpoken = {for (final s in prepSentences) s.spoken: s};
+    final s = bySpoken[lastSpoken]!;
+    // تظهر الجملة بفراغ مكان الكلمة.
+    expect(
+      _visibleText(t, (x) => x.contains('………')),
+      isNot(contains(s.answer)),
+    );
+    for (var i = 0; i < 10; i++) {
+      await typeLetters(t, bySpoken[lastSpoken]!.answer);
+      await _submit(t);
+      await _settle(t);
+    }
+    expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
   });
 }

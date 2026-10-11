@@ -13,7 +13,7 @@ void main() {
   testWidgets('مسار التعلّم: فتح المحطة الحالية والتنقل والعودة', (t) async {
     final state = await pumpScreen(t, const HomeScreen());
     expect(find.text('إملائي'), findsOneWidget);
-    expect(find.text('٠ من ١٠ محطات'), findsOneWidget);
+    expect(find.text('٠ من ١٢ محطة'), findsOneWidget);
 
     // محطة مقفلة تُظهر تلميحًا ولا تُفتح.
     await t.tap(find.text('أمثلة'));
@@ -71,7 +71,7 @@ void main() {
     await t.pumpAndSettle();
     expect(state.isPageDone('lam', 0), isTrue);
     expect(state.isPageDone('lam', 1), isTrue);
-    expect(find.text('٢ من ١٠ محطات'), findsOneWidget);
+    expect(find.text('٢ من ١٢ محطة'), findsOneWidget);
   });
 
   testWidgets('تبويبا الإنجازات والإعدادات', (t) async {

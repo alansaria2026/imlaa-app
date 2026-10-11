@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:imlaa/data/bi_lesson.dart';
 import 'package:imlaa/data/lam_lesson.dart';
 import 'package:imlaa/data/li_lesson.dart';
+import 'package:imlaa/data/review_lesson.dart';
+import 'package:imlaa/widgets/letter_boxes.dart';
 import 'package:imlaa/lesson/lam_lesson_pages.dart';
 import 'package:imlaa/utils/arabic.dart';
 
@@ -73,7 +75,7 @@ void main() {
 
   test('بناء صفحات الدرس', () {
     final pages = buildLamLessonPages();
-    expect(pages.length, 10);
+    expect(pages.length, 12);
     expect(addAlWordBank.toSet().length, addAlWordBank.length);
   });
 
@@ -142,6 +144,32 @@ void main() {
       final words = pickBiWords(Random(2));
       expect(words.toSet().length, 10);
       expect(words.where((w) => w[2] == 'ل').length, 2);
+    });
+  });
+
+  group('مراجعة الاستماع', () {
+    test('كل جملة فيها الكلمة الناقصة مرة واحدة وتُكتب باللوحة', () {
+      for (final s in prepSentences) {
+        final words = normalizeAnswer(s.spoken).split(' ');
+        expect(words.where((w) => w == s.answer).length, 1, reason: s.spoken);
+        expect(ArabicKeyboard.canType(s.answer), isTrue, reason: s.answer);
+      }
+    });
+
+    test('عشرة أسئلة: نصفها باللام ونصفها بالباء', () {
+      for (final (items, spare) in [
+        listenWordItems(Random(3)),
+        listenSentenceItems(Random(3)),
+      ]) {
+        expect(items.length, 10);
+        expect(items.where((i) => i.answer.startsWith('لل')).length, 5);
+        expect(items.where((i) => i.answer.startsWith('بال')).length, 5);
+        expect(spare, isNotEmpty);
+        expect(items.map((i) => i.answer).toSet().length, 10);
+      }
+      final (words, _) = listenWordItems(Random(4));
+      // تركيز على الكلمات المبدوءة باللام: للحن (لام حمراء واحدة) وباللحن.
+      expect(words.where((i) => i.answer.startsWith('للل')), isEmpty);
     });
   });
 }

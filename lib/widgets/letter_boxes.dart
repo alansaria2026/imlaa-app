@@ -108,6 +108,10 @@ class ArabicKeyboard extends StatelessWidget {
   final ValueChanged<String> onLetter;
   final VoidCallback onBackspace;
 
+  /// هل يمكن كتابة [word] بحروف هذه اللوحة.
+  static bool canType(String word) =>
+      word.split('').every((c) => _rows.any((r) => r.contains(c)));
+
   static const _rows = [
     ['ض', 'ص', 'ث', 'ق', 'ف', 'غ', 'ع', 'ه', 'خ', 'ح', 'ج'],
     ['ش', 'س', 'ي', 'ب', 'ل', 'ا', 'ت', 'ن', 'م', 'ك', 'ط'],

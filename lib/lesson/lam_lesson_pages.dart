@@ -1,14 +1,18 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+
 import '../data/lam_lesson.dart';
 import '../data/bi_lesson.dart';
 import '../data/li_lesson.dart';
+import '../data/review_lesson.dart';
 import 'page_handle.dart';
 import 'pages/challenge_page.dart';
 import 'pages/equation_page.dart';
 import 'bi_rule_content.dart';
 import 'li_rule_content.dart';
 import 'pages/intro_pages.dart';
+import 'pages/listen_write_page.dart';
 import 'pages/picture_page.dart';
 
 /// صفحات درس اللام بالترتيب، مع خلط الكلمات والجمل في كل مرة.
@@ -131,6 +135,35 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
         showLamType: false,
       ),
     ),
+    // مراجعة بالاستماع: كلمات وجمل باللام والباء مختلطة.
+    LessonPageSpec(
+      title: 'اسمع واكتب',
+      emoji: '👂',
+      rule: const _PrepRules(),
+      builder: (h) {
+        final (items, spare) = listenWordItems(rnd);
+        return ListenWritePage(
+          handle: h,
+          title: 'اسمع الكلمة واكتبها',
+          items: items,
+          spare: spare,
+        );
+      },
+    ),
+    LessonPageSpec(
+      title: 'الكلمة الناقصة',
+      emoji: '🧩',
+      rule: const _PrepRules(),
+      builder: (h) {
+        final (items, spare) = listenSentenceItems(rnd);
+        return ListenWritePage(
+          handle: h,
+          title: 'اسمع واكتب الكلمة الناقصة',
+          items: items,
+          spare: spare,
+        );
+      },
+    ),
   ];
 }
 
@@ -139,3 +172,16 @@ List<List<String>> _groupsOfTwo(List<String> words) => [
   for (var i = 0; i < words.length; i += 2)
     words.sublist(i, min(i + 2, words.length)),
 ];
+
+/// قاعدتا اللام والباء معًا لصفحتي الاستماع.
+class _PrepRules extends StatelessWidget {
+  const _PrepRules();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [LiRuleContent(), Divider(height: 40), BiRuleContent()],
+    );
+  }
+}
