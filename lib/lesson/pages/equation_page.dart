@@ -373,7 +373,7 @@ class _EquationPageState extends State<EquationPage> {
                 width: 100,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: AlText(word, size: 30, highlight: true),
+                  child: AlText(word, size: 30, highlight: false),
                 ),
               ),
               Text(widget.add ? '+' : '−', style: op),
