@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
 import '../../data/lam_lesson.dart';
+import '../../data/bi_lesson.dart';
 import '../../data/li_lesson.dart';
 import '../../services/speaker.dart';
 import '../../theme.dart';
@@ -24,26 +25,43 @@ enum EquationOp {
   addLi,
 
   /// للكتاب − لِـ = الكتاب
-  removeLi;
+  removeLi,
 
-  bool get adds => this == addAl || this == addLi;
-  bool get isLi => this == addLi || this == removeLi;
+  /// الكتاب + بـ = بالكتاب
+  addBi,
+
+  /// بالكتاب − بـ = الكتاب
+  removeBi;
+
+  bool get adds => this == addAl || this == addLi || this == addBi;
 
   /// ما يُضاف أو يُحذف.
-  String get part => isLi ? 'لِـ' : 'الـ';
+  String get part => switch (this) {
+    addLi || removeLi => 'لِـ',
+    addBi || removeBi => 'بـ',
+    _ => 'الـ',
+  };
 
   /// الكلمة المعروضة في السؤال (الكلمات مخزنة بصيغتها مع «ال» إلا في addAl).
-  String question(String w) => this == removeLi ? liForm(w) : w;
+  String question(String w) => switch (this) {
+    removeLi => liForm(w),
+    removeBi => biForm(w),
+    _ => w,
+  };
 
   String answer(String w) => switch (this) {
     addAl => 'ال$w',
     removeAl => w.substring(2),
     addLi => liForm(w),
-    removeLi => w,
+    addBi => biForm(w),
+    removeLi || removeBi => w,
   };
 
-  String spokenQuestion(String w) =>
-      this == removeLi ? liSpoken(w) : spokenForm(w);
+  String spokenQuestion(String w) => switch (this) {
+    removeLi => liSpoken(w),
+    removeBi => biSpoken(w),
+    _ => spokenForm(w),
+  };
 }
 
 /// تطبيق المعادلات: كلمة ± الـ = ؟ أو كلمة ± لِـ = ؟
@@ -200,6 +218,8 @@ class _EquationPageState extends State<EquationPage> {
         EquationOp.removeAl => 'احذف أول حرفين «ال»: ${ans.substring(0, 1)}…',
         EquationOp.addLi => 'احذف الألف واكتب لامين فقط: لل…',
         EquationOp.removeLi => 'أعد «ال» إلى أول الكلمة: ال…',
+        EquationOp.addBi => 'اكتب الباء ثم الكلمة كما هي: بال…',
+        EquationOp.removeBi => 'احذف الباء فقط وأبقِ «ال»: ال…',
       },
     );
     showFeedback(context, _hints[i]!, tone: FeedbackTone.hint);

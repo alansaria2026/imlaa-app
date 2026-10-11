@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:math';
 
+import 'package:imlaa/data/bi_lesson.dart';
 import 'package:imlaa/data/lam_lesson.dart';
 import 'package:imlaa/data/li_lesson.dart';
 import 'package:imlaa/lesson/lam_lesson_pages.dart';
@@ -72,7 +73,7 @@ void main() {
 
   test('بناء صفحات الدرس', () {
     final pages = buildLamLessonPages();
-    expect(pages.length, 11);
+    expect(pages.length, 14);
     expect(addAlWordBank.toSet().length, addAlWordBank.length);
   });
 
@@ -130,6 +131,25 @@ void main() {
         final words = normalizeAnswer(s.spoken).split(' ');
         expect(words.where((w) => w == s.answer).length, 1, reason: s.spoken);
       }
+    });
+  });
+
+  group('اتصال الباء بـ(ال)', () {
+    test('تُكتب الباء ويبقى الاسم كما هو', () {
+      expect(biForm('الطائرة'), 'بالطائرة');
+      expect(biForm('اللحم'), 'باللحم');
+      expect(biSpoken('الكتب'), 'بِالْكُتُب');
+      for (final w in biWordBank) {
+        expect(spokenForm(w), isNot(w), reason: w);
+        expect(normalizeAnswer(biSpoken(w)), normalizeAnswer(biForm(w)));
+      }
+    });
+
+    test('عشر كلمات مختلفة منها اثنتان مبدوءتان باللام', () {
+      expect(biWordBank.toSet().length, biWordBank.length);
+      final words = pickBiWords(Random(2));
+      expect(words.toSet().length, 10);
+      expect(words.where((w) => w[2] == 'ل').length, 2);
     });
   });
 }

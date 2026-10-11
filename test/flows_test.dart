@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:imlaa/data/bi_lesson.dart';
 import 'package:imlaa/data/lam_lesson.dart';
 import 'package:imlaa/data/li_lesson.dart';
 import 'package:imlaa/lesson/lam_lesson_pages.dart';
@@ -273,5 +274,56 @@ void main() {
       await _settle(t);
     }
     expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
+  });
+
+  testWidgets('أضف (بـ): خطأ ثم عشر كلمات', (t) async {
+    await pumpScreen(t, _single(12));
+    final fields = find.byType(TextField);
+    List<String> group() =>
+        _visibleTexts(t).where(biWordBank.contains).toList();
+    for (var round = 0; round < 5; round++) {
+      final words = group();
+      expect(words.length, 2);
+      // إجابة خاطئة شائعة: حذف الألف كما في لام الجر.
+      if (round == 0) {
+        await t.enterText(fields.at(0), 'بل${words[0].substring(2)}');
+        await t.enterText(fields.at(1), biForm(words[1]));
+        await _submit(t);
+        expect(find.textContaining('لا يُسمح بالخطأ'), findsOneWidget);
+        await t.pump(const Duration(milliseconds: 3600));
+        await t.pumpAndSettle();
+        continue;
+      }
+      for (var i = 0; i < 2; i++) {
+        await t.enterText(fields.at(i), biForm(words[i]));
+      }
+      await _submit(t);
+      await _settle(t);
+    }
+    // بعد الخطأ أعيدت الكلمات: يكفي أن نُكمل الباقي.
+    while (scoreLabel('لم يبقَ شيء').evaluate().isEmpty) {
+      final words = group();
+      for (var i = 0; i < words.length; i++) {
+        await t.enterText(fields.at(i), biForm(words[i]));
+      }
+      await _submit(t);
+      await _settle(t);
+    }
+  });
+
+  testWidgets('احذف (بـ): تبقى (ال) كما هي', (t) async {
+    await pumpScreen(t, _single(13));
+    final fields = find.byType(TextField);
+    final byBi = {for (final w in biWordBank) biForm(w): w};
+    for (var round = 0; round < 5; round++) {
+      final words = _visibleTexts(t).where(byBi.containsKey).toList();
+      expect(words.length, 2);
+      for (var i = 0; i < 2; i++) {
+        await t.enterText(fields.at(i), byBi[words[i]]!);
+      }
+      await _submit(t);
+      await _settle(t);
+    }
+    expect(scoreLabel('لم يبقَ شيء'), findsOneWidget);
   });
 }

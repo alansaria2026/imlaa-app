@@ -33,7 +33,7 @@ class _LiRulePageState extends State<LiRulePage> {
       ))
       ..onHint = () => showFeedback(
         context,
-        'تسقط ألف (ال) فتبقى لامان فقط: الكتاب ← للكتاب، اللحن ← للحن.',
+        'تسقط ألف (ال) فتبقى لامان فقط: الكتاب تصبح للكتاب، واللحن تصبح للحن.',
         tone: FeedbackTone.hint,
       );
     WidgetsBinding.instance.addPostFrameCallback(

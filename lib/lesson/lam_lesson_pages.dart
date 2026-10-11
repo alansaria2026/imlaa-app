@@ -1,10 +1,12 @@
 import 'dart:math';
 
 import '../data/lam_lesson.dart';
+import '../data/bi_lesson.dart';
 import '../data/li_lesson.dart';
 import 'page_handle.dart';
 import 'pages/challenge_page.dart';
 import 'pages/equation_page.dart';
+import 'bi_rule_content.dart';
 import 'li_rule_content.dart';
 import 'pages/intro_pages.dart';
 import 'pages/li_pages.dart';
@@ -133,6 +135,43 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
           spare: spare,
         );
       },
+    ),
+    // اتصال الباء (بـ) بـ(ال) التعريف.
+    LessonPageSpec(
+      tag: 'القاعدة',
+      title: 'قاعدة (بـ)',
+      emoji: '📗',
+      needsCompletion: false,
+      rule: const BiRuleContent(),
+      builder: (h) => BiRulePage(handle: h),
+    ),
+    LessonPageSpec(
+      title: 'أضف (بـ)',
+      emoji: '➕',
+      rule: const BiRuleContent(),
+      builder: (h) => EquationPage(
+        handle: h,
+        rounds: _groupsOfTwo(pickBiWords(rnd)),
+        refill: () => _groupsOfTwo(pickBiWords(rnd)),
+        op: EquationOp.addBi,
+        title: 'أضف (بـ) إلى الكلمة واكتب الناتج',
+        strict: true,
+        showLamType: false,
+      ),
+    ),
+    LessonPageSpec(
+      title: 'احذف (بـ)',
+      emoji: '➖',
+      rule: const BiRuleContent(),
+      builder: (h) => EquationPage(
+        handle: h,
+        rounds: _groupsOfTwo(pickBiWords(rnd)),
+        refill: () => _groupsOfTwo(pickBiWords(rnd)),
+        op: EquationOp.removeBi,
+        title: 'احذف (بـ) من الكلمة واكتب الناتج',
+        strict: true,
+        showLamType: false,
+      ),
     ),
   ];
 }
