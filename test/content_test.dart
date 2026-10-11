@@ -156,20 +156,16 @@ void main() {
       }
     });
 
-    test('عشرة أسئلة: نصفها باللام ونصفها بالباء', () {
-      for (final (items, spare) in [
-        listenWordItems(Random(3)),
-        listenSentenceItems(Random(3)),
-      ]) {
+    test('عشرة أسئلة لكل حرف: خمس كلمات وخمس جمل', () {
+      for (final p in Prep.values) {
+        final (items, spare) = listenItems(p, Random(3));
+        final prefix = p == Prep.li ? 'لل' : 'بال';
         expect(items.length, 10);
-        expect(items.where((i) => i.answer.startsWith('لل')).length, 5);
-        expect(items.where((i) => i.answer.startsWith('بال')).length, 5);
+        expect(items.every((i) => i.answer.startsWith(prefix)), isTrue);
+        expect(items.where((i) => i.sentence != null).length, 5);
         expect(spare, isNotEmpty);
-        expect(items.map((i) => i.answer).toSet().length, 10);
+        expect(spare.every((i) => i.answer.startsWith(prefix)), isTrue);
       }
-      final (words, _) = listenWordItems(Random(4));
-      // تركيز على الكلمات المبدوءة باللام: للحن (لام حمراء واحدة) وباللحن.
-      expect(words.where((i) => i.answer.startsWith('للل')), isEmpty);
     });
   });
 }

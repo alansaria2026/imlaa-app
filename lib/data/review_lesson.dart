@@ -1,4 +1,4 @@
-/// مراجعة الاستماع بعد درسي اتصال اللام والباء بـ(ال): أسئلة مختلطة.
+/// صفحات الاستماع: بعد «حذف اللام» للام وحدها، وبعد «حذف الباء» للباء.
 library;
 
 import 'dart:math';
@@ -80,7 +80,7 @@ const prepSentences = [
   PrepSentence(Prep.bi, 'وصلْنا بالسيارةِ', 'السيارة'),
 ];
 
-/// عدد أسئلة كل صفحة استماع (نصفها باللام ونصفها بالباء).
+/// عدد أسئلة كل صفحة استماع (نصفها كلمات ونصفها جمل).
 const listenQuestionCount = 10;
 
 ListenItem _wordItem(Prep p, String w) => ListenItem(
@@ -99,51 +99,33 @@ ListenItem _sentenceItem(PrepSentence s) => ListenItem(
   ].join(' '),
 );
 
-/// يأخذ من كل حرف نصف الأسئلة، ويعيد الباقي بدائل لـ«سؤال جديد».
-(List<ListenItem>, List<ListenItem>) _mix(
-  List<ListenItem> li,
-  List<ListenItem> bi,
-  Random rnd,
-  int count,
-) {
-  final half = count ~/ 2;
-  final items = [...li.take(half), ...bi.take(count - half)]..shuffle(rnd);
-  final spare = [...li.skip(half), ...bi.skip(count - half)]..shuffle(rnd);
-  return (items, spare);
-}
-
-/// «اسمع الكلمة واكتبها»: كلمات باللام وأخرى بالباء، بتركيز على
-/// الكلمات المبدوءة باللام (للحن وباللحن).
-(List<ListenItem>, List<ListenItem>) listenWordItems(
+/// أسئلة صفحة الاستماع لحرف [prep]: نصفها كلمات مفردة ونصفها جمل
+/// بكلمة ناقصة. الباقي بدائل يأتي منها «سؤال جديد» بعد الرجوع للقاعدة.
+(List<ListenItem>, List<ListenItem>) listenItems(
+  Prep prep,
   Random rnd, {
   int count = listenQuestionCount,
 }) {
   final half = count ~/ 2;
-  // الكلمات المختارة أولًا (ثلاث منها على الأقل مبدوءة باللام)، ثم البقية.
-  List<String> ordered(List<String> picked, List<String> bank) => [
-    ...picked,
-    ...([...bank.where((w) => !picked.contains(w))]..shuffle(rnd)),
+  // الكلمات المختارة أولًا (بتركيز على المبدوءة باللام)، ثم بقية البنك.
+  final bank = prep == Prep.li ? liWordBank : biWordBank;
+  final picked = prep == Prep.li
+      ? pickLiWords(rnd, count: half)
+      : pickBiWords(rnd, count: half);
+  final words = [
+    for (final w in [
+      ...picked,
+      ...([...bank.where((w) => !picked.contains(w))]..shuffle(rnd)),
+    ])
+      if (ArabicKeyboard.canType(prep.form(w))) _wordItem(prep, w),
   ];
-  List<ListenItem> items(Prep p, List<String> words) => [
-    for (final w in words)
-      if (ArabicKeyboard.canType(p.form(w))) _wordItem(p, w),
-  ];
-  return _mix(
-    items(Prep.li, ordered(pickLiWords(rnd, count: half), liWordBank)),
-    items(Prep.bi, ordered(pickBiWords(rnd, count: count - half), biWordBank)),
-    rnd,
-    count,
-  );
-}
-
-/// «اسمع واكتب الكلمة الناقصة»: جمل باللام وأخرى بالباء.
-(List<ListenItem>, List<ListenItem>) listenSentenceItems(
-  Random rnd, {
-  int count = listenQuestionCount,
-}) {
-  List<ListenItem> of(Prep p) => [
+  final sentences = [
     for (final s in [...prepSentences]..shuffle(rnd))
-      if (s.prep == p && ArabicKeyboard.canType(s.answer)) _sentenceItem(s),
+      if (s.prep == prep && ArabicKeyboard.canType(s.answer)) _sentenceItem(s),
   ];
-  return _mix(of(Prep.li), of(Prep.bi), rnd, count);
+  final items = [...words.take(half), ...sentences.take(count - half)]
+    ..shuffle(rnd);
+  final spare = [...words.skip(half), ...sentences.skip(count - half)]
+    ..shuffle(rnd);
+  return (items, spare);
 }

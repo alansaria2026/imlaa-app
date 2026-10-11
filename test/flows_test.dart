@@ -242,7 +242,7 @@ void main() {
   });
 
   testWidgets('أضف (بـ): خطأ ثم عشر كلمات', (t) async {
-    await pumpScreen(t, _single(8));
+    await pumpScreen(t, _single(9));
     final fields = find.byType(TextField);
     List<String> group() =>
         _visibleTexts(t).where(biWordBank.contains).toList();
@@ -277,7 +277,7 @@ void main() {
   });
 
   testWidgets('احذف (بـ): تبقى (ال) كما هي', (t) async {
-    await pumpScreen(t, _single(9));
+    await pumpScreen(t, _single(10));
     final fields = find.byType(TextField);
     final byBi = {for (final w in biWordBank) biForm(w): w};
     for (var round = 0; round < 5; round++) {
@@ -299,53 +299,38 @@ void main() {
     }
   }
 
-  testWidgets('اسمع الكلمة واكتبها: لام وباء مختلطتان', (t) async {
-    await pumpScreen(t, _single(10));
-    final bySpoken = {
-      for (final w in liWordBank) liSpoken(w): liForm(w),
-      for (final w in biWordBank) biSpoken(w): biForm(w),
-    };
+  for (final (page, prep) in [(8, Prep.li), (11, Prep.bi)]) {
+    testWidgets('استماع ${prep.name}: كلمات وجمل بحرف واحد', (t) async {
+      await pumpScreen(t, _single(page));
+      final bySpoken = {
+        for (final w in prep == Prep.li ? liWordBank : biWordBank)
+          prep.spoken(w): prep.form(w),
+        for (final s in prepSentences)
+          if (s.prep == prep) s.spoken: s.answer,
+      };
 
-    // «إدخال» قبل إكمال الكلمة لا يُحتسب.
-    await t.tap(find.text('إدخال'));
-    await t.pump();
-    expect(find.textContaining('أكمل كتابة الكلمة'), findsOneWidget);
-    await _settle(t);
-
-    // خطأ شائع: «بلـ» بدل «بال» أو ثلاث لامات.
-    final first = bySpoken[lastSpoken]!;
-    await typeLetters(t, 'ل' * first.length);
-    await t.tap(find.text('إدخال'));
-    await t.pump();
-    expect(find.textContaining('سيعاد هذا السؤال'), findsOneWidget);
-    await _settle(t);
-
-    final answers = <String>[];
-    for (var i = 0; i < 10; i++) {
-      final answer = bySpoken[lastSpoken]!;
-      answers.add(answer);
-      await typeLetters(t, answer);
+      // «إدخال» قبل إكمال الكلمة لا يُحتسب.
       await t.tap(find.text('إدخال'));
+      await t.pump();
+      expect(find.textContaining('أكمل كتابة الكلمة'), findsOneWidget);
       await _settle(t);
-    }
-    expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
-    expect(answers.where((a) => a.startsWith('بال')).length, 5);
-  });
 
-  testWidgets('اسمع واكتب الكلمة الناقصة', (t) async {
-    await pumpScreen(t, _single(11));
-    final bySpoken = {for (final s in prepSentences) s.spoken: s};
-    final s = bySpoken[lastSpoken]!;
-    // تظهر الجملة بفراغ مكان الكلمة.
-    expect(
-      _visibleText(t, (x) => x.contains('………')),
-      isNot(contains(s.answer)),
-    );
-    for (var i = 0; i < 10; i++) {
-      await typeLetters(t, bySpoken[lastSpoken]!.answer);
-      await _submit(t);
+      final first = bySpoken[lastSpoken]!;
+      await typeLetters(t, 'ل' * first.length);
+      await t.tap(find.text('إدخال'));
+      await t.pump();
+      expect(find.textContaining('سيعاد هذا السؤال'), findsOneWidget);
       await _settle(t);
-    }
-    expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
-  });
+
+      var sentences = 0;
+      for (var i = 0; i < 10; i++) {
+        if (find.textContaining('………').evaluate().isNotEmpty) sentences++;
+        await typeLetters(t, bySpoken[lastSpoken]!);
+        await _submit(t);
+        await _settle(t);
+      }
+      expect(sentences, 5);
+      expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
+    });
+  }
 }
