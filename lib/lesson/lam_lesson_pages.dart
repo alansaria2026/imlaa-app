@@ -79,8 +79,8 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
       rule: const LiRuleContent(),
       builder: (h) => EquationPage(
         handle: h,
-        rounds: _groupsOfTwo(pickLiWords(rnd)),
-        refill: () => _groupsOfTwo(pickLiWords(rnd)),
+        rounds: _groupsOfTwo(pickLiWords(rnd, exclude: 'الكتاب')),
+        refill: () => _groupsOfTwo(pickLiWords(rnd, exclude: 'الكتاب')),
         op: EquationOp.addLi,
         title: 'أضف (لِـ) إلى الكلمة واكتب الناتج',
         example: 'الكتاب',
@@ -94,8 +94,8 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
       rule: const LiRuleContent(),
       builder: (h) => EquationPage(
         handle: h,
-        rounds: _groupsOfTwo(pickLiWords(rnd)),
-        refill: () => _groupsOfTwo(pickLiWords(rnd)),
+        rounds: _groupsOfTwo(pickLiWords(rnd, exclude: 'اللحن')),
+        refill: () => _groupsOfTwo(pickLiWords(rnd, exclude: 'اللحن')),
         op: EquationOp.removeLi,
         title: 'احذف (لِـ) من الكلمة واكتب الناتج',
         example: 'اللحن',
@@ -123,8 +123,8 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
       rule: const BiRuleContent(),
       builder: (h) => EquationPage(
         handle: h,
-        rounds: _groupsOfTwo(pickBiWords(rnd)),
-        refill: () => _groupsOfTwo(pickBiWords(rnd)),
+        rounds: _groupsOfTwo(pickBiWords(rnd, exclude: 'الطائرة')),
+        refill: () => _groupsOfTwo(pickBiWords(rnd, exclude: 'الطائرة')),
         op: EquationOp.addBi,
         title: 'أضف (بـ) إلى الكلمة واكتب الناتج',
         example: 'الطائرة',
@@ -138,8 +138,8 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
       rule: const BiRuleContent(),
       builder: (h) => EquationPage(
         handle: h,
-        rounds: _groupsOfTwo(pickBiWords(rnd)),
-        refill: () => _groupsOfTwo(pickBiWords(rnd)),
+        rounds: _groupsOfTwo(pickBiWords(rnd, exclude: 'الكتب')),
+        refill: () => _groupsOfTwo(pickBiWords(rnd, exclude: 'الكتب')),
         op: EquationOp.removeBi,
         title: 'احذف (بـ) من الكلمة واكتب الناتج',
         example: 'الكتب',

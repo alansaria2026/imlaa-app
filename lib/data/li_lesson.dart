@@ -53,9 +53,15 @@ const liWordBank = [
 const liQuestionCount = 10;
 
 /// [count] كلمة مختلفة في كل مرة، نحو خُمسيها مبدوءة باللام.
-List<String> pickLiWords(Random rnd, {int count = liQuestionCount}) {
-  final lam = liWordBank.where((w) => w[2] == 'ل').toList()..shuffle(rnd);
-  final other = liWordBank.where((w) => w[2] != 'ل').toList()..shuffle(rnd);
+List<String> pickLiWords(
+  Random rnd, {
+  int count = liQuestionCount,
+  String? exclude,
+}) {
+  // [exclude]: كلمة المثال المحلول فوق التمرين لا تُسأل.
+  final words = liWordBank.where((w) => w != exclude);
+  final lam = words.where((w) => w[2] == 'ل').toList()..shuffle(rnd);
+  final other = words.where((w) => w[2] != 'ل').toList()..shuffle(rnd);
   final lamCount = min(max(3, count * 2 ~/ 5), lam.length);
   return [...lam.take(lamCount), ...other.take(count - lamCount)]..shuffle(rnd);
 }

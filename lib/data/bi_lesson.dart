@@ -26,9 +26,11 @@ const biWordBank = [
 ];
 
 /// [count] كلمة مختلفة، منها اثنتان مبدوءتان باللام للمقارنة بدرس اللام.
-List<String> pickBiWords(Random rnd, {int count = 10}) {
-  final lam = biWordBank.where((w) => w[2] == 'ل').toList()..shuffle(rnd);
-  final other = biWordBank.where((w) => w[2] != 'ل').toList()..shuffle(rnd);
+List<String> pickBiWords(Random rnd, {int count = 10, String? exclude}) {
+  // [exclude]: كلمة المثال المحلول فوق التمرين لا تُسأل.
+  final words = biWordBank.where((w) => w != exclude);
+  final lam = words.where((w) => w[2] == 'ل').toList()..shuffle(rnd);
+  final other = words.where((w) => w[2] != 'ل').toList()..shuffle(rnd);
   final lamCount = min(2, lam.length);
   return [...lam.take(lamCount), ...other.take(count - lamCount)]..shuffle(rnd);
 }
