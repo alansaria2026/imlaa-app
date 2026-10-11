@@ -30,6 +30,8 @@ void main() {
     expect(find.byTooltip('القائمة'), findsOneWidget);
     expect(find.byTooltip('رجوع'), findsOneWidget);
     expect(find.text('الحروف الشمسية'), findsNothing);
+    // «إنهاء» لا يظهر إلا في آخر صفحة.
+    expect(find.text('إنهاء'), findsNothing);
 
     // ص ١ ← ص ٢ ← ص ٣
     await t.tap(nextButton());

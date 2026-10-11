@@ -75,6 +75,8 @@ void main() {
     }
     expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
     expect(state.points, 10 + 9 * 20);
+    // صفحة واحدة فهي الأخيرة: زر مكتوب عليه «إنهاء».
+    expect(find.text('إنهاء'), findsOneWidget);
     expect(find.text('اسمع الجملة واكتب منها ما يلي'), findsNothing);
   });
 

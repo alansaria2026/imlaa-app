@@ -205,9 +205,9 @@ class _LessonScreenState extends State<LessonScreen> {
                     const Spacer(),
                     _SquareButton(
                       tooltip: last ? 'إنهاء' : 'التالي',
-                      icon: last
-                          ? Icons.flag_outlined
-                          : Icons.arrow_forward_rounded,
+                      icon: Icons.arrow_forward_rounded,
+                      // في آخر صفحة زر مكتوب عليه «إنهاء» بدل السهم.
+                      label: last ? 'إنهاء' : null,
                       size: 54,
                       filled: _canAdvance(_page) || handle.onSubmit != null,
                       onTap: _next,
@@ -230,10 +230,14 @@ class _SquareButton extends StatelessWidget {
     required this.onTap,
     this.size = 40,
     this.filled = false,
+    this.label,
   });
 
   final String tooltip;
   final IconData icon;
+
+  /// نص يظهر بدل الأيقونة.
+  final String? label;
   final VoidCallback onTap;
   final double size;
   final bool filled;
@@ -252,13 +256,27 @@ class _SquareButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           onTap: onTap,
           child: SizedBox(
-            width: size,
+            width: label == null ? size : null,
             height: size,
-            child: Icon(
-              icon,
-              size: size * 0.55,
-              color: filled ? Colors.white : AppColors.ink,
-            ),
+            child: label == null
+                ? Icon(
+                    icon,
+                    size: size * 0.55,
+                    color: filled ? Colors.white : AppColors.ink,
+                  )
+                : Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 26),
+                    child: Center(
+                      child: Text(
+                        label!,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: filled ? Colors.white : AppColors.ink,
+                            ),
+                      ),
+                    ),
+                  ),
           ),
         ),
       ),
