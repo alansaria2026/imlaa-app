@@ -64,6 +64,7 @@ const prepSentences = [
   PrepSentence(Prep.li, 'استعدَّ الطالبُ للسفرِ', 'السفر'),
   PrepSentence(Prep.li, 'أهديتُ الكتابَ للمكتبةِ', 'المكتبة'),
   PrepSentence(Prep.li, 'انتبهْ للونِ الإشارةِ', 'اللون'),
+  PrepSentence(Prep.bi, 'سافرتُ بالطائرةِ', 'الطائرة'),
   PrepSentence(Prep.bi, 'كتبتُ بالقلمِ', 'القلم'),
   PrepSentence(Prep.bi, 'اعتنيتُ بالكتبِ', 'الكتب'),
   PrepSentence(Prep.bi, 'لعبْنا بالكرةِ', 'الكرة'),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:imlaa/app_state.dart';
 import 'package:imlaa/screens/home_screen.dart';
+import 'package:imlaa/widgets/letter_boxes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helpers/harness.dart';
@@ -86,6 +87,35 @@ void main() {
     expect(find.text('سرعة النطق'), findsOneWidget);
     expect(find.text('جرّب الصوت'), findsOneWidget);
   });
+
+  for (final (platform, dLeftOfJ) in [
+    (TargetPlatform.iOS, true),
+    (TargetPlatform.android, false),
+  ]) {
+    testWidgets('لوحة الحروف كلوحة ${platform.name}', (t) async {
+      final typed = <String>[];
+      await t.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(platform: platform),
+          home: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Scaffold(
+              body: ArabicKeyboard(onLetter: typed.add, onBackspace: () {}),
+            ),
+          ),
+        ),
+      );
+      final d = t.getCenter(find.text('ض')).dx;
+      final j = t.getCenter(find.text('ج')).dx;
+      // الآيفون: «ض» يسارًا. أندرويد: «ض» يمينًا.
+      expect(d < j, dLeftOfJ);
+      // حروف الهمزة الناقصة موجودة في الجهازين.
+      for (final l in ['أ', 'إ', 'آ', 'ئ', 'ؤ']) {
+        await t.tap(find.text(l));
+      }
+      expect(typed, ['أ', 'إ', 'آ', 'ئ', 'ؤ']);
+    });
+  }
 
   group('الأيام المتتالية', () {
     tearDown(() => AppState.clock = DateTime.now);

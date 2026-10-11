@@ -108,39 +108,64 @@ class ArabicKeyboard extends StatelessWidget {
   final ValueChanged<String> onLetter;
   final VoidCallback onBackspace;
 
-  /// هل يمكن كتابة [word] بحروف هذه اللوحة.
-  static bool canType(String word) =>
-      word.split('').every((c) => _rows.any((r) => r.contains(c)));
+  /// هل يمكن كتابة [word] بحروف اللوحة (على أي جهاز).
+  static bool canType(String word) => word
+      .split('')
+      .every((c) => [..._iosRows, ..._androidRows].any((r) => r.contains(c)));
 
-  /// ترتيب لوحة مفاتيح الآيفون العربية من اليسار إلى اليمين («ض» مكان Q).
-  static const _rows = [
+  /// لوحة الآيفون العربية من اليسار إلى اليمين («ض» مكان Q)، وزر الحذف
+  /// في آخر الصف الثالث يمينًا. الصف الأخير حروف الهمزة التي تظهر في الجوال
+  /// بالضغط المطوّل.
+  static const _iosRows = [
     ['ض', 'ص', 'ث', 'ق', 'ف', 'غ', 'ع', 'ه', 'خ', 'ح', 'ج'],
     ['ش', 'س', 'ي', 'ب', 'ل', 'ا', 'ت', 'ن', 'م', 'ك', 'ة'],
     ['ء', 'ظ', 'ط', 'ذ', 'د', 'ز', 'ر', 'و', 'ى'],
+    ['أ', 'إ', 'آ', 'ؤ', 'ئ'],
+  ];
+
+  /// لوحة أندرويد العربية من اليمين إلى اليسار («ض» في أقصى اليمين).
+  static const _androidRows = [
+    ['ض', 'ص', 'ث', 'ق', 'ف', 'غ', 'ع', 'ه', 'خ', 'ح', 'ج'],
+    ['ش', 'س', 'ي', 'ب', 'ل', 'ا', 'ت', 'ن', 'م', 'ك', 'ط'],
+    ['ذ', 'ء', 'ؤ', 'ر', 'ى', 'ة', 'و', 'ز', 'ظ', 'د'],
+    ['أ', 'إ', 'آ', 'ئ'],
   ];
 
   @override
   Widget build(BuildContext context) {
+    // على الويب أيضًا يعكس نظام الجهاز (آيفون أو أندرويد).
+    final platform = Theme.of(context).platform;
+    final ios =
+        platform == TargetPlatform.iOS || platform == TargetPlatform.macOS;
+    final rows = ios ? _iosRows : _androidRows;
+    const letterRows = 3;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(2, 6, 2, 6),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(20),
       ),
-      // من اليسار إلى اليمين كلوحة الجوال، وزر الحذف في آخر الصف الثالث.
       child: Directionality(
-        textDirection: TextDirection.ltr,
+        textDirection: ios ? TextDirection.ltr : TextDirection.rtl,
         child: Column(
           children: [
-            for (var r = 0; r < _rows.length; r++)
+            for (var r = 0; r < rows.length; r++)
               Row(
                 children: [
-                  for (final l in _rows[r])
-                    _Key(label: l, onTap: () => onLetter(l)),
-                  if (r == _rows.length - 1)
+                  // صف الهمزات أقصر فيتوسط اللوحة بمفاتيح بالعرض نفسه.
+                  if (r == letterRows) Spacer(flex: 11 - rows[r].length),
+                  for (final l in rows[r])
+                    _Key(
+                      label: l,
+                      flex: r == letterRows ? 2 : 1,
+                      onTap: () => onLetter(l),
+                    ),
+                  if (r == letterRows) Spacer(flex: 11 - rows[r].length),
+                  if (r == letterRows - 1)
                     _Key(
                       icon: Icons.backspace_outlined,
-                      flex: 2,
+                      flex: 11 - rows[r].length,
                       onTap: onBackspace,
                     ),
                 ],
