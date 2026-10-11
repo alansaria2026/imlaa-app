@@ -164,10 +164,12 @@ class _PicturePageState extends State<PicturePage> {
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: AppColors.line, width: 1.5),
                     ),
-                    child: Text(
-                      item.emoji,
-                      style: const TextStyle(fontSize: 64),
-                    ),
+                    child: item.drawn
+                        ? const FootballPitch()
+                        : Text(
+                            item.emoji,
+                            style: const TextStyle(fontSize: 64),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -203,4 +205,57 @@ class _PicturePageState extends State<PicturePage> {
             ),
     );
   }
+}
+
+/// ملعب كرة قدم: مستطيل أخضر بخطوط بيضاء.
+class FootballPitch extends StatelessWidget {
+  const FootballPitch({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 130,
+      height: 84,
+      child: CustomPaint(painter: _PitchPainter()),
+    );
+  }
+}
+
+class _PitchPainter extends CustomPainter {
+  const _PitchPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final grass = Paint()..color = const Color(0xFF2E9D4A);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(6)),
+      grass,
+    );
+    final line = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    const m = 6.0;
+    canvas.drawRect(Rect.fromLTRB(m, m, w - m, h - m), line);
+    canvas.drawLine(Offset(w / 2, m), Offset(w / 2, h - m), line);
+    canvas.drawCircle(Offset(w / 2, h / 2), h * 0.17, line);
+    canvas.drawCircle(
+      Offset(w / 2, h / 2),
+      2,
+      line..style = PaintingStyle.fill,
+    );
+    line.style = PaintingStyle.stroke;
+    final boxH = h * 0.5;
+    final boxW = w * 0.14;
+    canvas.drawRect(Rect.fromLTWH(m, (h - boxH) / 2, boxW, boxH), line);
+    canvas.drawRect(
+      Rect.fromLTWH(w - m - boxW, (h - boxH) / 2, boxW, boxH),
+      line,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

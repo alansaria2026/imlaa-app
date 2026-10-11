@@ -146,7 +146,7 @@ class _LessonScreenState extends State<LessonScreen> {
               padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
               child: Row(
                 children: [
-                  _LessonMenu(handle: handle),
+                  _LessonMenu(handle: handle, rule: widget.pages[_page].rule),
                   const SizedBox(width: 6),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 96),
@@ -205,9 +205,9 @@ class _LessonScreenState extends State<LessonScreen> {
                     const Spacer(),
                     _SquareButton(
                       tooltip: last ? 'إنهاء' : 'التالي',
-                      icon: last
-                          ? Icons.flag_outlined
-                          : Icons.arrow_forward_rounded,
+                      icon: Icons.arrow_forward_rounded,
+                      // في آخر صفحة زر مكتوب عليه «إنهاء» بدل السهم.
+                      label: last ? 'إنهاء' : null,
                       size: 54,
                       filled: _canAdvance(_page) || handle.onSubmit != null,
                       onTap: _next,
@@ -230,10 +230,14 @@ class _SquareButton extends StatelessWidget {
     required this.onTap,
     this.size = 40,
     this.filled = false,
+    this.label,
   });
 
   final String tooltip;
   final IconData icon;
+
+  /// نص يظهر بدل الأيقونة.
+  final String? label;
   final VoidCallback onTap;
   final double size;
   final bool filled;
@@ -252,13 +256,27 @@ class _SquareButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           onTap: onTap,
           child: SizedBox(
-            width: size,
+            width: label == null ? size : null,
             height: size,
-            child: Icon(
-              icon,
-              size: size * 0.55,
-              color: filled ? Colors.white : AppColors.ink,
-            ),
+            child: label == null
+                ? Icon(
+                    icon,
+                    size: size * 0.55,
+                    color: filled ? Colors.white : AppColors.ink,
+                  )
+                : Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 26),
+                    child: Center(
+                      child: Text(
+                        label!,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: filled ? Colors.white : AppColors.ink,
+                            ),
+                      ),
+                    ),
+                  ),
           ),
         ),
       ),
@@ -268,13 +286,19 @@ class _SquareButton extends StatelessWidget {
 
 /// القائمة المنسدلة: القاعدة، استمع، مساعدة.
 class _LessonMenu extends StatelessWidget {
-  const _LessonMenu({required this.handle});
+  const _LessonMenu({required this.handle, this.rule});
   final PageHandle handle;
+  final Widget? rule;
+
+  Future<void> _openRule(BuildContext context) async {
+    await showRuleSheet(context, content: rule);
+    handle.onRuleOpened?.call();
+  }
 
   @override
   Widget build(BuildContext context) {
     final items = <(IconData, String, VoidCallback)>[
-      (Icons.menu_book_outlined, 'القاعدة', () => showRuleSheet(context)),
+      (Icons.menu_book_outlined, 'القاعدة', () => _openRule(context)),
       if (handle.onListen != null)
         (Icons.volume_up_outlined, 'استمع', handle.onListen!),
       if (handle.onHint != null)

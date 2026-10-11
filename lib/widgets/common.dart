@@ -17,6 +17,7 @@ class AlText extends StatelessWidget {
     this.color = AppColors.ink,
     this.highlight = true,
     this.textAlign = TextAlign.center,
+    this.redPrefix,
   });
 
   final String text;
@@ -25,6 +26,9 @@ class AlText extends StatelessWidget {
   final bool highlight;
   final TextAlign textAlign;
 
+  /// عدد الحروف الحمراء في أول النص بدل (الـ) (مثل «لل» في للكتاب).
+  final int? redPrefix;
+
   @override
   Widget build(BuildContext context) {
     final base = AppTheme.word(size, color: color);
@@ -32,7 +36,11 @@ class AlText extends StatelessWidget {
     final words = text.split(' ');
     for (var i = 0; i < words.length; i++) {
       final w = words[i];
-      final cut = highlight ? alPrefixLength(w) : 0;
+      final cut = !highlight
+          ? 0
+          : redPrefix != null && i == 0
+          ? redPrefix!.clamp(0, w.length)
+          : alPrefixLength(w);
       if (cut > 0) {
         spans.add(
           TextSpan(
@@ -70,6 +78,8 @@ class PageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // بعد إنهاء التمرين تظهر رسالة الإكمال وحدها بلا السؤال.
+    if (child is PageDoneMessage) return child;
     final t = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -142,8 +152,9 @@ class LamChip extends StatelessWidget {
 
 /// مربع (الـ) الأحمر المستخدم في المعادلات.
 class AlBox extends StatelessWidget {
-  const AlBox({super.key, this.size = 22});
+  const AlBox({super.key, this.size = 22, this.text = 'الـ'});
   final double size;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +164,7 @@ class AlBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.al, width: 1.2),
       ),
-      child: Text('الـ', style: AppTheme.word(size, color: AppColors.al)),
+      child: Text(text, style: AppTheme.word(size, color: AppColors.al)),
     );
   }
 }
@@ -167,6 +178,7 @@ void showFeedback(
   BuildContext context,
   String message, {
   FeedbackTone tone = FeedbackTone.success,
+  Duration? duration,
 }) {
   switch (tone) {
     case FeedbackTone.success:
@@ -177,9 +189,9 @@ void showFeedback(
       HapticFeedback.selectionClick();
   }
   final (color, icon) = switch (tone) {
-    FeedbackTone.success => (AppColors.success, '🎉'),
-    FeedbackTone.error => (AppColors.error, '🤔'),
-    FeedbackTone.hint => (AppColors.primary, '💡'),
+    FeedbackTone.success => (AppColors.success, Icons.check_rounded),
+    FeedbackTone.error => (AppColors.error, Icons.close_rounded),
+    FeedbackTone.hint => (AppColors.primary, Icons.help_outline_rounded),
   };
   hideFeedback();
   late final OverlayEntry entry;
@@ -188,7 +200,9 @@ void showFeedback(
       color: color,
       icon: icon,
       message: message,
-      duration: Duration(seconds: tone == FeedbackTone.hint ? 4 : 2),
+      // رسائل الخطأ والمساعدة أطول ظهورًا لتُقرأ كاملة.
+      duration:
+          duration ?? Duration(seconds: tone == FeedbackTone.success ? 2 : 4),
       onDone: () {
         if (_toast == entry) hideFeedback();
       },
@@ -213,7 +227,7 @@ class _Toast extends StatefulWidget {
   });
 
   final Color color;
-  final String icon;
+  final IconData icon;
   final String message;
   final Duration duration;
   final VoidCallback onDone;
@@ -299,10 +313,7 @@ class _ToastState extends State<_Toast> with SingleTickerProviderStateMixin {
                         color: Colors.white.withValues(alpha: 0.22),
                         shape: BoxShape.circle,
                       ),
-                      child: Text(
-                        widget.icon,
-                        style: const TextStyle(fontSize: 18),
-                      ),
+                      child: Icon(widget.icon, color: Colors.white, size: 22),
                     ),
                     const SizedBox(width: 12),
                     Expanded(

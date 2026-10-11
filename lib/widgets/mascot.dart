@@ -75,9 +75,9 @@ class _PencilPainter extends CustomPainter {
   _PencilPainter(this.mood);
   final MascotMood mood;
 
-  static const _wood = Color(0xFFF4DDB8);
-  static const _eraser = Color(0xFFF2A7A0);
-  static const _eraserDark = Color(0xFFD9867F);
+  static const _wood = Color(0xFFEDEDED);
+  static const _eraser = AppColors.red;
+  static const _eraserDark = Color(0xFFA32424);
 
   @override
   void paint(Canvas canvas, Size size) {

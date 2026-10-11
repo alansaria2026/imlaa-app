@@ -478,7 +478,8 @@ class _UnitBanner extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '${arDigits(done)} من ${arDigits(total)} محطات',
+                    // ٣–١٠ «محطات»، وما فوقها «محطة».
+                    '${arDigits(done)} من ${arDigits(total)} ${total >= 3 && total <= 10 ? 'محطات' : 'محطة'}',
                     style: t.labelMedium?.copyWith(
                       color: Colors.white.withValues(alpha: 0.85),
                     ),

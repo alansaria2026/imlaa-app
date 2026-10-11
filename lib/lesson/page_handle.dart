@@ -12,6 +12,9 @@ class PageHandle extends ChangeNotifier {
   /// يُستدعى عند ظهور الصفحة (لتشغيل الصوت تلقائيًا مثلًا).
   VoidCallback? onEnter;
 
+  /// يُستدعى بعد فتح القاعدة من القائمة (لتغيير الكلمات مثلًا).
+  VoidCallback? onRuleOpened;
+
   int done = 0;
   int total = 0;
   bool complete = false;
@@ -44,7 +47,11 @@ class LessonPageSpec {
     required this.emoji,
     required this.builder,
     this.needsCompletion = true,
+    this.rule,
   });
+
+  /// محتوى نافذة «القاعدة» لهذه الصفحة؛ null لقاعدة اللام القمرية والشمسية.
+  final Widget? rule;
 
   final String? tag;
 

@@ -4,13 +4,67 @@ import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
 import '../../data/lam_lesson.dart';
+import '../../data/bi_lesson.dart';
+import '../../data/li_lesson.dart';
 import '../../services/speaker.dart';
 import '../../theme.dart';
 import '../../utils/arabic.dart';
 import '../../widgets/common.dart';
+import '../../widgets/pressable.dart';
 import '../page_handle.dart';
 
-/// تطبيق المعادلات: كلمة + الـ = ؟ (ص ٣) أو كلمة − الـ = ؟ (ص ٧).
+/// نوع المعادلة.
+enum EquationOp {
+  /// كتاب + الـ = الكتاب
+  addAl,
+
+  /// الكتاب − الـ = كتاب
+  removeAl,
+
+  /// الكتاب + لِـ = للكتاب
+  addLi,
+
+  /// للكتاب − لِـ = الكتاب
+  removeLi,
+
+  /// الكتاب + بـ = بالكتاب
+  addBi,
+
+  /// بالكتاب − بـ = الكتاب
+  removeBi;
+
+  bool get adds => this == addAl || this == addLi || this == addBi;
+
+  /// ما يُضاف أو يُحذف.
+  String get part => switch (this) {
+    addLi || removeLi => 'لِـ',
+    addBi || removeBi => 'بـ',
+    _ => 'الـ',
+  };
+
+  /// الكلمة المعروضة في السؤال (الكلمات مخزنة بصيغتها مع «ال» إلا في addAl).
+  String question(String w) => switch (this) {
+    removeLi => liForm(w),
+    removeBi => biForm(w),
+    _ => w,
+  };
+
+  String answer(String w) => switch (this) {
+    addAl => 'ال$w',
+    removeAl => w.substring(2),
+    addLi => liForm(w),
+    addBi => biForm(w),
+    removeLi || removeBi => w,
+  };
+
+  String spokenQuestion(String w) => switch (this) {
+    removeLi => liSpoken(w),
+    removeBi => biSpoken(w),
+    _ => spokenForm(w),
+  };
+}
+
+/// تطبيق المعادلات: كلمة ± الـ = ؟ أو كلمة ± لِـ = ؟
 ///
 /// في الوضع الصارم [strict] (تعليمات ص ٤): لا يُسمح بأي خطأ؛ أي خطأ يعيد
 /// جميع الكلمات بترتيب مختلف، ومؤشر النتيجة يبدأ ممتلئًا وينقص مع كل خطأ.
@@ -19,8 +73,10 @@ class EquationPage extends StatefulWidget {
     super.key,
     required this.handle,
     required this.rounds,
-    required this.add,
+    required this.op,
     this.tag,
+    this.refill,
+    this.example,
     required this.title,
     this.strict = false,
     this.showLamType = true,
@@ -30,7 +86,13 @@ class EquationPage extends StatefulWidget {
 
   /// كل جولة مجموعة كلمات تظهر معًا.
   final List<List<String>> rounds;
-  final bool add;
+  final EquationOp op;
+
+  /// كلمات جديدة عند الرجوع للقاعدة (تعليمات ص ٣ من درس اللام)؛ null للإبقاء.
+  final List<List<String>> Function()? refill;
+
+  /// كلمة مثال تُعرض محلولة فوق التمرين (الكتاب + لِـ = للكتاب).
+  final String? example;
   final String? tag;
   final String title;
   final bool strict;
@@ -69,7 +131,7 @@ class _EquationPageState extends State<EquationPage> {
   int get _total => _rounds.fold(0, (a, r) => a + r.length);
   int get _level => max(0, 100 - _mistakes * EquationPage.levelStep);
 
-  String _answer(String w) => widget.add ? 'ال$w' : w.substring(2);
+  String _answer(String w) => widget.op.answer(w);
 
   @override
   void initState() {
@@ -78,8 +140,9 @@ class _EquationPageState extends State<EquationPage> {
     widget.handle
       ..onHint = _hint
       ..onSubmit = _check
+      ..onRuleOpened = _refill
       ..onListen = () => Speaker.instance.speak(
-        _words.map(spokenForm).join('، '),
+        _words.map(widget.op.spokenQuestion).join('، '),
         rate: AppScope.read(context).speechRate,
       );
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -111,6 +174,22 @@ class _EquationPageState extends State<EquationPage> {
     widget.handle.setProgress(0, _total);
   }
 
+  /// بعد الرجوع للقاعدة: كلمات جديدة من البداية دون احتساب خطأ.
+  void _refill() {
+    final refill = widget.refill;
+    if (refill == null || widget.handle.complete) return;
+    setState(() {
+      _retired.addAll(_ctrls);
+      _rounds = refill();
+      _round = 0;
+      _solved = 0;
+      _generation++;
+      _restarting = false;
+      _setupRound();
+    });
+    widget.handle.setProgress(0, _total);
+  }
+
   static bool _listEquals(List<String> a, List<String> b) {
     for (var i = 0; i < a.length; i++) {
       if (a[i] != b[i]) return false;
@@ -138,9 +217,14 @@ class _EquationPageState extends State<EquationPage> {
     if (i < 0) return;
     final ans = _answer(_words[i]);
     setState(
-      () => _hints[i] = widget.add
-          ? 'اكتب «ال» ثم الكلمة: ${ans.substring(0, 3)}…'
-          : 'احذف أول حرفين «ال»: ${ans.substring(0, 1)}…',
+      () => _hints[i] = switch (widget.op) {
+        EquationOp.addAl => 'اكتب «ال» ثم الكلمة: ${ans.substring(0, 3)}…',
+        EquationOp.removeAl => 'احذف أول حرفين «ال»: ${ans.substring(0, 1)}…',
+        EquationOp.addLi => 'احذف الألف واكتب لامين فقط: لل…',
+        EquationOp.removeLi => 'أعد «ال» إلى أول الكلمة: ال…',
+        EquationOp.addBi => 'اكتب الباء ثم الكلمة كما هي: بال…',
+        EquationOp.removeBi => 'احذف الباء فقط وأبقِ «ال»: ال…',
+      },
     );
     showFeedback(context, _hints[i]!, tone: FeedbackTone.hint);
   }
@@ -207,7 +291,7 @@ class _EquationPageState extends State<EquationPage> {
           });
         });
       } else {
-        showFeedback(context, 'ممتاز! أنهيت هذا التطبيق 🎉');
+        showFeedback(context, 'ممتاز! أنهيت هذا التمرين');
         widget.handle.markComplete();
       }
     }
@@ -219,10 +303,25 @@ class _EquationPageState extends State<EquationPage> {
       for (var i = 0; i < _words.length; i++)
         if (_states[i] != _RowState.right) i,
     ];
-    if (open.any((i) => _ctrls[i].text.trim().isEmpty)) {
+    final empty = [
+      for (final i in open)
+        if (_ctrls[i].text.trim().isEmpty) i,
+    ];
+    if (empty.isNotEmpty) {
+      // حقل فارغ لا يُحتسب خطأً: يُظلَّل بالأحمر ويُنبَّه الطالب فقط.
+      setState(() {
+        for (final i in empty) {
+          _states[i] = _RowState.wrong;
+        }
+        _shake++;
+      });
       showFeedback(
         context,
-        'أجب عن جميع الأسئلة ثم اضغط «التالي»',
+        empty.length == open.length
+            ? (open.length > 1
+                  ? 'اكتب الكلمتين ثم اضغط «إدخال»'
+                  : 'اكتب الكلمة ثم اضغط «إدخال»')
+            : 'لم تكتب إحدى الكلمتين، اكتبها ثم اضغط «إدخال»',
         tone: FeedbackTone.error,
       );
       return;
@@ -255,8 +354,10 @@ class _EquationPageState extends State<EquationPage> {
         context,
         'لا يُسمح بالخطأ! ستُعاد جميع الكلمات بترتيب مختلف',
         tone: FeedbackTone.error,
+        duration: const Duration(seconds: 5),
       );
-      Future.delayed(const Duration(milliseconds: 1800), () {
+      // وقت كافٍ لقراءة الرسالة ورؤية الإجابات الخاطئة قبل الإعادة.
+      Future.delayed(const Duration(milliseconds: 3500), () {
         if (mounted) setState(_restartShuffled);
       });
       return;
@@ -278,7 +379,7 @@ class _EquationPageState extends State<EquationPage> {
     } else {
       // النقاط حسب المستوى المتبقي في المؤشر.
       AppScope.read(context).addPoints((_total * 10 * _level / 100).round());
-      showFeedback(context, 'ممتاز! أنهيت هذا التطبيق 🎉');
+      showFeedback(context, 'ممتاز! أنهيت هذا التمرين');
       widget.handle.markComplete();
     }
   }
@@ -292,6 +393,14 @@ class _EquationPageState extends State<EquationPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (widget.example case final e?) ...[
+            _ExampleLine(
+              key: const ValueKey('example'),
+              op: widget.op,
+              word: e,
+            ),
+            const SizedBox(height: 12),
+          ],
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: Column(
@@ -303,6 +412,20 @@ class _EquationPageState extends State<EquationPage> {
                 ],
               ],
             ),
+          ),
+          const SizedBox(height: 4),
+          // يبقى ظاهرًا أثناء الكتابة حين يختفي زر «التالي».
+          Builder(
+            builder: (context) {
+              final active =
+                  !_restarting && !_states.every((s) => s == _RowState.right);
+              return AppButton(
+                label: 'إدخال',
+                style: AppButtonStyle.secondary,
+                enabled: active,
+                onTap: active ? _check : null,
+              );
+            },
           ),
         ],
       ),
@@ -371,12 +494,16 @@ class _EquationPageState extends State<EquationPage> {
                 width: 100,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: AlText(word, size: 30, highlight: true),
+                  child: AlText(
+                    widget.op.question(word),
+                    size: 30,
+                    highlight: false,
+                  ),
                 ),
               ),
-              Text(widget.add ? '+' : '−', style: op),
+              Text(widget.op.adds ? '+' : '−', style: op),
               const SizedBox(width: 4),
-              const AlBox(size: 18),
+              AlBox(size: 18, text: widget.op.part),
               const SizedBox(width: 4),
               Text('=', style: op),
               const SizedBox(width: 6),
@@ -389,12 +516,58 @@ class _EquationPageState extends State<EquationPage> {
               child: Align(
                 alignment: AlignmentDirectional.centerEnd,
                 child: LamChip(
-                  lamTypeOf(widget.add ? _answer(word) : word),
+                  lamTypeOf(widget.op.adds ? _answer(word) : word),
                   dense: true,
                 ),
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// مثال محلول بخط أصغر: الكتاب + لِـ = للكتاب.
+class _ExampleLine extends StatelessWidget {
+  const _ExampleLine({super.key, required this.op, required this.word});
+  final EquationOp op;
+  final String word;
+
+  @override
+  Widget build(BuildContext context) {
+    final answer = op.answer(word);
+    // الحرف المضاف بالأحمر في الناتج (لل/ل في لام الجر، ب في الباء).
+    final red = switch (op) {
+      EquationOp.addLi => liRedPrefix(word),
+      EquationOp.addBi => 1,
+      _ => 0,
+    };
+    final sign = TextStyle(color: AppColors.muted, fontSize: 20);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('مثال: ', style: AppTheme.word(18, color: AppColors.muted)),
+            AlText(op.question(word), size: 22, highlight: false),
+            Text(op.adds ? '  +  ' : '  −  ', style: sign),
+            Text(op.part, style: AppTheme.word(22, color: AppColors.al)),
+            Text('  =  ', style: sign),
+            AlText(
+              answer,
+              size: 22,
+              color: AppColors.blue,
+              highlight: red > 0,
+              redPrefix: red > 0 ? red : null,
+            ),
+          ],
+        ),
       ),
     );
   }

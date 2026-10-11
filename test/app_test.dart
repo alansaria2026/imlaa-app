@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:imlaa/app_state.dart';
 import 'package:imlaa/screens/home_screen.dart';
+import 'package:imlaa/widgets/letter_boxes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helpers/harness.dart';
@@ -13,7 +14,7 @@ void main() {
   testWidgets('مسار التعلّم: فتح المحطة الحالية والتنقل والعودة', (t) async {
     final state = await pumpScreen(t, const HomeScreen());
     expect(find.text('إملائي'), findsOneWidget);
-    expect(find.text('٠ من ٦ محطات'), findsOneWidget);
+    expect(find.text('٠ من ١٢ محطة'), findsOneWidget);
 
     // محطة مقفلة تُظهر تلميحًا ولا تُفتح.
     await t.tap(find.text('أمثلة'));
@@ -29,6 +30,8 @@ void main() {
     expect(find.byTooltip('القائمة'), findsOneWidget);
     expect(find.byTooltip('رجوع'), findsOneWidget);
     expect(find.text('الحروف الشمسية'), findsNothing);
+    // «إنهاء» لا يظهر إلا في آخر صفحة.
+    expect(find.text('إنهاء'), findsNothing);
 
     // ص ١ ← ص ٢ ← ص ٣
     await t.tap(nextButton());
@@ -38,14 +41,26 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text('أضف (الـ) إلى الكلمة واكتب الناتج'), findsOneWidget);
     expect(find.text('تطبيق'), findsNothing);
+    expect(find.text('إدخال'), findsOneWidget);
     // مربع لكل سؤال تحت مؤشر النتيجة.
     expect(find.byKey(const ValueKey('q11')), findsOneWidget);
 
     // «التالي» قبل الإجابة يطلب إكمال الأسئلة ولا ينتقل.
     await t.tap(nextButton());
     await t.pump();
-    expect(find.textContaining('أجب عن جميع الأسئلة'), findsOneWidget);
+    expect(
+      find.textContaining('اكتب الكلمتين ثم اضغط «إدخال»'),
+      findsOneWidget,
+    );
     await t.pumpAndSettle(const Duration(seconds: 3));
+
+    // أثناء الكتابة تُخفى أزرار التنقل لتتسع المساحة فوق لوحة المفاتيح.
+    t.view.viewInsets = const FakeViewPadding(bottom: 900);
+    await t.pump();
+    expect(find.byTooltip('رجوع'), findsNothing);
+    t.view.resetViewInsets();
+    await t.pump();
+    expect(find.byTooltip('رجوع'), findsOneWidget);
 
     // القائمة المنسدلة ← القاعدة.
     await t.tap(find.byTooltip('القائمة'));
@@ -62,7 +77,7 @@ void main() {
     await t.pumpAndSettle();
     expect(state.isPageDone('lam', 0), isTrue);
     expect(state.isPageDone('lam', 1), isTrue);
-    expect(find.text('٢ من ٦ محطات'), findsOneWidget);
+    expect(find.text('٢ من ١٢ محطة'), findsOneWidget);
   });
 
   testWidgets('تبويبا الإنجازات والإعدادات', (t) async {
@@ -77,6 +92,35 @@ void main() {
     expect(find.text('سرعة النطق'), findsOneWidget);
     expect(find.text('جرّب الصوت'), findsOneWidget);
   });
+
+  for (final (platform, dLeftOfJ) in [
+    (TargetPlatform.iOS, true),
+    (TargetPlatform.android, false),
+  ]) {
+    testWidgets('لوحة الحروف كلوحة ${platform.name}', (t) async {
+      final typed = <String>[];
+      await t.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(platform: platform),
+          home: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Scaffold(
+              body: ArabicKeyboard(onLetter: typed.add, onBackspace: () {}),
+            ),
+          ),
+        ),
+      );
+      final d = t.getCenter(find.text('ض')).dx;
+      final j = t.getCenter(find.text('ج')).dx;
+      // الآيفون: «ض» يسارًا. أندرويد: «ض» يمينًا.
+      expect(d < j, dLeftOfJ);
+      // حروف الهمزة الناقصة موجودة في الجهازين.
+      for (final l in ['أ', 'إ', 'آ', 'ئ', 'ؤ']) {
+        await t.tap(find.text(l));
+      }
+      expect(typed, ['أ', 'إ', 'آ', 'ئ', 'ؤ']);
+    });
+  }
 
   group('الأيام المتتالية', () {
     tearDown(() => AppState.clock = DateTime.now);

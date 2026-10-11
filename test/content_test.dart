@@ -1,5 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'dart:math';
+
+import 'package:imlaa/data/bi_lesson.dart';
 import 'package:imlaa/data/lam_lesson.dart';
+import 'package:imlaa/data/li_lesson.dart';
+import 'package:imlaa/data/review_lesson.dart';
+import 'package:imlaa/widgets/letter_boxes.dart';
 import 'package:imlaa/lesson/lam_lesson_pages.dart';
 import 'package:imlaa/utils/arabic.dart';
 
@@ -69,7 +75,7 @@ void main() {
 
   test('بناء صفحات الدرس', () {
     final pages = buildLamLessonPages();
-    expect(pages.length, 6);
+    expect(pages.length, 12);
     expect(addAlWordBank.toSet().length, addAlWordBank.length);
   });
 
@@ -86,5 +92,80 @@ void main() {
     for (final e in lamExamples) {
       expect(normalizeAnswer(spokenForm(e.result)), normalizeAnswer(e.result));
     }
+  });
+
+  group('اتصال اللام بـ(ال)', () {
+    test('لامان فقط، ولا تجتمع ثلاث لامات', () {
+      expect(liForm('الكتاب'), 'للكتاب');
+      expect(liForm('السكر'), 'للسكر');
+      expect(liForm('اللوحة'), 'للوحة');
+      expect(liForm('اللحن'), 'للحن');
+      expect(liRedPrefix('الكتاب'), 2);
+      expect(liRedPrefix('اللحن'), 1);
+    });
+
+    test('النطق مشكول', () {
+      expect(liSpoken('الكتاب'), 'لِلْكِتاب');
+      expect(normalizeAnswer(liSpoken('الطبيب')), 'للطبيب');
+      expect(normalizeAnswer(liSpoken('اللحن')), 'للحن');
+      for (final w in liWordBank) {
+        expect(spokenForm(w), isNot(w), reason: w);
+        expect(normalizeAnswer(liSpoken(w)), liForm(w), reason: w);
+      }
+    });
+
+    test('عشر كلمات مختلفة منها أربع مبدوءة باللام', () {
+      expect(liWordBank.toSet().length, liWordBank.length);
+      final words = pickLiWords(Random(1));
+      expect(words.length, 10);
+      expect(words.toSet().length, 10);
+      expect(words.where((w) => w[2] == 'ل').length, 4);
+      // البنك كله (للبدائل) دون فقد كلمات.
+      expect(
+        pickLiWords(Random(1), count: liWordBank.length).toSet(),
+        liWordBank.toSet(),
+      );
+    });
+  });
+
+  group('اتصال الباء بـ(ال)', () {
+    test('تُكتب الباء ويبقى الاسم كما هو', () {
+      expect(biForm('الطائرة'), 'بالطائرة');
+      expect(biForm('اللحم'), 'باللحم');
+      expect(biSpoken('الكتب'), 'بِالْكُتُب');
+      for (final w in biWordBank) {
+        expect(spokenForm(w), isNot(w), reason: w);
+        expect(normalizeAnswer(biSpoken(w)), normalizeAnswer(biForm(w)));
+      }
+    });
+
+    test('عشر كلمات مختلفة منها اثنتان مبدوءتان باللام', () {
+      expect(biWordBank.toSet().length, biWordBank.length);
+      final words = pickBiWords(Random(2));
+      expect(words.toSet().length, 10);
+      expect(words.where((w) => w[2] == 'ل').length, 2);
+    });
+  });
+
+  group('مراجعة الاستماع', () {
+    test('كل جملة فيها الكلمة الناقصة مرة واحدة وتُكتب باللوحة', () {
+      for (final s in prepSentences) {
+        final words = normalizeAnswer(s.spoken).split(' ');
+        expect(words.where((w) => w == s.answer).length, 1, reason: s.spoken);
+        expect(ArabicKeyboard.canType(s.answer), isTrue, reason: s.answer);
+      }
+    });
+
+    test('عشرة أسئلة لكل حرف: خمس كلمات وخمس جمل', () {
+      for (final p in Prep.values) {
+        final (items, spare) = listenItems(p, Random(3));
+        final prefix = p == Prep.li ? 'لل' : 'بال';
+        expect(items.length, 10);
+        expect(items.every((i) => i.answer.startsWith(prefix)), isTrue);
+        expect(items.where((i) => i.sentence != null).length, 5);
+        expect(spare, isNotEmpty);
+        expect(spare.every((i) => i.answer.startsWith(prefix)), isTrue);
+      }
+    });
   });
 }
