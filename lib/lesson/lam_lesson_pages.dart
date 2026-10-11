@@ -124,11 +124,15 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
       title: 'الكلمة الناقصة',
       emoji: '🧩',
       rule: const LiRuleContent(),
-      builder: (h) => LiListenPage(
-        handle: h,
-        title: 'اسمع واكتب الكلمة الناقصة',
-        items: liSentenceItems(rnd),
-      ),
+      builder: (h) {
+        final (items, spare) = liSentenceItems(rnd);
+        return LiListenPage(
+          handle: h,
+          title: 'اسمع واكتب الكلمة الناقصة',
+          items: items,
+          spare: spare,
+        );
+      },
     ),
   ];
 }

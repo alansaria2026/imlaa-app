@@ -53,11 +53,14 @@ const liWordBank = [
   'الجار', 'السفر', 'النهر', 'اللحم', 'اللون',
 ];
 
-/// ٢٠ كلمة مختلفة في كل مرة، منها ست على الأقل مبدوءة باللام.
-List<String> pickLiWords(Random rnd, {int count = 20}) {
+/// عدد أسئلة كل تمرين.
+const liQuestionCount = 10;
+
+/// [count] كلمة مختلفة في كل مرة، نحو خُمسيها مبدوءة باللام.
+List<String> pickLiWords(Random rnd, {int count = liQuestionCount}) {
   final lam = liWordBank.where((w) => w[2] == 'ل').toList()..shuffle(rnd);
   final other = liWordBank.where((w) => w[2] != 'ل').toList()..shuffle(rnd);
-  const lamCount = 6;
+  final lamCount = min(max(3, count * 2 ~/ 5), lam.length);
   return [...lam.take(lamCount), ...other.take(count - lamCount)]..shuffle(rnd);
 }
 

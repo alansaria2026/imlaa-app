@@ -354,7 +354,7 @@ class _SentenceWithBlank extends StatelessWidget {
 /// أسئلة «اسمع الكلمة واكتبها»: [count] كلمة، والباقي بدائل.
 (List<LiListenItem>, List<LiListenItem>) liWordItems(
   Random rnd, {
-  int count = 20,
+  int count = liQuestionCount,
 }) {
   final words = pickLiWords(rnd, count: liWordBank.length);
   LiListenItem item(String w) => LiListenItem(
@@ -368,10 +368,13 @@ class _SentenceWithBlank extends StatelessWidget {
   );
 }
 
-/// أسئلة «اسمع واكتب الكلمة الناقصة».
-List<LiListenItem> liSentenceItems(Random rnd) {
+/// أسئلة «اسمع واكتب الكلمة الناقصة»: [count] جمل، والباقي بدائل.
+(List<LiListenItem>, List<LiListenItem>) liSentenceItems(
+  Random rnd, {
+  int count = liQuestionCount,
+}) {
   final sentences = [...liSentences]..shuffle(rnd);
-  return [
+  final items = [
     for (final s in sentences)
       LiListenItem(
         spoken: s.spoken,
@@ -380,6 +383,7 @@ List<LiListenItem> liSentenceItems(Random rnd) {
         sentence: _blank(s),
       ),
   ];
+  return (items.take(count).toList(), items.skip(count).toList());
 }
 
 String _blank(LiSentence s) {

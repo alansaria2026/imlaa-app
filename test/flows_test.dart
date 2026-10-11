@@ -172,12 +172,12 @@ void main() {
     expect(state.points, 108); // ١٢ × ١٠ × ٩٠٪
   });
 
-  testWidgets('أضف (لِـ): عشرون كلمة بلا خطأ', (t) async {
+  testWidgets('أضف (لِـ): عشر كلمات بلا خطأ', (t) async {
     final state = await pumpScreen(t, _single(7));
     final fields = find.byType(TextField);
     List<String> group() =>
         _visibleTexts(t).where(liWordBank.contains).toList();
-    for (var round = 0; round < 10; round++) {
+    for (var round = 0; round < 5; round++) {
       final words = group();
       expect(words.length, 2);
       for (var i = 0; i < 2; i++) {
@@ -187,7 +187,7 @@ void main() {
       await _settle(t);
     }
     expect(scoreLabel('لم يبقَ شيء'), findsOneWidget);
-    expect(state.points, 200);
+    expect(state.points, 100);
   });
 
   testWidgets('احذف (لِـ): للحن − لِـ = اللحن', (t) async {
@@ -195,7 +195,7 @@ void main() {
     final fields = find.byType(TextField);
     final byLi = {for (final w in liWordBank) liForm(w): w};
     List<String> group() => _visibleTexts(t).where(byLi.containsKey).toList();
-    for (var round = 0; round < 10; round++) {
+    for (var round = 0; round < 5; round++) {
       final words = group();
       expect(words.length, 2);
       for (var i = 0; i < 2; i++) {
@@ -233,7 +233,7 @@ void main() {
     }
   }
 
-  testWidgets('اسمع الكلمة واكتبها: خطأ ثم عشرون كلمة', (t) async {
+  testWidgets('اسمع الكلمة واكتبها: خطأ ثم عشر كلمات', (t) async {
     await pumpScreen(t, _single(9));
     final bySpoken = {for (final w in liWordBank) liSpoken(w): liForm(w)};
 
@@ -250,7 +250,7 @@ void main() {
     expect(find.textContaining('سيعاد هذا السؤال'), findsOneWidget);
     await _settle(t);
 
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 10; i++) {
       await typeLetters(t, bySpoken[lastSpoken]!);
       await t.tap(find.text('إدخال'));
       await _settle(t);
@@ -267,7 +267,7 @@ void main() {
       _visibleText(t, (x) => x.contains('………')),
       isNot(contains(s.answer)),
     );
-    for (var i = 0; i < liSentences.length; i++) {
+    for (var i = 0; i < 10; i++) {
       await typeLetters(t, bySpoken[lastSpoken]!.answer);
       await _submit(t);
       await _settle(t);

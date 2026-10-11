@@ -111,12 +111,17 @@ void main() {
       }
     });
 
-    test('٢٠ كلمة مختلفة منها ست مبدوءة باللام', () {
+    test('عشر كلمات مختلفة منها أربع مبدوءة باللام', () {
       expect(liWordBank.toSet().length, liWordBank.length);
       final words = pickLiWords(Random(1));
-      expect(words.length, 20);
-      expect(words.toSet().length, 20);
-      expect(words.where((w) => w[2] == 'ل').length, 6);
+      expect(words.length, 10);
+      expect(words.toSet().length, 10);
+      expect(words.where((w) => w[2] == 'ل').length, 4);
+      // البنك كله (للبدائل) دون فقد كلمات.
+      expect(
+        pickLiWords(Random(1), count: liWordBank.length).toSet(),
+        liWordBank.toSet(),
+      );
     });
 
     test('كل جملة فيها الكلمة الناقصة مرة واحدة', () {
