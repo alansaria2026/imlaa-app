@@ -59,8 +59,13 @@ void main() {
 
     await t.enterText(find.byType(TextField).first, 'كلمة');
     await _submit(t);
-    expect(find.text('هذه الكلمة ليست في الجملة'), findsOneWidget);
+    // كلمة واحدة فقط: تنبيه دون احتساب خطأ.
     expect(find.text('اكتب الكلمة'), findsOneWidget);
+    expect(find.textContaining('لم تكتب إحدى الكلمتين'), findsOneWidget);
+    await _settle(t);
+    await t.enterText(find.byType(TextField).at(1), 'كلمة');
+    await _submit(t);
+    expect(find.text('هذه الكلمة ليست في الجملة'), findsNWidgets(2));
     await _settle(t);
 
     // الجملة مسموعة فقط ولا تُعرض قبل الإجابة.
@@ -161,7 +166,7 @@ void main() {
     // «التالي» قبل الإجابة عن السؤالين لا يُحتسب خطأ.
     await t.enterText(fields.at(0), 'ال${group()[0]}');
     await _submit(t);
-    expect(find.textContaining('أجب عن جميع الأسئلة'), findsOneWidget);
+    expect(find.textContaining('لم تكتب إحدى الكلمتين'), findsOneWidget);
     await _settle(t);
 
     final before = group();

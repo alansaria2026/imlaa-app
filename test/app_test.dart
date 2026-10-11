@@ -48,7 +48,10 @@ void main() {
     // «التالي» قبل الإجابة يطلب إكمال الأسئلة ولا ينتقل.
     await t.tap(nextButton());
     await t.pump();
-    expect(find.textContaining('أجب عن جميع الأسئلة'), findsOneWidget);
+    expect(
+      find.textContaining('اكتب الكلمتين ثم اضغط «إدخال»'),
+      findsOneWidget,
+    );
     await t.pumpAndSettle(const Duration(seconds: 3));
 
     // أثناء الكتابة تُخفى أزرار التنقل لتتسع المساحة فوق لوحة المفاتيح.

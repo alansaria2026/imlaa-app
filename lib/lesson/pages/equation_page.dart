@@ -303,10 +303,25 @@ class _EquationPageState extends State<EquationPage> {
       for (var i = 0; i < _words.length; i++)
         if (_states[i] != _RowState.right) i,
     ];
-    if (open.any((i) => _ctrls[i].text.trim().isEmpty)) {
+    final empty = [
+      for (final i in open)
+        if (_ctrls[i].text.trim().isEmpty) i,
+    ];
+    if (empty.isNotEmpty) {
+      // حقل فارغ لا يُحتسب خطأً: يُظلَّل بالأحمر ويُنبَّه الطالب فقط.
+      setState(() {
+        for (final i in empty) {
+          _states[i] = _RowState.wrong;
+        }
+        _shake++;
+      });
       showFeedback(
         context,
-        'أجب عن جميع الأسئلة ثم اضغط «التالي»',
+        empty.length == open.length
+            ? (open.length > 1
+                  ? 'اكتب الكلمتين ثم اضغط «إدخال»'
+                  : 'اكتب الكلمة ثم اضغط «إدخال»')
+            : 'لم تكتب إحدى الكلمتين، اكتبها ثم اضغط «إدخال»',
         tone: FeedbackTone.error,
       );
       return;

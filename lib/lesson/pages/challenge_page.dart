@@ -94,6 +94,23 @@ class _ChallengePageState extends State<ChallengePage> {
     final s = _s;
     if (s == null || _solvedCurrent) return;
     FocusScope.of(context).unfocus();
+    // حقل فارغ لا يُحتسب خطأً: يُنبَّه الطالب فقط.
+    final emptyMoon = normalizeAnswer(_moonCtrl.text).isEmpty;
+    final emptySun = normalizeAnswer(_sunCtrl.text).isEmpty;
+    if (emptyMoon || emptySun) {
+      setState(() {
+        _moonError = emptyMoon ? 'اكتب الكلمة' : null;
+        _sunError = emptySun ? 'اكتب الكلمة' : null;
+      });
+      showFeedback(
+        context,
+        emptyMoon && emptySun
+            ? 'اكتب الكلمتين ثم اضغط «إدخال»'
+            : 'لم تكتب إحدى الكلمتين، اكتبها ثم اضغط «إدخال»',
+        tone: FeedbackTone.error,
+      );
+      return;
+    }
     setState(() {
       _moonError = _validate(_moonCtrl.text, s.moon, LamType.moon);
       _sunError = _validate(_sunCtrl.text, s.sun, LamType.sun);
