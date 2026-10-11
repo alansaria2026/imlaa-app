@@ -38,6 +38,7 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text('أضف (الـ) إلى الكلمة واكتب الناتج'), findsOneWidget);
     expect(find.text('تطبيق'), findsNothing);
+    expect(find.text('إدخال'), findsOneWidget);
     // مربع لكل سؤال تحت مؤشر النتيجة.
     expect(find.byKey(const ValueKey('q11')), findsOneWidget);
 
