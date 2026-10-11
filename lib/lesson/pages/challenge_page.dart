@@ -144,7 +144,7 @@ class _ChallengePageState extends State<ChallengePage> {
                     RoundIconButton(
                       tooltip: 'استمع',
                       icon: Icons.volume_up_rounded,
-                      size: 76,
+                      size: 60,
                       color: AppColors.ink,
                       iconColor: Colors.white,
                       onTap: _speak,
@@ -156,10 +156,10 @@ class _ChallengePageState extends State<ChallengePage> {
                       borderColor: AppColors.ink,
                       shape: BoxShape.circle,
                       child: const SizedBox(
-                        width: 54,
-                        height: 54,
+                        width: 48,
+                        height: 48,
                         child: Center(
-                          child: Text('🐢', style: TextStyle(fontSize: 26)),
+                          child: Text('🐢', style: TextStyle(fontSize: 22)),
                         ),
                       ),
                     ),
@@ -169,24 +169,40 @@ class _ChallengePageState extends State<ChallengePage> {
                   const SizedBox(height: 16),
                   AlText('( ${s.spoken} )', size: 30),
                 ],
-                const SizedBox(height: 20),
-                _AnswerField(
-                  number: 1,
-                  type: LamType.moon,
-                  controller: _moonCtrl,
-                  error: _moonError,
-                  done: _solvedCurrent,
-                  onChanged: () => setState(() => _moonError = null),
+                const SizedBox(height: 16),
+                // الحقلان متجاوران ليبقيا فوق لوحة المفاتيح.
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _AnswerField(
+                        type: LamType.moon,
+                        controller: _moonCtrl,
+                        error: _moonError,
+                        done: _solvedCurrent,
+                        onChanged: () => setState(() => _moonError = null),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _AnswerField(
+                        type: LamType.sun,
+                        controller: _sunCtrl,
+                        error: _sunError,
+                        done: _solvedCurrent,
+                        onChanged: () => setState(() => _sunError = null),
+                        onSubmitted: _submit,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 14),
-                _AnswerField(
-                  number: 2,
-                  type: LamType.sun,
-                  controller: _sunCtrl,
-                  error: _sunError,
-                  done: _solvedCurrent,
-                  onChanged: () => setState(() => _sunError = null),
-                  onSubmitted: _submit,
+                // يبقى ظاهرًا أثناء الكتابة حين يختفي زر «التالي».
+                AppButton(
+                  label: 'إدخال',
+                  style: AppButtonStyle.secondary,
+                  enabled: !_solvedCurrent,
+                  onTap: _solvedCurrent ? null : _submit,
                 ),
               ],
             ),
@@ -196,7 +212,6 @@ class _ChallengePageState extends State<ChallengePage> {
 
 class _AnswerField extends StatelessWidget {
   const _AnswerField({
-    required this.number,
     required this.type,
     required this.controller,
     required this.error,
@@ -205,7 +220,6 @@ class _AnswerField extends StatelessWidget {
     this.onSubmitted,
   });
 
-  final int number;
   final LamType type;
   final TextEditingController controller;
   final String? error;
@@ -217,30 +231,28 @@ class _AnswerField extends StatelessWidget {
   Widget build(BuildContext context) {
     final moon = type == LamType.moon;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 4,
           children: [
-            Flexible(
-              child: Text(
-                '${arDigits(number)}. كلمة بها ',
-                style: AppTheme.word(22),
-              ),
-            ),
+            Text('كلمة بها', style: AppTheme.word(18).copyWith(height: 1.3)),
             LamChip(type, dense: true),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         TextField(
           controller: controller,
           enabled: !done,
           textDirection: TextDirection.rtl,
           textAlign: TextAlign.center,
           style: AppTheme.word(
-            28,
+            26,
             color: done ? AppColors.success : AppColors.ink,
           ).copyWith(height: 1.3),
-          scrollPadding: const EdgeInsets.fromLTRB(20, 90, 20, 60),
+          scrollPadding: const EdgeInsets.fromLTRB(20, 90, 20, 120),
           textInputAction: onSubmitted == null
               ? TextInputAction.next
               : TextInputAction.done,
@@ -249,8 +261,10 @@ class _AnswerField extends StatelessWidget {
           },
           onSubmitted: (_) => onSubmitted?.call(),
           decoration: InputDecoration(
-            hintText: moon ? 'مثل: القمر' : 'مثل: الشمس',
+            hintText: moon ? 'القمر' : 'الشمس',
+            hintStyle: AppTheme.word(20, color: AppColors.lineDark),
             errorText: error,
+            errorMaxLines: 2,
             fillColor: done ? AppColors.successSoft : AppColors.surface,
           ),
         ),
