@@ -146,7 +146,7 @@ class _LessonScreenState extends State<LessonScreen> {
               padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
               child: Row(
                 children: [
-                  _LessonMenu(handle: handle),
+                  _LessonMenu(handle: handle, rule: widget.pages[_page].rule),
                   const SizedBox(width: 6),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 96),
@@ -268,13 +268,19 @@ class _SquareButton extends StatelessWidget {
 
 /// القائمة المنسدلة: القاعدة، استمع، مساعدة.
 class _LessonMenu extends StatelessWidget {
-  const _LessonMenu({required this.handle});
+  const _LessonMenu({required this.handle, this.rule});
   final PageHandle handle;
+  final Widget? rule;
+
+  Future<void> _openRule(BuildContext context) async {
+    await showRuleSheet(context, content: rule);
+    handle.onRuleOpened?.call();
+  }
 
   @override
   Widget build(BuildContext context) {
     final items = <(IconData, String, VoidCallback)>[
-      (Icons.menu_book_outlined, 'القاعدة', () => showRuleSheet(context)),
+      (Icons.menu_book_outlined, 'القاعدة', () => _openRule(context)),
       if (handle.onListen != null)
         (Icons.volume_up_outlined, 'استمع', handle.onListen!),
       if (handle.onHint != null)

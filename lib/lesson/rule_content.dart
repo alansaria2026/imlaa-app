@@ -265,8 +265,9 @@ class _ExampleTile extends StatelessWidget {
   }
 }
 
-void showRuleSheet(BuildContext context) {
-  showModalBottomSheet<void>(
+/// نافذة القاعدة؛ [content] لقاعدة غير قاعدة اللام القمرية والشمسية.
+Future<void> showRuleSheet(BuildContext context, {Widget? content}) {
+  return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     builder: (context) => DraggableScrollableSheet(
@@ -285,7 +286,7 @@ void showRuleSheet(BuildContext context) {
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 16),
-          const RuleContent(),
+          content ?? const RuleContent(),
         ],
       ),
     ),

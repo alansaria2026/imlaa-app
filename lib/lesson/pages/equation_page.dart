@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
 import '../../data/lam_lesson.dart';
+import '../../data/li_lesson.dart';
 import '../../services/speaker.dart';
 import '../../theme.dart';
 import '../../utils/arabic.dart';
@@ -11,7 +12,41 @@ import '../../widgets/common.dart';
 import '../../widgets/pressable.dart';
 import '../page_handle.dart';
 
-/// تطبيق المعادلات: كلمة + الـ = ؟ (ص ٣) أو كلمة − الـ = ؟ (ص ٧).
+/// نوع المعادلة.
+enum EquationOp {
+  /// كتاب + الـ = الكتاب
+  addAl,
+
+  /// الكتاب − الـ = كتاب
+  removeAl,
+
+  /// الكتاب + لِـ = للكتاب
+  addLi,
+
+  /// للكتاب − لِـ = الكتاب
+  removeLi;
+
+  bool get adds => this == addAl || this == addLi;
+  bool get isLi => this == addLi || this == removeLi;
+
+  /// ما يُضاف أو يُحذف.
+  String get part => isLi ? 'لِـ' : 'الـ';
+
+  /// الكلمة المعروضة في السؤال (الكلمات مخزنة بصيغتها مع «ال» إلا في addAl).
+  String question(String w) => this == removeLi ? liForm(w) : w;
+
+  String answer(String w) => switch (this) {
+    addAl => 'ال$w',
+    removeAl => w.substring(2),
+    addLi => liForm(w),
+    removeLi => w,
+  };
+
+  String spokenQuestion(String w) =>
+      this == removeLi ? liSpoken(w) : spokenForm(w);
+}
+
+/// تطبيق المعادلات: كلمة ± الـ = ؟ أو كلمة ± لِـ = ؟
 ///
 /// في الوضع الصارم [strict] (تعليمات ص ٤): لا يُسمح بأي خطأ؛ أي خطأ يعيد
 /// جميع الكلمات بترتيب مختلف، ومؤشر النتيجة يبدأ ممتلئًا وينقص مع كل خطأ.
@@ -20,8 +55,9 @@ class EquationPage extends StatefulWidget {
     super.key,
     required this.handle,
     required this.rounds,
-    required this.add,
+    required this.op,
     this.tag,
+    this.refill,
     required this.title,
     this.strict = false,
     this.showLamType = true,
@@ -31,7 +67,10 @@ class EquationPage extends StatefulWidget {
 
   /// كل جولة مجموعة كلمات تظهر معًا.
   final List<List<String>> rounds;
-  final bool add;
+  final EquationOp op;
+
+  /// كلمات جديدة عند الرجوع للقاعدة (تعليمات ص ٣ من درس اللام)؛ null للإبقاء.
+  final List<List<String>> Function()? refill;
   final String? tag;
   final String title;
   final bool strict;
@@ -70,7 +109,7 @@ class _EquationPageState extends State<EquationPage> {
   int get _total => _rounds.fold(0, (a, r) => a + r.length);
   int get _level => max(0, 100 - _mistakes * EquationPage.levelStep);
 
-  String _answer(String w) => widget.add ? 'ال$w' : w.substring(2);
+  String _answer(String w) => widget.op.answer(w);
 
   @override
   void initState() {
@@ -79,8 +118,9 @@ class _EquationPageState extends State<EquationPage> {
     widget.handle
       ..onHint = _hint
       ..onSubmit = _check
+      ..onRuleOpened = _refill
       ..onListen = () => Speaker.instance.speak(
-        _words.map(spokenForm).join('، '),
+        _words.map(widget.op.spokenQuestion).join('، '),
         rate: AppScope.read(context).speechRate,
       );
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -112,6 +152,22 @@ class _EquationPageState extends State<EquationPage> {
     widget.handle.setProgress(0, _total);
   }
 
+  /// بعد الرجوع للقاعدة: كلمات جديدة من البداية دون احتساب خطأ.
+  void _refill() {
+    final refill = widget.refill;
+    if (refill == null || widget.handle.complete) return;
+    setState(() {
+      _retired.addAll(_ctrls);
+      _rounds = refill();
+      _round = 0;
+      _solved = 0;
+      _generation++;
+      _restarting = false;
+      _setupRound();
+    });
+    widget.handle.setProgress(0, _total);
+  }
+
   static bool _listEquals(List<String> a, List<String> b) {
     for (var i = 0; i < a.length; i++) {
       if (a[i] != b[i]) return false;
@@ -139,9 +195,12 @@ class _EquationPageState extends State<EquationPage> {
     if (i < 0) return;
     final ans = _answer(_words[i]);
     setState(
-      () => _hints[i] = widget.add
-          ? 'اكتب «ال» ثم الكلمة: ${ans.substring(0, 3)}…'
-          : 'احذف أول حرفين «ال»: ${ans.substring(0, 1)}…',
+      () => _hints[i] = switch (widget.op) {
+        EquationOp.addAl => 'اكتب «ال» ثم الكلمة: ${ans.substring(0, 3)}…',
+        EquationOp.removeAl => 'احذف أول حرفين «ال»: ${ans.substring(0, 1)}…',
+        EquationOp.addLi => 'احذف الألف واكتب لامين فقط: لل…',
+        EquationOp.removeLi => 'أعد «ال» إلى أول الكلمة: ال…',
+      },
     );
     showFeedback(context, _hints[i]!, tone: FeedbackTone.hint);
   }
@@ -388,12 +447,16 @@ class _EquationPageState extends State<EquationPage> {
                 width: 100,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: AlText(word, size: 30, highlight: false),
+                  child: AlText(
+                    widget.op.question(word),
+                    size: 30,
+                    highlight: false,
+                  ),
                 ),
               ),
-              Text(widget.add ? '+' : '−', style: op),
+              Text(widget.op.adds ? '+' : '−', style: op),
               const SizedBox(width: 4),
-              const AlBox(size: 18),
+              AlBox(size: 18, text: widget.op.part),
               const SizedBox(width: 4),
               Text('=', style: op),
               const SizedBox(width: 6),
@@ -406,7 +469,7 @@ class _EquationPageState extends State<EquationPage> {
               child: Align(
                 alignment: AlignmentDirectional.centerEnd,
                 child: LamChip(
-                  lamTypeOf(widget.add ? _answer(word) : word),
+                  lamTypeOf(widget.op.adds ? _answer(word) : word),
                   dense: true,
                 ),
               ),

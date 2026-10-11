@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'dart:math';
+
 import 'package:imlaa/data/lam_lesson.dart';
+import 'package:imlaa/data/li_lesson.dart';
 import 'package:imlaa/lesson/lam_lesson_pages.dart';
 import 'package:imlaa/utils/arabic.dart';
 
@@ -69,7 +72,7 @@ void main() {
 
   test('بناء صفحات الدرس', () {
     final pages = buildLamLessonPages();
-    expect(pages.length, 6);
+    expect(pages.length, 11);
     expect(addAlWordBank.toSet().length, addAlWordBank.length);
   });
 
@@ -86,5 +89,42 @@ void main() {
     for (final e in lamExamples) {
       expect(normalizeAnswer(spokenForm(e.result)), normalizeAnswer(e.result));
     }
+  });
+
+  group('اتصال اللام بـ(ال)', () {
+    test('لامان فقط، ولا تجتمع ثلاث لامات', () {
+      expect(liForm('الكتاب'), 'للكتاب');
+      expect(liForm('السكر'), 'للسكر');
+      expect(liForm('اللوحة'), 'للوحة');
+      expect(liForm('اللحن'), 'للحن');
+      expect(liRedPrefix('الكتاب'), 2);
+      expect(liRedPrefix('اللحن'), 1);
+    });
+
+    test('النطق مشكول', () {
+      expect(liSpoken('الكتاب'), 'لِلْكِتاب');
+      expect(normalizeAnswer(liSpoken('الطبيب')), 'للطبيب');
+      expect(normalizeAnswer(liSpoken('اللحن')), 'للحن');
+      for (final w in liWordBank) {
+        expect(spokenForm(w), isNot(w), reason: w);
+        expect(normalizeAnswer(liSpoken(w)), liForm(w), reason: w);
+      }
+    });
+
+    test('٢٠ كلمة مختلفة منها ست مبدوءة باللام', () {
+      expect(liWordBank.toSet().length, liWordBank.length);
+      final words = pickLiWords(Random(1));
+      expect(words.length, 20);
+      expect(words.toSet().length, 20);
+      expect(words.where((w) => w[2] == 'ل').length, 6);
+    });
+
+    test('كل جملة فيها الكلمة الناقصة مرة واحدة', () {
+      expect(liSentences.length, 20);
+      for (final s in liSentences) {
+        final words = normalizeAnswer(s.spoken).split(' ');
+        expect(words.where((w) => w == s.answer).length, 1, reason: s.spoken);
+      }
+    });
   });
 }

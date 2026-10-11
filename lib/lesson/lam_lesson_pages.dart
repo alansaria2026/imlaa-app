@@ -1,10 +1,13 @@
 import 'dart:math';
 
 import '../data/lam_lesson.dart';
+import '../data/li_lesson.dart';
 import 'page_handle.dart';
 import 'pages/challenge_page.dart';
 import 'pages/equation_page.dart';
+import 'li_rule_content.dart';
 import 'pages/intro_pages.dart';
+import 'pages/li_pages.dart';
 import 'pages/picture_page.dart';
 
 /// صفحات درس اللام بالترتيب، مع خلط الكلمات والجمل في كل مرة.
@@ -38,7 +41,7 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
       builder: (h) => EquationPage(
         handle: h,
         rounds: addRounds,
-        add: true,
+        op: EquationOp.addAl,
         title: 'أضف (الـ) إلى الكلمة واكتب الناتج',
         strict: true,
       ),
@@ -60,10 +63,71 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
       builder: (h) => EquationPage(
         handle: h,
         rounds: _groupsOfTwo(removeAlWords),
-        add: false,
+        op: EquationOp.removeAl,
         title: 'احذف (الـ) من الكلمة واكتب الناتج',
         strict: true,
         showLamType: false,
+      ),
+    ),
+    // اتصال اللام (لِـ) بـ(ال) التعريف.
+    LessonPageSpec(
+      tag: 'القاعدة',
+      title: 'قاعدة (لِـ)',
+      emoji: '📘',
+      needsCompletion: false,
+      rule: const LiRuleContent(),
+      builder: (h) => LiRulePage(handle: h),
+    ),
+    LessonPageSpec(
+      title: 'أضف (لِـ)',
+      emoji: '➕',
+      rule: const LiRuleContent(),
+      builder: (h) => EquationPage(
+        handle: h,
+        rounds: _groupsOfTwo(pickLiWords(rnd)),
+        refill: () => _groupsOfTwo(pickLiWords(rnd)),
+        op: EquationOp.addLi,
+        title: 'أضف (لِـ) إلى الكلمة واكتب الناتج',
+        strict: true,
+        showLamType: false,
+      ),
+    ),
+    LessonPageSpec(
+      title: 'احذف (لِـ)',
+      emoji: '➖',
+      rule: const LiRuleContent(),
+      builder: (h) => EquationPage(
+        handle: h,
+        rounds: _groupsOfTwo(pickLiWords(rnd)),
+        refill: () => _groupsOfTwo(pickLiWords(rnd)),
+        op: EquationOp.removeLi,
+        title: 'احذف (لِـ) من الكلمة واكتب الناتج',
+        strict: true,
+        showLamType: false,
+      ),
+    ),
+    LessonPageSpec(
+      title: 'اسمع واكتب',
+      emoji: '👂',
+      rule: const LiRuleContent(),
+      builder: (h) {
+        final (items, spare) = liWordItems(rnd);
+        return LiListenPage(
+          handle: h,
+          title: 'اسمع الكلمة واكتبها',
+          items: items,
+          spare: spare,
+        );
+      },
+    ),
+    LessonPageSpec(
+      title: 'الكلمة الناقصة',
+      emoji: '🧩',
+      rule: const LiRuleContent(),
+      builder: (h) => LiListenPage(
+        handle: h,
+        title: 'اسمع واكتب الكلمة الناقصة',
+        items: liSentenceItems(rnd),
       ),
     ),
   ];

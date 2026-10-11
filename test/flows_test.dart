@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:imlaa/data/lam_lesson.dart';
+import 'package:imlaa/data/li_lesson.dart';
 import 'package:imlaa/lesson/lam_lesson_pages.dart';
 import 'package:imlaa/lesson/lesson_screen.dart';
 import 'package:imlaa/lesson/pages/picture_page.dart';
@@ -169,5 +170,108 @@ void main() {
     }
     expect(scoreLabel('لم يبقَ شيء'), findsOneWidget);
     expect(state.points, 108); // ١٢ × ١٠ × ٩٠٪
+  });
+
+  testWidgets('أضف (لِـ): عشرون كلمة بلا خطأ', (t) async {
+    final state = await pumpScreen(t, _single(7));
+    final fields = find.byType(TextField);
+    List<String> group() =>
+        _visibleTexts(t).where(liWordBank.contains).toList();
+    for (var round = 0; round < 10; round++) {
+      final words = group();
+      expect(words.length, 2);
+      for (var i = 0; i < 2; i++) {
+        await t.enterText(fields.at(i), liForm(words[i]));
+      }
+      await _submit(t);
+      await _settle(t);
+    }
+    expect(scoreLabel('لم يبقَ شيء'), findsOneWidget);
+    expect(state.points, 200);
+  });
+
+  testWidgets('احذف (لِـ): للحن − لِـ = اللحن', (t) async {
+    await pumpScreen(t, _single(8));
+    final fields = find.byType(TextField);
+    final byLi = {for (final w in liWordBank) liForm(w): w};
+    List<String> group() => _visibleTexts(t).where(byLi.containsKey).toList();
+    for (var round = 0; round < 10; round++) {
+      final words = group();
+      expect(words.length, 2);
+      for (var i = 0; i < 2; i++) {
+        await t.enterText(fields.at(i), byLi[words[i]]!);
+      }
+      await _submit(t);
+      await _settle(t);
+    }
+    expect(scoreLabel('لم يبقَ شيء'), findsOneWidget);
+  });
+
+  testWidgets('الرجوع للقاعدة يغيّر كلمات (لِـ)', (t) async {
+    await pumpScreen(t, _single(7));
+    List<String> group() =>
+        _visibleTexts(t).where(liWordBank.contains).toList();
+    final seen = <String>{};
+    for (var i = 0; i < 4; i++) {
+      seen.addAll(group());
+      await t.tap(find.byTooltip('القائمة'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('القاعدة').last);
+      await t.pumpAndSettle();
+      expect(find.text('نبدأ الاسم بكتابة لامين فقط'), findsOneWidget);
+      await t.tapAt(const Offset(20, 20));
+      await t.pumpAndSettle();
+    }
+    // كلمات جديدة في كل مرة (عشوائية، فيكفي أن تتغير مرة على الأقل).
+    expect(seen.length, greaterThan(2));
+  });
+
+  Future<void> typeLetters(WidgetTester t, String word) async {
+    for (final l in word.split('')) {
+      await t.tap(find.text(l).last);
+      await t.pump();
+    }
+  }
+
+  testWidgets('اسمع الكلمة واكتبها: خطأ ثم عشرون كلمة', (t) async {
+    await pumpScreen(t, _single(9));
+    final bySpoken = {for (final w in liWordBank) liSpoken(w): liForm(w)};
+
+    // «إدخال» قبل إكمال الكلمة لا يُحتسب.
+    await t.tap(find.text('إدخال'));
+    await t.pump();
+    expect(find.textContaining('أكمل كتابة الكلمة'), findsOneWidget);
+    await _settle(t);
+
+    final first = bySpoken[lastSpoken]!;
+    await typeLetters(t, 'ل' * first.length);
+    await t.tap(find.text('إدخال'));
+    await t.pump();
+    expect(find.textContaining('سيعاد هذا السؤال'), findsOneWidget);
+    await _settle(t);
+
+    for (var i = 0; i < 20; i++) {
+      await typeLetters(t, bySpoken[lastSpoken]!);
+      await t.tap(find.text('إدخال'));
+      await _settle(t);
+    }
+    expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
+  });
+
+  testWidgets('اسمع واكتب الكلمة الناقصة', (t) async {
+    await pumpScreen(t, _single(10));
+    final bySpoken = {for (final s in liSentences) s.spoken: s};
+    final s = bySpoken[lastSpoken]!;
+    // تظهر الجملة بفراغ مكان الكلمة.
+    expect(
+      _visibleText(t, (x) => x.contains('………')),
+      isNot(contains(s.answer)),
+    );
+    for (var i = 0; i < liSentences.length; i++) {
+      await typeLetters(t, bySpoken[lastSpoken]!.answer);
+      await _submit(t);
+      await _settle(t);
+    }
+    expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
   });
 }

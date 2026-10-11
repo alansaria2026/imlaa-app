@@ -17,6 +17,7 @@ class AlText extends StatelessWidget {
     this.color = AppColors.ink,
     this.highlight = true,
     this.textAlign = TextAlign.center,
+    this.redPrefix,
   });
 
   final String text;
@@ -25,6 +26,9 @@ class AlText extends StatelessWidget {
   final bool highlight;
   final TextAlign textAlign;
 
+  /// عدد الحروف الحمراء في أول النص بدل (الـ) (مثل «لل» في للكتاب).
+  final int? redPrefix;
+
   @override
   Widget build(BuildContext context) {
     final base = AppTheme.word(size, color: color);
@@ -32,7 +36,11 @@ class AlText extends StatelessWidget {
     final words = text.split(' ');
     for (var i = 0; i < words.length; i++) {
       final w = words[i];
-      final cut = highlight ? alPrefixLength(w) : 0;
+      final cut = !highlight
+          ? 0
+          : redPrefix != null && i == 0
+          ? redPrefix!.clamp(0, w.length)
+          : alPrefixLength(w);
       if (cut > 0) {
         spans.add(
           TextSpan(
@@ -144,8 +152,9 @@ class LamChip extends StatelessWidget {
 
 /// مربع (الـ) الأحمر المستخدم في المعادلات.
 class AlBox extends StatelessWidget {
-  const AlBox({super.key, this.size = 22});
+  const AlBox({super.key, this.size = 22, this.text = 'الـ'});
   final double size;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +164,7 @@ class AlBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.al, width: 1.2),
       ),
-      child: Text('الـ', style: AppTheme.word(size, color: AppColors.al)),
+      child: Text(text, style: AppTheme.word(size, color: AppColors.al)),
     );
   }
 }
