@@ -59,6 +59,7 @@ void main() {
     }
     expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
     expect(state.points, 10 + 9 * 20);
+    expect(find.text('اسمع الجملة واكتب منها ما يلي'), findsNothing);
   });
 
   testWidgets('الصور: خطأ يعيد السؤال ثم إكمال الثمانية', (t) async {
@@ -89,6 +90,8 @@ void main() {
     // الدب أعيد إلى آخر الطابور.
     expect(answered.last, 'الدب');
     expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
+    // يختفي السؤال بعد الإنهاء.
+    expect(find.text('اكتب اسم ما تراه في الصورة'), findsNothing);
   });
 
   testWidgets('حذف (الـ): أي خطأ يعيد الكلمات بترتيب جديد', (t) async {

@@ -70,6 +70,8 @@ class PageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // بعد إنهاء التمرين تظهر رسالة الإكمال وحدها بلا السؤال.
+    if (child is PageDoneMessage) return child;
     final t = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
