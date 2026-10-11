@@ -112,10 +112,11 @@ class ArabicKeyboard extends StatelessWidget {
   static bool canType(String word) =>
       word.split('').every((c) => _rows.any((r) => r.contains(c)));
 
+  /// ترتيب لوحة مفاتيح الآيفون العربية من اليسار إلى اليمين («ض» مكان Q).
   static const _rows = [
     ['ض', 'ص', 'ث', 'ق', 'ف', 'غ', 'ع', 'ه', 'خ', 'ح', 'ج'],
-    ['ش', 'س', 'ي', 'ب', 'ل', 'ا', 'ت', 'ن', 'م', 'ك', 'ط'],
-    ['ذ', 'ء', 'ؤ', 'ر', 'ى', 'ة', 'و', 'ز', 'ظ', 'د'],
+    ['ش', 'س', 'ي', 'ب', 'ل', 'ا', 'ت', 'ن', 'م', 'ك', 'ة'],
+    ['ء', 'ظ', 'ط', 'ذ', 'د', 'ز', 'ر', 'و', 'ى'],
   ];
 
   @override
@@ -126,22 +127,26 @@ class ArabicKeyboard extends StatelessWidget {
         color: AppColors.background,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Column(
-        children: [
-          for (var r = 0; r < _rows.length; r++)
-            Row(
-              children: [
-                for (final l in _rows[r])
-                  _Key(label: l, onTap: () => onLetter(l)),
-                if (r == _rows.length - 1)
-                  _Key(
-                    icon: Icons.backspace_outlined,
-                    flex: 1,
-                    onTap: onBackspace,
-                  ),
-              ],
-            ),
-        ],
+      // من اليسار إلى اليمين كلوحة الجوال، وزر الحذف في آخر الصف الثالث.
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Column(
+          children: [
+            for (var r = 0; r < _rows.length; r++)
+              Row(
+                children: [
+                  for (final l in _rows[r])
+                    _Key(label: l, onTap: () => onLetter(l)),
+                  if (r == _rows.length - 1)
+                    _Key(
+                      icon: Icons.backspace_outlined,
+                      flex: 2,
+                      onTap: onBackspace,
+                    ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }
