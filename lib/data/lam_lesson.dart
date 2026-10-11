@@ -47,8 +47,13 @@ const removeAlWords = [
 
 /// تطبيق الصور (ص ٥).
 class PictureItem {
-  const PictureItem(this.emoji, this.answer, this.spoken);
+  const PictureItem(this.emoji, this.answer, this.spoken, {this.drawn = false});
+
+  /// الرمز التعبيري، أو معرّف الصورة إن كانت مرسومة ([drawn]).
   final String emoji;
+
+  /// صورة مرسومة داخل التطبيق بدل الرمز التعبيري.
+  final bool drawn;
   final String answer;
   final String spoken;
 }
@@ -61,7 +66,7 @@ const pictureItems = [
   PictureItem('🦊', 'الثعلب', 'الثَّعلب'),
   PictureItem('🖊️', 'القلم', 'القَلَم'),
   PictureItem('🌳', 'الشجرة', 'الشَّجرة'),
-  PictureItem('🏟️', 'الملعب', 'المَلعب'),
+  PictureItem('pitch', 'الملعب', 'المَلعب', drawn: true),
 ];
 
 /// جمل التحدي (ص ٦): كل جملة فيها كلمة واحدة بلام قمرية وأخرى بلام شمسية.

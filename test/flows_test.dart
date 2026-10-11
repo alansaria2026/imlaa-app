@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:imlaa/data/lam_lesson.dart';
 import 'package:imlaa/lesson/lam_lesson_pages.dart';
 import 'package:imlaa/lesson/lesson_screen.dart';
+import 'package:imlaa/lesson/pages/picture_page.dart';
 
 import 'helpers/harness.dart';
 
@@ -78,11 +79,14 @@ void main() {
 
     final answered = <String>[];
     for (var i = 0; i < pictureItems.length; i++) {
-      final emoji = _visibleText(
-        t,
-        (s) => pictureItems.any((p) => p.emoji == s),
-      );
-      final item = pictureItems.firstWhere((p) => p.emoji == emoji);
+      // صورة الملعب مرسومة، وبقية الصور رموز تعبيرية.
+      final item = find.byType(FootballPitch).evaluate().isNotEmpty
+          ? pictureItems.firstWhere((p) => p.drawn)
+          : pictureItems.firstWhere(
+              (p) =>
+                  p.emoji ==
+                  _visibleText(t, (s) => pictureItems.any((p) => p.emoji == s)),
+            );
       answered.add(item.answer);
       await type(item.answer);
       await _settle(t);
