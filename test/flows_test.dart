@@ -20,10 +20,22 @@ String _visibleText(WidgetTester t, bool Function(String) where) => t
     .map((w) => w.textSpan?.toPlainText() ?? w.data ?? '')
     .firstWhere(where);
 
-List<String> _visibleTexts(WidgetTester t) => t
-    .widgetList<Text>(find.byType(Text))
-    .map((w) => w.textSpan?.toPlainText() ?? w.data ?? '')
-    .toList();
+/// النصوص الظاهرة، دون سطر المثال المحلول.
+List<String> _visibleTexts(WidgetTester t) {
+  final example = t
+      .widgetList<Text>(
+        find.descendant(
+          of: find.byKey(const ValueKey('example')),
+          matching: find.byType(Text),
+        ),
+      )
+      .toSet();
+  return t
+      .widgetList<Text>(find.byType(Text))
+      .where((w) => !example.contains(w))
+      .map((w) => w.textSpan?.toPlainText() ?? w.data ?? '')
+      .toList();
+}
 
 /// «التالي» يصحّح الإجابات قبل إكمال الصفحة.
 Future<void> _submit(WidgetTester t) async {
@@ -174,7 +186,7 @@ void main() {
   });
 
   testWidgets('أضف (لِـ): عشر كلمات بلا خطأ', (t) async {
-    final state = await pumpScreen(t, _single(7));
+    final state = await pumpScreen(t, _single(6));
     final fields = find.byType(TextField);
     List<String> group() =>
         _visibleTexts(t).where(liWordBank.contains).toList();
@@ -192,7 +204,7 @@ void main() {
   });
 
   testWidgets('احذف (لِـ): للحن − لِـ = اللحن', (t) async {
-    await pumpScreen(t, _single(8));
+    await pumpScreen(t, _single(7));
     final fields = find.byType(TextField);
     final byLi = {for (final w in liWordBank) liForm(w): w};
     List<String> group() => _visibleTexts(t).where(byLi.containsKey).toList();
@@ -209,7 +221,7 @@ void main() {
   });
 
   testWidgets('الرجوع للقاعدة يغيّر كلمات (لِـ)', (t) async {
-    await pumpScreen(t, _single(7));
+    await pumpScreen(t, _single(6));
     List<String> group() =>
         _visibleTexts(t).where(liWordBank.contains).toList();
     final seen = <String>{};
@@ -220,6 +232,7 @@ void main() {
       await t.tap(find.text('القاعدة').last);
       await t.pumpAndSettle();
       expect(find.text('نبدأ الاسم بكتابة لامين فقط'), findsOneWidget);
+      expect(find.text('مثال'), findsWidgets);
       await t.tapAt(const Offset(20, 20));
       await t.pumpAndSettle();
     }
@@ -227,57 +240,8 @@ void main() {
     expect(seen.length, greaterThan(2));
   });
 
-  Future<void> typeLetters(WidgetTester t, String word) async {
-    for (final l in word.split('')) {
-      await t.tap(find.text(l).last);
-      await t.pump();
-    }
-  }
-
-  testWidgets('اسمع الكلمة واكتبها: خطأ ثم عشر كلمات', (t) async {
-    await pumpScreen(t, _single(9));
-    final bySpoken = {for (final w in liWordBank) liSpoken(w): liForm(w)};
-
-    // «إدخال» قبل إكمال الكلمة لا يُحتسب.
-    await t.tap(find.text('إدخال'));
-    await t.pump();
-    expect(find.textContaining('أكمل كتابة الكلمة'), findsOneWidget);
-    await _settle(t);
-
-    final first = bySpoken[lastSpoken]!;
-    await typeLetters(t, 'ل' * first.length);
-    await t.tap(find.text('إدخال'));
-    await t.pump();
-    expect(find.textContaining('سيعاد هذا السؤال'), findsOneWidget);
-    await _settle(t);
-
-    for (var i = 0; i < 10; i++) {
-      await typeLetters(t, bySpoken[lastSpoken]!);
-      await t.tap(find.text('إدخال'));
-      await _settle(t);
-    }
-    expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
-  });
-
-  testWidgets('اسمع واكتب الكلمة الناقصة', (t) async {
-    await pumpScreen(t, _single(10));
-    final bySpoken = {for (final s in liSentences) s.spoken: s};
-    final s = bySpoken[lastSpoken]!;
-    // تظهر الجملة بفراغ مكان الكلمة.
-    expect(
-      _visibleText(t, (x) => x.contains('………')),
-      isNot(contains(s.answer)),
-    );
-    for (var i = 0; i < 10; i++) {
-      await typeLetters(t, bySpoken[lastSpoken]!.answer);
-      await _submit(t);
-      await _settle(t);
-    }
-    expect(find.text('أحسنت! أنهيت هذا التمرين'), findsOneWidget);
-  });
-
   testWidgets('أضف (بـ): خطأ ثم عشر كلمات', (t) async {
-    await pumpScreen(t, _single(12));
+    await pumpScreen(t, _single(8));
     final fields = find.byType(TextField);
     List<String> group() =>
         _visibleTexts(t).where(biWordBank.contains).toList();
@@ -312,7 +276,7 @@ void main() {
   });
 
   testWidgets('احذف (بـ): تبقى (ال) كما هي', (t) async {
-    await pumpScreen(t, _single(13));
+    await pumpScreen(t, _single(9));
     final fields = find.byType(TextField);
     final byBi = {for (final w in biWordBank) biForm(w): w};
     for (var round = 0; round < 5; round++) {

@@ -5,7 +5,6 @@ import '../data/bi_lesson.dart';
 import '../services/speaker.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
-import 'page_handle.dart';
 
 /// قاعدة اتصال الباء (بـ) بـ(ال): الباء بالأحمر وبقية الكلمة بالأزرق.
 class BiRuleContent extends StatelessWidget {
@@ -136,45 +135,6 @@ class _BiExample extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// قاعدة اتصال الباء بـ(ال) (ص ١ من درس الباء).
-class BiRulePage extends StatefulWidget {
-  const BiRulePage({super.key, required this.handle});
-  final PageHandle handle;
-
-  @override
-  State<BiRulePage> createState() => _BiRulePageState();
-}
-
-class _BiRulePageState extends State<BiRulePage> {
-  @override
-  void initState() {
-    super.initState();
-    widget.handle
-      ..onListen = (() => Speaker.instance.speak(
-        biRuleSpeech,
-        rate: AppScope.read(context).speechRate,
-      ))
-      ..onHint = () => showFeedback(
-        context,
-        'الباء لا تحذف شيئًا: الكتاب تصبح بالكتاب، واللحم تصبح باللحم.',
-        tone: FeedbackTone.hint,
-      );
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => widget.handle.markComplete(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const PageCard(
-      tag: 'القاعدة',
-      title: 'اتصال الباء بـ(ال) التعريف',
-      subtitle: 'اضغط على المثال لتسمعه',
-      child: BiRuleContent(),
     );
   }
 }

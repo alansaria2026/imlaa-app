@@ -9,7 +9,6 @@ import 'pages/equation_page.dart';
 import 'bi_rule_content.dart';
 import 'li_rule_content.dart';
 import 'pages/intro_pages.dart';
-import 'pages/li_pages.dart';
 import 'pages/picture_page.dart';
 
 /// صفحات درس اللام بالترتيب، مع خلط الكلمات والجمل في كل مرة.
@@ -71,17 +70,9 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
         showLamType: false,
       ),
     ),
-    // اتصال اللام (لِـ) بـ(ال) التعريف.
+    // بعد حذف (الـ): اتصال اللام وحذفها، ثم اتصال الباء وحذفها.
     LessonPageSpec(
-      tag: 'القاعدة',
-      title: 'قاعدة (لِـ)',
-      emoji: '📘',
-      needsCompletion: false,
-      rule: const LiRuleContent(),
-      builder: (h) => LiRulePage(handle: h),
-    ),
-    LessonPageSpec(
-      title: 'أضف (لِـ)',
+      title: 'اتصال اللام',
       emoji: '➕',
       rule: const LiRuleContent(),
       builder: (h) => EquationPage(
@@ -90,12 +81,13 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
         refill: () => _groupsOfTwo(pickLiWords(rnd)),
         op: EquationOp.addLi,
         title: 'أضف (لِـ) إلى الكلمة واكتب الناتج',
+        example: 'الكتاب',
         strict: true,
         showLamType: false,
       ),
     ),
     LessonPageSpec(
-      title: 'احذف (لِـ)',
+      title: 'حذف اللام',
       emoji: '➖',
       rule: const LiRuleContent(),
       builder: (h) => EquationPage(
@@ -104,49 +96,13 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
         refill: () => _groupsOfTwo(pickLiWords(rnd)),
         op: EquationOp.removeLi,
         title: 'احذف (لِـ) من الكلمة واكتب الناتج',
+        example: 'اللحن',
         strict: true,
         showLamType: false,
       ),
     ),
     LessonPageSpec(
-      title: 'اسمع واكتب',
-      emoji: '👂',
-      rule: const LiRuleContent(),
-      builder: (h) {
-        final (items, spare) = liWordItems(rnd);
-        return LiListenPage(
-          handle: h,
-          title: 'اسمع الكلمة واكتبها',
-          items: items,
-          spare: spare,
-        );
-      },
-    ),
-    LessonPageSpec(
-      title: 'الكلمة الناقصة',
-      emoji: '🧩',
-      rule: const LiRuleContent(),
-      builder: (h) {
-        final (items, spare) = liSentenceItems(rnd);
-        return LiListenPage(
-          handle: h,
-          title: 'اسمع واكتب الكلمة الناقصة',
-          items: items,
-          spare: spare,
-        );
-      },
-    ),
-    // اتصال الباء (بـ) بـ(ال) التعريف.
-    LessonPageSpec(
-      tag: 'القاعدة',
-      title: 'قاعدة (بـ)',
-      emoji: '📗',
-      needsCompletion: false,
-      rule: const BiRuleContent(),
-      builder: (h) => BiRulePage(handle: h),
-    ),
-    LessonPageSpec(
-      title: 'أضف (بـ)',
+      title: 'اتصال الباء',
       emoji: '➕',
       rule: const BiRuleContent(),
       builder: (h) => EquationPage(
@@ -155,12 +111,13 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
         refill: () => _groupsOfTwo(pickBiWords(rnd)),
         op: EquationOp.addBi,
         title: 'أضف (بـ) إلى الكلمة واكتب الناتج',
+        example: 'الطائرة',
         strict: true,
         showLamType: false,
       ),
     ),
     LessonPageSpec(
-      title: 'احذف (بـ)',
+      title: 'حذف الباء',
       emoji: '➖',
       rule: const BiRuleContent(),
       builder: (h) => EquationPage(
@@ -169,6 +126,7 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
         refill: () => _groupsOfTwo(pickBiWords(rnd)),
         op: EquationOp.removeBi,
         title: 'احذف (بـ) من الكلمة واكتب الناتج',
+        example: 'الكتب',
         strict: true,
         showLamType: false,
       ),

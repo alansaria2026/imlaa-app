@@ -73,7 +73,7 @@ void main() {
 
   test('بناء صفحات الدرس', () {
     final pages = buildLamLessonPages();
-    expect(pages.length, 14);
+    expect(pages.length, 10);
     expect(addAlWordBank.toSet().length, addAlWordBank.length);
   });
 
@@ -123,14 +123,6 @@ void main() {
         pickLiWords(Random(1), count: liWordBank.length).toSet(),
         liWordBank.toSet(),
       );
-    });
-
-    test('كل جملة فيها الكلمة الناقصة مرة واحدة', () {
-      expect(liSentences.length, 20);
-      for (final s in liSentences) {
-        final words = normalizeAnswer(s.spoken).split(' ');
-        expect(words.where((w) => w == s.answer).length, 1, reason: s.spoken);
-      }
     });
   });
 

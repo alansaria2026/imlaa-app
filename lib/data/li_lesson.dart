@@ -6,10 +6,6 @@ import 'dart:math';
 import '../utils/arabic.dart';
 import 'lam_lesson.dart';
 
-const liRuleSpeech =
-    'عند اتصالِ اللامِ بـ ألْ التعريف، تُحذفُ الألفُ ونكتبُ لامينِ فقط، '
-    'مثلُ: لِلْكِتاب، لِلسُّكَّر، لِلَّوْحة.';
-
 /// الاسم مع لام الجر: تُحذف ألف (ال)، وإن بدأ الاسم بلام تُحذف لام (ال)
 /// أيضًا فلا تجتمع ثلاث لامات (اللحن ← للحن).
 String liForm(String alWord) {
@@ -63,37 +59,3 @@ List<String> pickLiWords(Random rnd, {int count = liQuestionCount}) {
   final lamCount = min(max(3, count * 2 ~/ 5), lam.length);
   return [...lam.take(lamCount), ...other.take(count - lamCount)]..shuffle(rnd);
 }
-
-/// «اسمع واكتب الكلمة الناقصة» (ص ٥): الجملة مشكولة، والكلمة الناقصة
-/// بلام الجر (مكتوبة بلا تشكيل).
-class LiSentence {
-  const LiSentence(this.spoken, this.alWord);
-  final String spoken;
-
-  /// الكلمة الناقصة بصيغتها مع (ال)؛ الإجابة [answer] بلام الجر.
-  final String alWord;
-  String get answer => liForm(alWord);
-}
-
-const liSentences = [
-  LiSentence('ذهبتُ للطبيبِ', 'الطبيب'),
-  LiSentence('ذهبْنا للمطارِ', 'المطار'),
-  LiSentence('نظرتُ للسماءِ', 'السماء'),
-  LiSentence('استمعتُ للحنِ', 'اللحن'),
-  LiSentence('ترحيبُ الكُتّابِ للغةِ العربيةِ', 'اللغة'),
-  LiSentence('أعطى المدربُ الكرةَ للاعبِ', 'اللاعب'),
-  LiSentence('اشتريتُ هديةً للمعلمِ', 'المعلم'),
-  LiSentence('قدّمتُ الماءَ للضيفِ', 'الضيف'),
-  LiSentence('خرجْنا للحديقةِ', 'الحديقة'),
-  LiSentence('عُدْتُ للبيتِ مبكرًا', 'البيت'),
-  LiSentence('حبّي للوطنِ كبيرٌ', 'الوطن'),
-  LiSentence('أضفتُ السكرَ للبنِ', 'اللبن'),
-  LiSentence('اشتقْتُ للقمرِ في الليلِ', 'القمر'),
-  LiSentence('قرأتُ القصةَ للطفلِ', 'الطفل'),
-  LiSentence('استعدَّ الطالبُ للسفرِ', 'السفر'),
-  LiSentence('تحتاجُ الزهرةُ للشمسِ', 'الشمس'),
-  LiSentence('نامَ الطفلُ مبكرًا للراحةِ', 'الراحة'),
-  LiSentence('أهديتُ الكتابَ للمكتبةِ', 'المكتبة'),
-  LiSentence('أشرْتُ للوحةِ الجميلةِ', 'اللوحة'),
-  LiSentence('انتبهْ للونِ الإشارةِ', 'اللون'),
-];

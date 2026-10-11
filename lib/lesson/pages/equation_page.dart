@@ -76,6 +76,7 @@ class EquationPage extends StatefulWidget {
     required this.op,
     this.tag,
     this.refill,
+    this.example,
     required this.title,
     this.strict = false,
     this.showLamType = true,
@@ -89,6 +90,9 @@ class EquationPage extends StatefulWidget {
 
   /// كلمات جديدة عند الرجوع للقاعدة (تعليمات ص ٣ من درس اللام)؛ null للإبقاء.
   final List<List<String>> Function()? refill;
+
+  /// كلمة مثال تُعرض محلولة فوق التمرين (الكتاب + لِـ = للكتاب).
+  final String? example;
   final String? tag;
   final String title;
   final bool strict;
@@ -374,6 +378,14 @@ class _EquationPageState extends State<EquationPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (widget.example case final e?) ...[
+            _ExampleLine(
+              key: const ValueKey('example'),
+              op: widget.op,
+              word: e,
+            ),
+            const SizedBox(height: 12),
+          ],
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: Column(
@@ -495,6 +507,52 @@ class _EquationPageState extends State<EquationPage> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// مثال محلول بخط أصغر: الكتاب + لِـ = للكتاب.
+class _ExampleLine extends StatelessWidget {
+  const _ExampleLine({super.key, required this.op, required this.word});
+  final EquationOp op;
+  final String word;
+
+  @override
+  Widget build(BuildContext context) {
+    final answer = op.answer(word);
+    // الحرف المضاف بالأحمر في الناتج (لل/ل في لام الجر، ب في الباء).
+    final red = switch (op) {
+      EquationOp.addLi => liRedPrefix(word),
+      EquationOp.addBi => 1,
+      _ => 0,
+    };
+    final sign = TextStyle(color: AppColors.muted, fontSize: 20);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('مثال: ', style: AppTheme.word(18, color: AppColors.muted)),
+            AlText(op.question(word), size: 22, highlight: false),
+            Text(op.adds ? '  +  ' : '  −  ', style: sign),
+            Text(op.part, style: AppTheme.word(22, color: AppColors.al)),
+            Text('  =  ', style: sign),
+            AlText(
+              answer,
+              size: 22,
+              color: AppColors.blue,
+              highlight: red > 0,
+              redPrefix: red > 0 ? red : null,
+            ),
+          ],
+        ),
       ),
     );
   }
