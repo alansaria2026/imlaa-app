@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-"""يولّد تسجيلات النطق بصوت Google Cloud Text-to-Speech العربي.
+"""يولّد تسجيلات النطق بصوت عربي عالي الجودة.
+
+المصدر الافتراضي: Gemini (مفتاح مجاني من aistudio.google.com/apikey) في
+متغير البيئة GEMINI_API_KEY. البديل: Google Cloud Text-to-Speech بالمفتاح
+GOOGLE_TTS_API_KEY (يحتاج حساب فوترة).
 
 الخطوات:
   1. flutter test tool/export_speech_test.dart     # يكتب tool/speech_texts.json
   2. python3 tool/generate_audio.py --samples      # عينات لاختيار الصوت
   3. python3 tool/generate_audio.py --voice NAME   # كل التسجيلات + الفهرس
 
-يقرأ المفتاح من متغير البيئة GOOGLE_TTS_API_KEY. التسجيلات تُحفظ في
+التسجيلات تُحفظ في
 assets/audio/ والفهرس في lib/services/audio_catalog.g.dart، ولا يُعاد توليد
 تسجيل موجود إلا مع --force.
 """
@@ -16,7 +20,10 @@ import base64
 import hashlib
 import json
 import os
+import subprocess
 import sys
+import tempfile
+import time
 import urllib.error
 import urllib.request
 
@@ -27,7 +34,19 @@ CATALOG = os.path.join(ROOT, "lib", "services", "audio_catalog.g.dart")
 SAMPLES_DIR = os.path.join(ROOT, "build", "voice_samples")
 API = "https://texttospeech.googleapis.com/v1/text:synthesize?key="
 
-# أصوات عربية مرشحة (الأحدث أولًا).
+GEMINI_API = (
+    "https://generativelanguage.googleapis.com/v1beta/models/"
+    "gemini-2.5-flash-preview-tts:generateContent?key="
+)
+# أصوات Gemini المرشحة (تتحدث العربية كلها).
+GEMINI_VOICES = ["Kore", "Charon", "Aoede", "Orus"]
+GEMINI_STYLE = (
+    "Read the following Arabic text aloud exactly as written, honoring every "
+    "diacritic, in clear Modern Standard Arabic, slowly and distinctly for a "
+    "young student: "
+)
+
+# أصوات Google Cloud المرشحة (الأحدث أولًا).
 CANDIDATES = [
     "ar-XA-Chirp3-HD-Charon",
     "ar-XA-Chirp3-HD-Kore",
@@ -60,6 +79,46 @@ def synthesize(key, text, voice, rate):
         sys.exit(f"خطأ من Google ({e.code}) للصوت {voice}: {e.read().decode()[:300]}")
 
 
+def synthesize_gemini(key, text, voice, rate):
+    """Gemini يعيد PCM خامًا (24kHz)، فنحوّله إلى MP3 بـ ffmpeg."""
+    body = {
+        "contents": [{"parts": [{"text": GEMINI_STYLE + text}]}],
+        "generationConfig": {
+            "responseModalities": ["AUDIO"],
+            "speechConfig": {
+                "voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}
+            },
+        },
+    }
+    req = urllib.request.Request(
+        GEMINI_API + key,
+        data=json.dumps(body).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    for attempt in range(8):
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                part = json.load(r)["candidates"][0]["content"]["parts"][0]
+                pcm = base64.b64decode(part["inlineData"]["data"])
+            break
+        except urllib.error.HTTPError as e:
+            # الحد المجاني لعدد الطلبات في الدقيقة: ننتظر ثم نعيد.
+            if e.code in (429, 500, 503) and attempt < 7:
+                time.sleep(min(60, 8 * (attempt + 1)))
+                continue
+            sys.exit(f"خطأ من Gemini ({e.code}): {e.read().decode()[:300]}")
+    with tempfile.NamedTemporaryFile(suffix=".pcm") as raw:
+        raw.write(pcm)
+        raw.flush()
+        tempo = [] if abs(rate - 1) < 0.01 else ["-filter:a", f"atempo={rate}"]
+        out = subprocess.run(
+            ["ffmpeg", "-v", "error", "-f", "s16le", "-ar", "24000", "-ac", "1",
+             "-i", raw.name, *tempo, "-b:a", "64k", "-f", "mp3", "-"],
+            check=True, capture_output=True,
+        )
+    return out.stdout
+
+
 def file_name(text):
     return hashlib.md5(text.encode()).hexdigest()[:12] + ".mp3"
 
@@ -82,19 +141,23 @@ def write_catalog(texts):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--samples", action="store_true", help="عينات من كل صوت مرشح")
-    ap.add_argument("--voice", default=CANDIDATES[0])
+    ap.add_argument("--voice", default=None, help="اسم الصوت (الافتراضي أول المرشحين)")
     ap.add_argument("--rate", type=float, default=0.9, help="سرعة النطق (1 = عادية)")
     ap.add_argument("--force", action="store_true", help="إعادة توليد الموجود")
     args = ap.parse_args()
 
-    key = os.environ.get("GOOGLE_TTS_API_KEY")
-    if not key:
-        sys.exit("أضف المفتاح في متغير البيئة GOOGLE_TTS_API_KEY")
+    if os.environ.get("GEMINI_API_KEY"):
+        key, voices, say = os.environ["GEMINI_API_KEY"], GEMINI_VOICES, synthesize_gemini
+    elif os.environ.get("GOOGLE_TTS_API_KEY"):
+        key, voices, say = os.environ["GOOGLE_TTS_API_KEY"], CANDIDATES, synthesize
+    else:
+        sys.exit("أضف المفتاح في متغير البيئة GEMINI_API_KEY (أو GOOGLE_TTS_API_KEY)")
+    voice = args.voice or voices[0]
 
     if args.samples:
         os.makedirs(SAMPLES_DIR, exist_ok=True)
-        for voice in CANDIDATES:
-            audio = b"".join(synthesize(key, t, voice, args.rate) for t in SAMPLE_TEXTS)
+        for voice in voices:
+            audio = b"".join(say(key, t, voice, args.rate) for t in SAMPLE_TEXTS)
             path = os.path.join(SAMPLES_DIR, f"{voice}.mp3")
             with open(path, "wb") as f:
                 f.write(audio)
@@ -110,7 +173,7 @@ def main():
         if os.path.exists(path) and not args.force:
             continue
         with open(path, "wb") as f:
-            f.write(synthesize(key, t, args.voice, args.rate))
+            f.write(say(key, t, voice, args.rate))
         made += 1
     # تسجيلات لم تعد مستخدمة.
     wanted = {file_name(t) for t in texts}
