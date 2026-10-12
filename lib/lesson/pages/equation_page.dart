@@ -141,8 +141,8 @@ class _EquationPageState extends State<EquationPage> {
       ..onHint = _hint
       ..onSubmit = _check
       ..onRuleOpened = _refill
-      ..onListen = () => Speaker.instance.speak(
-        _words.map(widget.op.spokenQuestion).join('، '),
+      ..onListen = () => Speaker.instance.speakAll(
+        _words.map(widget.op.spokenQuestion).toList(),
         rate: AppScope.read(context).speechRate,
       );
     WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -3,21 +3,22 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../app_state.dart';
-import '../data/lam_lesson.dart';
 import '../theme.dart';
 import '../utils/arabic.dart';
 import '../widgets/mascot.dart';
 import '../widgets/pressable.dart';
-import 'lam_lesson_pages.dart';
 import 'lesson_screen.dart';
+import 'lessons.dart';
 
 class LessonCompleteScreen extends StatefulWidget {
   const LessonCompleteScreen({
     super.key,
+    required this.lessonId,
     required this.title,
     required this.earned,
   });
 
+  final String lessonId;
   final String title;
   final int earned;
 
@@ -107,15 +108,18 @@ class _LessonCompleteScreenState extends State<LessonCompleteScreen>
                     label: 'إعادة الدرس',
                     icon: Icons.replay_rounded,
                     style: AppButtonStyle.outline,
-                    onTap: () => Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) => LessonScreen(
-                          lessonId: lamLessonId,
-                          title: lamLessonTitle,
-                          pages: buildLamLessonPages(),
+                    onTap: () {
+                      final lesson = lessonById(widget.lessonId);
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (_) => LessonScreen(
+                            lessonId: lesson.id,
+                            title: lesson.title,
+                            pages: lesson.build(),
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -5,6 +5,8 @@ import 'package:imlaa/data/bi_lesson.dart';
 import 'package:imlaa/data/lam_lesson.dart';
 import 'package:imlaa/data/li_lesson.dart';
 import 'package:imlaa/data/review_lesson.dart';
+import 'package:imlaa/services/audio_catalog.g.dart';
+import 'package:imlaa/services/speech_texts.dart';
 import 'package:imlaa/widgets/letter_boxes.dart';
 import 'package:imlaa/lesson/lam_lesson_pages.dart';
 import 'package:imlaa/utils/arabic.dart';
@@ -167,5 +169,15 @@ void main() {
         expect(spare.every((i) => i.answer.startsWith(prefix)), isTrue);
       }
     });
+  });
+
+  test('التسجيلات الجاهزة لنصوص يستخدمها التطبيق فقط', () {
+    final texts = allSpeechTexts();
+    expect(texts, contains(liSpoken('اللحن')));
+    expect(texts, contains(biSpoken('الكتب')));
+    expect(texts, contains(spokenForm('كتاب')));
+    for (final t in audioCatalog.keys) {
+      expect(texts, contains(t), reason: t);
+    }
   });
 }

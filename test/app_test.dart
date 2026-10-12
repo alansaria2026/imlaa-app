@@ -22,7 +22,10 @@ void main() {
     expect(find.textContaining('أكمل المحطات السابقة'), findsOneWidget);
     await t.pumpAndSettle(const Duration(seconds: 5));
 
-    await t.tap(find.text('ابدأ'));
+    // درس اللام أولًا ثم درس التاء، ولكل منهما محطته الحالية.
+    expect(find.text('٠ من ٣ محطات'), findsOneWidget);
+    expect(find.text('ابدأ'), findsNWidgets(2));
+    await t.tap(find.text('ابدأ').first);
     await t.pumpAndSettle();
     expect(find.text('عنوان الدرس'), findsNothing);
     expect(find.text('اللام القمرية واللام الشمسية'), findsOneWidget);

@@ -28,6 +28,7 @@ class ListenItem {
     required this.answer,
     required this.redPrefix,
     this.sentence,
+    this.colorTaa = false,
   });
 
   final String spoken;
@@ -36,6 +37,10 @@ class ListenItem {
 
   /// الجملة مع «…» مكان الكلمة الناقصة؛ null لكلمة مفردة.
   final String? sentence;
+
+  /// تلوين التاء في آخر الإجابة (المربوطة بالأحمر والمفتوحة بالأزرق)
+  /// بدل تلوين (الـ).
+  final bool colorTaa;
 }
 
 /// جملة فيها كلمة بحرف جر متصل بـ(ال)، والجملة مشكولة للنطق.

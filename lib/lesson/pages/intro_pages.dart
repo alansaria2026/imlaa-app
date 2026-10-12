@@ -77,10 +77,10 @@ class _ExamplesPageState extends State<ExamplesPage> {
   Future<void> _play(int i) async {
     setState(() => _playing = i);
     final e = lamExamples[i];
-    await Speaker.instance.speak(
-      '${spokenForm(e.from)}، ${spokenForm(e.result)}',
-      rate: AppScope.read(context).speechRate,
-    );
+    await Speaker.instance.speakAll([
+      spokenForm(e.from),
+      spokenForm(e.result),
+    ], rate: AppScope.read(context).speechRate);
     if (mounted && _playing == i) setState(() => _playing = null);
   }
 
