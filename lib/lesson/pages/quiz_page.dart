@@ -1,0 +1,541 @@
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+
+import '../../app_state.dart';
+import '../../data/hamza_lesson.dart';
+import '../../services/speaker.dart';
+import '../../theme.dart';
+import '../../utils/arabic.dart';
+import '../../widgets/common.dart';
+import '../../widgets/pressable.dart';
+import '../page_handle.dart';
+import '../rule_content.dart';
+
+/// سؤال: اختيار من [options] (الصحيحة [answers])، أو كتابة [answer].
+class QuizItem {
+  const QuizItem({
+    this.prompt,
+    this.options = const [],
+    this.answers = const {},
+    this.answer,
+    this.multi = false,
+  });
+
+  final String? prompt;
+  final List<String> options;
+  final Set<String> answers;
+
+  /// الإجابة المكتوبة لسؤال كتابة؛ null لسؤال اختيار.
+  final String? answer;
+
+  /// يختار الطالب كل الإجابات الصحيحة بدل إجابة واحدة.
+  final bool multi;
+
+  bool get writes => answer != null;
+}
+
+/// مجموعة أسئلة تظهر معًا ويُضغط بعدها «إدخال».
+class QuizRound {
+  const QuizRound({
+    required this.items,
+    this.instruction,
+    this.sentence,
+    this.mark,
+    this.spoken,
+    this.hint,
+  });
+
+  final List<QuizItem> items;
+  final String? instruction;
+
+  /// جملة السؤال، والكلمة [mark] فيها بالأحمر.
+  final String? sentence;
+  final String? mark;
+
+  /// ما يُنطق بزر «استمع» وبعد الإجابة الصحيحة.
+  final String? spoken;
+  final String? hint;
+}
+
+/// أسئلة الصفحة كلها؛ [attempt] صفر أول مرة (أسئلة الكتاب) ثم يزيد مع كل
+/// إعادة بأسئلة جديدة.
+typedef QuizBuilder = List<QuizRound> Function(Random rnd, int attempt);
+
+/// تمرين «اختر الإجابة الصحيحة» بتعليمات كتاب درس الهمزة: يُجاب عن الأسئلة
+/// على التوالي؛ أي خطأ تنبثق بعده القاعدة ثم تُعاد الأسئلة من البداية بأسئلة
+/// جديدة وأماكن خيارات مختلفة، ومؤشر النتيجة ينقص مع كل خطأ.
+class QuizPage extends StatefulWidget {
+  const QuizPage({
+    super.key,
+    required this.handle,
+    required this.title,
+    required this.build,
+    this.tag,
+    this.subtitle,
+    this.rule,
+    this.intro,
+  });
+
+  final PageHandle handle;
+  final String title;
+  final String? tag;
+  final String? subtitle;
+  final QuizBuilder build;
+
+  /// القاعدة التي تنبثق بعد الخطأ.
+  final Widget? rule;
+
+  /// مثال محلول يُعرض قبل التطبيق، ثم «طبّق الآن».
+  final Widget? intro;
+
+  static const levelStep = 10;
+
+  @override
+  State<QuizPage> createState() => _QuizPageState();
+}
+
+enum _State { open, wrong, right }
+
+class _QuizPageState extends State<QuizPage> {
+  final _rnd = Random();
+  int _attempt = 0;
+  late List<QuizRound> _rounds = widget.build(_rnd, 0);
+  int _round = 0;
+  int _solved = 0;
+  int _mistakes = 0;
+  int _generation = 0;
+  int _shake = 0;
+  bool _busy = false;
+  late bool _started = widget.intro == null;
+
+  late List<List<String>> _orders;
+  late List<Set<String>> _picked;
+  late List<_State> _states;
+  late List<TextEditingController> _ctrls;
+
+  /// تبقى حتى إغلاق الصفحة لأن الحركة الانتقالية تعرض الحقول القديمة.
+  final List<TextEditingController> _retired = [];
+
+  QuizRound get _current => _rounds[_round];
+  int get _total => _rounds.fold(0, (a, r) => a + r.items.length);
+  int get _level => max(0, 100 - _mistakes * QuizPage.levelStep);
+  bool get _done => widget.handle.complete;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupRound();
+    widget.handle
+      ..onHint = _hint
+      ..onListen = _listen
+      ..onRuleOpened = _restart;
+    if (_started) _activate();
+  }
+
+  /// يربط «التالي» بالتصحيح ويُظهر المؤشرين بعد بدء التطبيق.
+  void _activate() {
+    widget.handle.onSubmit = _check;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.handle
+        ..setProgress(_solved, _total)
+        ..setLevel(_level);
+    });
+  }
+
+  @override
+  void dispose() {
+    for (final c in [..._retired, ..._ctrls]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _setupRound() {
+    final items = _current.items;
+    _orders = [
+      for (final it in items) [...it.options]..shuffle(_rnd),
+    ];
+    _picked = [for (final _ in items) <String>{}];
+    _states = [for (final _ in items) _State.open];
+    _ctrls = [for (final _ in items) TextEditingController()];
+  }
+
+  void _listen() {
+    final text = _started ? _current.spoken : null;
+    Speaker.instance.speak(
+      text ?? widget.title,
+      rate: AppScope.read(context).speechRate,
+    );
+  }
+
+  void _hint() {
+    if (!_started || _done) return;
+    showFeedback(
+      context,
+      _current.hint ?? 'افتح «القاعدة» من القائمة وراجعها قبل الإجابة',
+      tone: FeedbackTone.hint,
+    );
+  }
+
+  /// أسئلة جديدة من البداية (بعد الخطأ أو الرجوع للقاعدة).
+  void _restart() {
+    if (!_started || _done || !mounted) return;
+    setState(() {
+      _retired.addAll(_ctrls);
+      _attempt++;
+      _rounds = widget.build(_rnd, _attempt);
+      _round = 0;
+      _solved = 0;
+      _generation++;
+      _busy = false;
+      _setupRound();
+    });
+    widget.handle.setProgress(0, _total);
+  }
+
+  void _pick(int i, String option) {
+    if (_busy || _states[i] == _State.right) return;
+    setState(() {
+      final item = _current.items[i];
+      final set = _picked[i];
+      if (item.multi) {
+        if (!set.remove(option)) set.add(option);
+      } else {
+        set
+          ..clear()
+          ..add(option);
+      }
+      _states[i] = _State.open;
+    });
+  }
+
+  bool _isRight(int i) {
+    final item = _current.items[i];
+    if (item.writes) return sameWriting(_ctrls[i].text, item.answer!);
+    final p = _picked[i];
+    return p.length == item.answers.length && p.containsAll(item.answers);
+  }
+
+  bool _isEmpty(int i) => _current.items[i].writes
+      ? _ctrls[i].text.trim().isEmpty
+      : _picked[i].isEmpty;
+
+  void _check() {
+    if (_busy || _done || !_started) return;
+    FocusScope.of(context).unfocus();
+    final items = _current.items;
+    final open = [
+      for (var i = 0; i < items.length; i++)
+        if (_states[i] != _State.right) i,
+    ];
+    // سؤال بلا إجابة لا يُحتسب خطأً: يُنبَّه الطالب فقط.
+    if (open.any(_isEmpty)) {
+      setState(() => _shake++);
+      showFeedback(
+        context,
+        items.length > 1
+            ? 'أجب عن جميع الأسئلة ثم اضغط «إدخال»'
+            : 'اختر الإجابة ثم اضغط «إدخال»',
+        tone: FeedbackTone.error,
+      );
+      return;
+    }
+    var anyWrong = false;
+    setState(() {
+      for (final i in open) {
+        final ok = _isRight(i);
+        _states[i] = ok ? _State.right : _State.wrong;
+        if (!ok) anyWrong = true;
+      }
+      if (anyWrong) {
+        _shake++;
+        _mistakes++;
+      }
+      _busy = true;
+    });
+
+    if (anyWrong) {
+      widget.handle.setLevel(_level);
+      showFeedback(
+        context,
+        'إجابة غير صحيحة! راجع القاعدة، ثم تبدأ من جديد بأسئلة أخرى',
+        tone: FeedbackTone.error,
+      );
+      // وقت لرؤية الإجابات الصحيحة قبل انبثاق القاعدة.
+      Future.delayed(const Duration(milliseconds: 1800), () async {
+        if (!mounted) return;
+        if (widget.rule != null) {
+          await showRuleSheet(context, content: widget.rule);
+        }
+        _restart();
+      });
+      return;
+    }
+
+    _solved += items.length;
+    widget.handle.setProgress(_solved, _total);
+    if (_current.spoken case final s?) {
+      Speaker.instance.speak(s, rate: AppScope.read(context).speechRate);
+    }
+    if (_round < _rounds.length - 1) {
+      showFeedback(context, 'أحسنت! ${remainingText(_total - _solved)}');
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (!mounted) return;
+        setState(() {
+          _retired.addAll(_ctrls);
+          _round++;
+          _busy = false;
+          _setupRound();
+        });
+      });
+    } else {
+      // النقاط حسب المستوى المتبقي في المؤشر.
+      AppScope.read(context).addPoints((_total * 10 * _level / 100).round());
+      showFeedback(context, 'ممتاز! أنهيت هذا التمرين');
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) setState(widget.handle.markComplete);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_done) {
+      return PageCard(title: widget.title, child: const PageDoneMessage());
+    }
+    if (!_started) {
+      return PageCard(
+        tag: widget.tag,
+        title: widget.title,
+        subtitle: widget.subtitle,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            widget.intro!,
+            const SizedBox(height: 20),
+            AppButton(
+              label: 'طبّق الآن',
+              icon: Icons.edit_rounded,
+              onTap: () {
+                setState(() => _started = true);
+                _activate();
+              },
+            ),
+          ],
+        ),
+      );
+    }
+    final round = _current;
+    return PageCard(
+      tag: widget.tag,
+      title: widget.title,
+      subtitle: widget.subtitle,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: Column(
+              key: ValueKey('$_generation-$_round'),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (round.instruction case final s?)
+                  Text(
+                    s,
+                    textAlign: TextAlign.center,
+                    style: AppTheme.word(22, color: AppColors.primary),
+                  ),
+                if (round.sentence case final s?)
+                  GestureDetector(
+                    onTap: _listen,
+                    child: MarkedSentence(s, mark: round.mark),
+                  ),
+                const SizedBox(height: 8),
+                for (var i = 0; i < round.items.length; i++) ...[
+                  _item(i),
+                  const SizedBox(height: 14),
+                ],
+              ],
+            ),
+          ),
+          AppButton(
+            label: 'إدخال',
+            style: AppButtonStyle.secondary,
+            enabled: !_busy,
+            onTap: _busy ? null : _check,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _item(int i) {
+    final item = _current.items[i];
+    final many = _current.items.length > 1;
+    final prompt = [
+      if (many) '${arDigits(i + 1)}-',
+      if (item.prompt != null) item.prompt!,
+    ].join(' ');
+    final promptText = prompt.isEmpty
+        ? null
+        : Text(prompt, style: AppTheme.word(22).copyWith(height: 1.5));
+    final state = _states[i];
+
+    if (item.writes) {
+      // السؤال فوق الحقل حتى لا يضيق السطر مع الخط الكبير.
+      return ShakeOnChange(
+        trigger: state == _State.wrong ? _shake : 0,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [?promptText, const SizedBox(height: 6), _field(i)],
+        ),
+      );
+    }
+
+    final options = Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final o in _orders[i])
+          _OptionChip(
+            label: o,
+            picked: _picked[i].contains(o),
+            // بعد الخطأ تظهر الإجابات الصحيحة بالأخضر.
+            reveal: state == _State.wrong && item.answers.contains(o),
+            state: state,
+            onTap: () => _pick(i, o),
+          ),
+      ],
+    );
+    return ShakeOnChange(
+      trigger: state == _State.wrong ? _shake : 0,
+      // رقم الفقرة وحده يبقى في سطر الخيارات.
+      child: item.prompt == null && promptText != null
+          ? Row(
+              children: [
+                promptText,
+                const SizedBox(width: 8),
+                Expanded(child: options),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [?promptText, const SizedBox(height: 6), options],
+            ),
+    );
+  }
+
+  Widget _field(int i) {
+    final state = _states[i];
+    final right = state == _State.right;
+    return TextField(
+      controller: _ctrls[i],
+      enabled: !right && !_busy,
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.rtl,
+      style: AppTheme.word(
+        24,
+        color: right ? AppColors.success : AppColors.ink,
+      ).copyWith(height: 1.3),
+      scrollPadding: const EdgeInsets.fromLTRB(20, 80, 20, 60),
+      onSubmitted: (_) => _check(),
+      onChanged: (_) {
+        if (state == _State.wrong) setState(() => _states[i] = _State.open);
+      },
+      decoration: InputDecoration(
+        hintText: '……',
+        isDense: true,
+        fillColor: switch (state) {
+          _State.right => AppColors.successSoft,
+          _State.wrong => AppColors.errorSoft,
+          _State.open => AppColors.background,
+        },
+        helperText: state == _State.wrong ? _current.items[i].answer : null,
+        helperStyle: AppTheme.word(18, color: AppColors.success),
+      ),
+    );
+  }
+}
+
+class _OptionChip extends StatelessWidget {
+  const _OptionChip({
+    required this.label,
+    required this.picked,
+    required this.reveal,
+    required this.state,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool picked;
+  final bool reveal;
+  final _State state;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final wrongPick = picked && state == _State.wrong && !reveal;
+    final (color, border, text) = switch (true) {
+      _ when wrongPick => (
+        AppColors.errorSoft,
+        AppColors.error,
+        AppColors.error,
+      ),
+      _ when reveal || (picked && state == _State.right) => (
+        AppColors.successSoft,
+        AppColors.success,
+        AppColors.success,
+      ),
+      _ when picked => (AppColors.primarySoft, AppColors.ink, AppColors.ink),
+      _ => (AppColors.surface, AppColors.line, AppColors.ink),
+    };
+    return Semantics(
+      button: true,
+      selected: picked,
+      child: Pressable(
+        onTap: onTap,
+        color: color,
+        borderColor: border,
+        radius: 14,
+        depth: 3,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Text(label, style: AppTheme.word(22, color: text)),
+        ),
+      ),
+    );
+  }
+}
+
+/// جملة بخط النسخ والكلمة [mark] فيها بالأحمر.
+class MarkedSentence extends StatelessWidget {
+  const MarkedSentence(this.text, {super.key, this.mark, this.size = 30});
+
+  final String text;
+  final String? mark;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final words = text.split(' ');
+    return Text.rich(
+      TextSpan(
+        children: [
+          for (var i = 0; i < words.length; i++) ...[
+            TextSpan(
+              text: words[i],
+              style: stripDiacritics(words[i]).replaceAll('؟', '') == mark
+                  ? const TextStyle(color: AppColors.al)
+                  : null,
+            ),
+            if (i < words.length - 1) const TextSpan(text: ' '),
+          ],
+        ],
+      ),
+      textAlign: TextAlign.center,
+      style: AppTheme.word(size).copyWith(height: 1.6),
+    );
+  }
+}

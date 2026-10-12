@@ -1,7 +1,10 @@
 import 'package:flutter/widgets.dart';
 
+import '../data/hamza_lesson.dart';
 import '../data/lam_lesson.dart';
 import '../data/taa_lesson.dart';
+import 'hamza_lesson_pages.dart';
+import 'hamza_rule_content.dart';
 import 'lam_lesson_pages.dart';
 import 'page_handle.dart';
 import 'taa_lesson_pages.dart';
@@ -41,6 +44,13 @@ final lessons = [
     unit: 2,
     build: buildTaaLessonPages,
     rule: TaaRuleContent(),
+  ),
+  const LessonDef(
+    id: hamzaLessonId,
+    title: hamzaLessonTitle,
+    unit: 3,
+    build: buildHamzaLessonPages,
+    rule: HamzaRuleContent(),
   ),
 ];
 

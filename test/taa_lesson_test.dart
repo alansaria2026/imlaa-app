@@ -89,7 +89,7 @@ void main() {
     });
 
     test('درس التاء في المسار بعد درس اللام', () {
-      expect(lessons.map((l) => l.id), ['lam', taaLessonId]);
+      expect(lessons.map((l) => l.id).take(2), ['lam', taaLessonId]);
       expect(lessonById(taaLessonId).build().length, 3);
     });
   });
