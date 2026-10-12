@@ -77,7 +77,7 @@ void main() {
 
   test('بناء صفحات الدرس', () {
     final pages = buildLamLessonPages();
-    expect(pages.length, 12);
+    expect(pages.length, 13);
     expect(addAlWordBank.toSet().length, addAlWordBank.length);
   });
 

@@ -23,7 +23,7 @@ void main() {
     expect(find.text('ابدأ الآن'), findsOneWidget);
 
     // محطة مقفلة تُظهر تلميحًا ولا تُفتح.
-    await t.tap(find.text('أمثلة'));
+    await t.tap(find.text('مثال الحذف'));
     await t.pump();
     expect(find.textContaining('أكمل المحطات السابقة'), findsOneWidget);
     await t.pumpAndSettle(const Duration(seconds: 5));
@@ -62,10 +62,17 @@ void main() {
     // «إنهاء» لا يظهر إلا في آخر صفحة.
     expect(find.text('إنهاء'), findsNothing);
 
-    // ص ١ ← ص ٢ ← ص ٣
+    // ص ١ ← مثال الحذف ← مثال الإضافة ← أضف (الـ)
     await t.tap(nextButton());
     await t.pumpAndSettle();
-    expect(find.text('أضف (الـ) أو احذفها'), findsOneWidget);
+    expect(find.text('احذف (الـ) من الكلمة'), findsOneWidget);
+    expect(find.text('لحم'), findsOneWidget);
+    expect(find.text('صلاة'), findsNothing);
+    await t.tap(nextButton());
+    await t.pumpAndSettle();
+    expect(find.text('أضف (الـ) إلى الكلمة'), findsOneWidget);
+    expect(find.text('صلاة'), findsOneWidget);
+    expect(find.text('لحم'), findsNothing);
     await t.tap(nextButton());
     await t.pumpAndSettle();
     expect(find.text('أضف (الـ) إلى الكلمة واكتب الناتج'), findsOneWidget);
@@ -102,11 +109,12 @@ void main() {
     await t.tapAt(const Offset(20, 20));
     await t.pumpAndSettle();
 
-    // العودة للرئيسية: أُنجزت محطتان وصارت «أضف (الـ)» الحالية.
+    // العودة للرئيسية: أُنجزت ثلاث محطات وصارت «أضف (الـ)» الحالية.
     await t.tap(find.byTooltip('الصفحة الرئيسية'));
     await t.pumpAndSettle();
     expect(state.isPageDone('lam', 0), isTrue);
     expect(state.isPageDone('lam', 1), isTrue);
+    expect(state.isPageDone('lam', 2), isTrue);
     expect(find.text('تابع'), findsOneWidget);
   });
 

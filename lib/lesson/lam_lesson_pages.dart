@@ -33,10 +33,17 @@ List<LessonPageSpec> buildLamLessonPages([Random? random]) {
     ),
     LessonPageSpec(
       tag: 'مثال',
-      title: 'أمثلة',
+      title: 'مثال الحذف',
       emoji: '💡',
       needsCompletion: false,
-      builder: (h) => ExamplesPage(handle: h),
+      builder: (h) => ExamplesPage(handle: h, add: false),
+    ),
+    LessonPageSpec(
+      tag: 'مثال',
+      title: 'مثال الإضافة',
+      emoji: '💡',
+      needsCompletion: false,
+      builder: (h) => ExamplesPage(handle: h, add: true),
     ),
     LessonPageSpec(
       title: 'أضف (الـ)',
