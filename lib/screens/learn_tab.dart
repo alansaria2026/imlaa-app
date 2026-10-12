@@ -124,11 +124,16 @@ class _LessonSection extends StatelessWidget {
                 'محطات الدرس',
                 style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
+              const SizedBox(width: 8),
               const Spacer(),
               if (n > 3) ...[
-                Text(
-                  'اسحب لرؤية المزيد',
-                  style: t.labelMedium?.copyWith(color: AppColors.muted),
+                Flexible(
+                  child: Text(
+                    'اسحب لرؤية المزيد',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: t.labelMedium?.copyWith(color: AppColors.muted),
+                  ),
                 ),
                 const SizedBox(width: 4),
                 const Icon(
@@ -140,38 +145,42 @@ class _LessonSection extends StatelessWidget {
             ],
           ),
         ),
-        _StationStrip(
-          count: n,
-          current: current,
-          nodeAt: (i) => i == n
-              ? Padding(
-                  // محاذاة مركز الكأس مع مراكز الدوائر.
-                  padding: const EdgeInsets.only(top: 33),
-                  child: _TrophyNode(
-                    earned: current == -1,
-                    onTap: current == -1 ? () => onOpen(0) : null,
+        // ارتفاع المحطات ثابت، فلا يكبر خط عناوينها مع تكبير خط الجهاز.
+        MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1,
+          child: _StationStrip(
+            count: n,
+            current: current,
+            nodeAt: (i) => i == n
+                ? Padding(
+                    // محاذاة مركز الكأس مع مراكز الدوائر.
+                    padding: const EdgeInsets.only(top: 33),
+                    child: _TrophyNode(
+                      earned: current == -1,
+                      onTap: current == -1 ? () => onOpen(0) : null,
+                    ),
+                  )
+                : _StationNode(
+                    spec: stations[i],
+                    state: done[i]
+                        ? _NodeState.done
+                        : i == current
+                        ? _NodeState.current
+                        : _NodeState.locked,
+                    onTap: () {
+                      if (done[i] || i == current) {
+                        onOpen(i);
+                      } else {
+                        showFeedback(
+                          context,
+                          'أكمل المحطات السابقة أولًا لفتح «${stations[i].title}»',
+                          tone: FeedbackTone.hint,
+                        );
+                      }
+                    },
                   ),
-                )
-              : _StationNode(
-                  spec: stations[i],
-                  state: done[i]
-                      ? _NodeState.done
-                      : i == current
-                      ? _NodeState.current
-                      : _NodeState.locked,
-                  onTap: () {
-                    if (done[i] || i == current) {
-                      onOpen(i);
-                    } else {
-                      showFeedback(
-                        context,
-                        'أكمل المحطات السابقة أولًا لفتح «${stations[i].title}»',
-                        tone: FeedbackTone.hint,
-                      );
-                    }
-                  },
-                ),
-          reached: (i) => i < n && (done[i] || i == current),
+            reached: (i) => i < n && (done[i] || i == current),
+          ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),

@@ -66,11 +66,12 @@ class _ChoicePageState extends State<ChoicePage> {
     if (item == null || _correct) return;
     _penalty.add(item);
     final marbuta = stripDiacritics(item.word).endsWith('ة');
+    final other = taaChoicePartner(item).word;
     showFeedback(
       context,
       marbuta
-          ? 'آخر «${item.word}» تاء مربوطة (ة) بنقطتين، فهي اسم واحد'
-          : 'آخر «${item.word}» هاء (ه) بلا نقط، أي: الذي له',
+          ? '«${item.word}» تنتهي بتاء مربوطة (ة) بنقطتين، وهي غير «$other»'
+          : '«${item.word}» تنتهي بهاء (ه) بلا نقطتين، وهي غير «$other»',
       tone: FeedbackTone.hint,
     );
   }
