@@ -137,7 +137,13 @@ void main() {
         final answers = [for (final r in rounds) r.items.single.answers.single];
         expect(answers.where((a) => a == Hamza.qat.label).length, 5);
         expect({for (final r in rounds) r.sentence}.length, 10);
-        if (attempt == 0) expect(rounds.first.mark, 'أكتب');
+        if (attempt == 0) expect(rounds.first.mark, 'اكتب');
+        // الهمزة مخفية في السؤال، وتظهر في الجملة بعد الإجابة.
+        for (final r in rounds) {
+          expect('أإ'.contains(r.mark![0]), isFalse, reason: r.mark);
+          expect(r.sentence, contains(r.mark));
+          expect(r.answerSentence, isNotNull);
+        }
       }
     });
 
@@ -224,11 +230,11 @@ void main() {
     );
 
     VerbSentence shown(WidgetTester t) {
-      final text = t.widget<MarkedSentence>(
-        inPage(find.byType(MarkedSentence)),
-      );
+      final w = t.widget<MarkedSentence>(inPage(find.byType(MarkedSentence)));
       return allVerbSentences.firstWhere(
-        (s) => text.text.contains(s.text) && s.verb == text.mark,
+        (s) =>
+            (w.mark == s.verb && w.text.contains(s.text)) ||
+            (w.mark == s.hiddenVerb && w.text.contains(s.hiddenText)),
       );
     }
 
@@ -250,6 +256,9 @@ void main() {
       await open(t, 1);
       final first = shown(t);
       expect(first.verb, 'أكتب');
+      expect(find.text('همزة الفعل «اكتب»:'), findsOneWidget);
+      // الجملة تُسمع عند ظهورها.
+      expect(lastSpoken, first.spoken);
       await t.tap(inPage(find.text(Hamza.wasl.label)));
       await t.pump();
       await t.tap(inPage(find.text('إدخال')));
@@ -270,8 +279,15 @@ void main() {
         await t.pump();
         await t.tap(inPage(find.text('إدخال')));
         await t.pump();
-        expect(lastSpoken, s.spoken);
+        // بعد الإجابة تظهر الكتابة الصحيحة للفعل.
+        expect(
+          t.widget<MarkedSentence>(inPage(find.byType(MarkedSentence))).mark,
+          s.verb,
+        );
         await t.pumpAndSettle(const Duration(seconds: 2));
+        if (find.byType(PageDoneMessage).evaluate().isEmpty) {
+          expect(lastSpoken, shown(t).spoken);
+        }
       }
       expect(find.byType(PageDoneMessage), findsOneWidget);
     });

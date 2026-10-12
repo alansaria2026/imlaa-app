@@ -42,6 +42,8 @@ class QuizRound {
     this.instruction,
     this.sentence,
     this.mark,
+    this.answerSentence,
+    this.answerMark,
     this.spoken,
     this.hint,
   });
@@ -52,6 +54,10 @@ class QuizRound {
   /// جملة السؤال، والكلمة [mark] فيها بالأحمر.
   final String? sentence;
   final String? mark;
+
+  /// الجملة كما تُكتب صحيحةً، تحل محل [sentence] بعد الإجابة.
+  final String? answerSentence;
+  final String? answerMark;
 
   /// ما يُنطق بزر «استمع» وبعد الإجابة الصحيحة.
   final String? spoken;
@@ -76,6 +82,7 @@ class QuizPage extends StatefulWidget {
     this.rule,
     this.intro,
     this.introSpeech,
+    this.autoSpeak = false,
   });
 
   final PageHandle handle;
@@ -92,6 +99,9 @@ class QuizPage extends StatefulWidget {
 
   /// ما ينطقه «استمع» قبل بدء التطبيق (جملة المثال).
   final String? introSpeech;
+
+  /// تُنطق جملة كل سؤال عند ظهوره (تمارين «اسمع»).
+  final bool autoSpeak;
 
   static const levelStep = 10;
 
@@ -133,7 +143,8 @@ class _QuizPageState extends State<QuizPage> {
     widget.handle
       ..onHint = _hint
       ..onListen = _listen
-      ..onRuleOpened = _restart;
+      ..onRuleOpened = _restart
+      ..onEnter = widget.autoSpeak ? _listen : null;
     // عدد الأسئلة يظهر من البداية، وبه تتحدث القائمة (استمع، مساعدة).
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => widget.handle.setProgress(_solved, _total),
@@ -208,6 +219,7 @@ class _QuizPageState extends State<QuizPage> {
       _setupRound();
     });
     widget.handle.setProgress(0, _total);
+    if (widget.autoSpeak) _listen();
   }
 
   void _pick(int i, String option) {
@@ -294,7 +306,8 @@ class _QuizPageState extends State<QuizPage> {
 
     _solved += items.length;
     widget.handle.setProgress(_solved, _total);
-    if (_current.spoken case final s?) {
+    // في تمارين «اسمع» تُسمع جملة السؤال التالي بدل إعادة هذه.
+    if (_current.spoken case final s? when !widget.autoSpeak) {
       Speaker.instance.speak(s, rate: AppScope.read(context).speechRate);
     }
     if (_round < _rounds.length - 1) {
@@ -307,6 +320,7 @@ class _QuizPageState extends State<QuizPage> {
           _busy = false;
           _setupRound();
         });
+        if (widget.autoSpeak) _listen();
       });
     } else {
       showFeedback(context, 'ممتاز! أنهيت هذا التمرين');
@@ -369,7 +383,12 @@ class _QuizPageState extends State<QuizPage> {
                 if (round.sentence case final s?)
                   GestureDetector(
                     onTap: _listen,
-                    child: MarkedSentence(s, mark: round.mark),
+                    child: _busy && round.answerSentence != null
+                        ? MarkedSentence(
+                            round.answerSentence!,
+                            mark: round.answerMark,
+                          )
+                        : MarkedSentence(s, mark: round.mark),
                   ),
                 const SizedBox(height: 8),
                 for (var i = 0; i < round.items.length; i++) ...[

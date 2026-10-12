@@ -63,7 +63,17 @@ class VerbSentence {
 
   String get text => stripDiacritics(spoken);
   Hamza get hamza => hamzaOf(tense, weight);
+
+  /// الفعل بلا صورة الهمزة (أكتب ← اكتب) ليعتمد الطالب على القاعدة الذهبية.
+  String get hiddenVerb => hideHamza(verb);
+
+  /// الجملة والفعل فيها بلا صورة الهمزة.
+  String get hiddenText =>
+      [for (final w in text.split(' ')) w == verb ? hiddenVerb : w].join(' ');
 }
+
+/// يكتب الهمزة في أول الكلمة ألفًا (أ، إ ← ا).
+String hideHamza(String word) => word.replaceFirst(RegExp('^[أإ]'), 'ا');
 
 /// قاعدة من قواعد الأفعال (ص ١٤–٣٧): جملة مثال محلولة، ثم جمل التطبيق؛
 /// الأولى من الكتاب، والبقية بدائل بعد الخطأ.

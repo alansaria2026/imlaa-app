@@ -40,8 +40,9 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
-        subtitle: 'عشرة أسئلة متتالية بلا خطأ',
+        subtitle: 'اسمع الجملة، ثم أدخل (ثم) قبل الفعل وانطقه',
         rule: const HamzaBasicsRule(),
+        autoSpeak: true,
         build: _qatOrWasl,
       ),
     ),
@@ -322,8 +323,8 @@ final _hamzaOptions = [for (final h in Hamza.values) h.label];
 final _tenseOptions = [for (final t in Tense.values) t.label];
 final _weightOptions = [for (final w in Weight.values) w.label];
 
-const _hamzaHint =
-    'همزة القطع تُكتب (أ) أو (إ)، وهمزة الوصل تُكتب ألفًا (ا) بلا همزة.';
+const _goldenHint =
+    'أدخل (ثم) قبل الفعل وانطقه: إن ظهرت الهمزة فهي قطع، وإن اختفت فهي وصل.';
 const _verbHint =
     'حوّل الفعل إلى الماضي وعُدّ حروفه لتعرف وزنه، ثم طبّق القاعدة العامة.';
 
@@ -337,13 +338,16 @@ List<QuizRound> _qatOrWasl(Random rnd, int attempt) {
   return [
     for (final s in [...first, ...picked])
       QuizRound(
-        sentence: s.text,
-        mark: s.verb,
+        // الهمزة مخفية حتى يجيب الطالب، ثم تظهر الكتابة الصحيحة.
+        sentence: s.hiddenText,
+        mark: s.hiddenVerb,
+        answerSentence: s.text,
+        answerMark: s.verb,
         spoken: s.spoken,
-        hint: _hamzaHint,
+        hint: _goldenHint,
         items: [
           QuizItem(
-            prompt: 'همزة الفعل «${s.verb}»:',
+            prompt: 'همزة الفعل «${s.hiddenVerb}»:',
             options: _hamzaOptions,
             answers: {s.hamza.label},
           ),
