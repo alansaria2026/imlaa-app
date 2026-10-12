@@ -20,6 +20,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -34,17 +35,12 @@ CATALOG = os.path.join(ROOT, "lib", "services", "audio_catalog.g.dart")
 SAMPLES_DIR = os.path.join(ROOT, "build", "voice_samples")
 API = "https://texttospeech.googleapis.com/v1/text:synthesize?key="
 
-GEMINI_API = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-2.5-flash-preview-tts:generateContent?key="
-)
-# أصوات Gemini المرشحة (تتحدث العربية كلها).
+GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key="
+# لكل نموذج حدّ يومي مجاني مستقل (نحو ١٠ طلبات).
+GEMINI_MODEL = "gemini-3.8-flash-tts"
+# أصوات Gemini المرشحة (تتحدث العربية كلها). نرسل النص وحده بلا تعليمات،
+# لأن النماذج الأحدث تقرأ التعليمات بصوت مسموع.
 GEMINI_VOICES = ["Kore", "Charon", "Aoede", "Orus"]
-GEMINI_STYLE = (
-    "Read the following Arabic text aloud exactly as written, honoring every "
-    "diacritic, in clear Modern Standard Arabic, slowly and distinctly for a "
-    "young student: "
-)
 
 # أصوات Google Cloud المرشحة (الأحدث أولًا).
 CANDIDATES = [
@@ -79,10 +75,10 @@ def synthesize(key, text, voice, rate):
         sys.exit(f"خطأ من Google ({e.code}) للصوت {voice}: {e.read().decode()[:300]}")
 
 
-def synthesize_gemini(key, text, voice, rate):
+def synthesize_gemini(key, text, voice, rate, model=GEMINI_MODEL):
     """Gemini يعيد PCM خامًا (24kHz)، فنحوّله إلى MP3 بـ ffmpeg."""
     body = {
-        "contents": [{"parts": [{"text": GEMINI_STYLE + text}]}],
+        "contents": [{"parts": [{"text": text}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": {
@@ -91,22 +87,32 @@ def synthesize_gemini(key, text, voice, rate):
         },
     }
     req = urllib.request.Request(
-        GEMINI_API + key,
+        GEMINI_API.format(model) + key,
         data=json.dumps(body).encode(),
         headers={"Content-Type": "application/json"},
     )
-    for attempt in range(8):
+    for attempt in range(10):
         try:
             with urllib.request.urlopen(req, timeout=120) as r:
-                part = json.load(r)["candidates"][0]["content"]["parts"][0]
-                pcm = base64.b64decode(part["inlineData"]["data"])
+                cand = json.load(r)["candidates"][0]
+            # أحيانًا يعود الرد بلا صوت (finishReason: OTHER)، فنعيد المحاولة.
+            if "content" not in cand and attempt < 9:
+                time.sleep(5)
+                continue
+            pcm = base64.b64decode(cand["content"]["parts"][0]["inlineData"]["data"])
             break
         except urllib.error.HTTPError as e:
-            # الحد المجاني لعدد الطلبات في الدقيقة: ننتظر ثم نعيد.
-            if e.code in (429, 500, 503) and attempt < 7:
-                time.sleep(min(60, 8 * (attempt + 1)))
+            err = e.read().decode()
+            # الحد المجاني لعدد الطلبات في الدقيقة: ننتظر المدة التي يطلبها الخادم ثم نعيد.
+            # وقد يرفض أحيانًا بحجة أنه «حاول توليد نص»، وتنجح الإعادة غالبًا.
+            retry = e.code in (429, 500, 503) or "generate text" in err
+            if retry and attempt < 9:
+                if "PerDay" in err:
+                    sys.exit(f"انتهى الحد اليومي المجاني لـ Gemini: {err[:300]}")
+                m = re.search(r'"retryDelay": "(\d+)', err)
+                time.sleep(int(m.group(1)) + 2 if m else min(60, 8 * (attempt + 1)))
                 continue
-            sys.exit(f"خطأ من Gemini ({e.code}): {e.read().decode()[:300]}")
+            sys.exit(f"خطأ من Gemini ({e.code}): {err[:300]}")
     with tempfile.NamedTemporaryFile(suffix=".pcm") as raw:
         raw.write(pcm)
         raw.flush()
@@ -157,8 +163,11 @@ def main():
     if args.samples:
         os.makedirs(SAMPLES_DIR, exist_ok=True)
         for voice in voices:
-            audio = b"".join(say(key, t, voice, args.rate) for t in SAMPLE_TEXTS)
             path = os.path.join(SAMPLES_DIR, f"{voice}.mp3")
+            if os.path.exists(path) and not args.force:
+                continue
+            # طلب واحد لكل صوت توفيرًا للحد المجاني.
+            audio = say(key, ".\n\n".join(SAMPLE_TEXTS) + ".", voice, args.rate)
             with open(path, "wb") as f:
                 f.write(audio)
             print(path)
