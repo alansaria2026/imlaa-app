@@ -1,4 +1,5 @@
 import '../data/bi_lesson.dart';
+import '../data/hamza_lesson.dart';
 import '../data/lam_lesson.dart';
 import '../data/li_lesson.dart';
 import '../data/review_lesson.dart';
@@ -33,4 +34,14 @@ Set<String> allSpeechTexts() => {
   for (final s in [...taaSentences, ...taaSpareSentences]) s.spoken,
   taaChoiceInstruction,
   for (final (a, b) in taaChoicePairs) ...[a.spoken, b.spoken],
+  // درس همزة القطع وهمزة الوصل.
+  hamzaRuleSpeech,
+  alRuleSpeech,
+  for (final (spoken, _, _) in goldenRuleExamples) spoken,
+  for (final s in allVerbSentences) s.spoken,
+  for (final w in [...alRuleWords, ...alExampleWords]) ...[
+    spokenForm(w),
+    spokenForm(w.startsWith('ال') ? w : 'ال$w'),
+  ],
+  for (final w in [...hamzaAlMoonWords, ...hamzaAlSunWords]) spokenForm(w),
 };

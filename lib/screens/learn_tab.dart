@@ -70,7 +70,6 @@ class _LearnTabState extends State<LearnTab> {
           padding: EdgeInsets.fromLTRB(16, 12, 16, 32),
           sliver: SliverList(
             delegate: SliverChildListDelegate.fixed([
-              _UnitCard(number: 3, title: 'همزة الوصل وهمزة القطع'),
               _UnitCard(number: 4, title: 'الألف اللينة'),
               _UnitCard(number: 5, title: 'الهمزة المتوسطة والمتطرفة'),
             ]),
