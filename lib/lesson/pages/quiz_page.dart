@@ -75,6 +75,7 @@ class QuizPage extends StatefulWidget {
     this.subtitle,
     this.rule,
     this.intro,
+    this.introSpeech,
   });
 
   final PageHandle handle;
@@ -88,6 +89,9 @@ class QuizPage extends StatefulWidget {
 
   /// مثال محلول يُعرض قبل التطبيق، ثم «طبّق الآن».
   final Widget? intro;
+
+  /// ما ينطقه «استمع» قبل بدء التطبيق (جملة المثال).
+  final String? introSpeech;
 
   static const levelStep = 10;
 
@@ -130,6 +134,10 @@ class _QuizPageState extends State<QuizPage> {
       ..onHint = _hint
       ..onListen = _listen
       ..onRuleOpened = _restart;
+    // عدد الأسئلة يظهر من البداية، وبه تتحدث القائمة (استمع، مساعدة).
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => widget.handle.setProgress(_solved, _total),
+    );
     if (_started) _activate();
   }
 
@@ -162,7 +170,7 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void _listen() {
-    final text = _started ? _current.spoken : null;
+    final text = _started ? _current.spoken : widget.introSpeech;
     Speaker.instance.speak(
       text ?? widget.title,
       rate: AppScope.read(context).speechRate,
@@ -170,7 +178,15 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void _hint() {
-    if (!_started || _done) return;
+    if (_done) return;
+    if (!_started) {
+      showFeedback(
+        context,
+        'اقرأ المثال المحلول والقاعدة، ثم اضغط «طبّق الآن»',
+        tone: FeedbackTone.hint,
+      );
+      return;
+    }
     showFeedback(
       context,
       _current.hint ?? 'افتح «القاعدة» من القائمة وراجعها قبل الإجابة',
@@ -255,6 +271,9 @@ class _QuizPageState extends State<QuizPage> {
       _busy = true;
     });
 
+    // خطوة مؤجلة تُلغى إن أُعيدت الأسئلة قبلها (بفتح القاعدة من القائمة).
+    final generation = _generation;
+
     if (anyWrong) {
       widget.handle.setLevel(_level);
       showFeedback(
@@ -264,11 +283,11 @@ class _QuizPageState extends State<QuizPage> {
       );
       // وقت لرؤية الإجابات الصحيحة قبل انبثاق القاعدة.
       Future.delayed(const Duration(milliseconds: 1800), () async {
-        if (!mounted) return;
+        if (!mounted || _generation != generation) return;
         if (widget.rule != null) {
           await showRuleSheet(context, content: widget.rule);
         }
-        _restart();
+        if (mounted && _generation == generation) _restart();
       });
       return;
     }
@@ -281,7 +300,7 @@ class _QuizPageState extends State<QuizPage> {
     if (_round < _rounds.length - 1) {
       showFeedback(context, 'أحسنت! ${remainingText(_total - _solved)}');
       Future.delayed(const Duration(milliseconds: 1200), () {
-        if (!mounted) return;
+        if (!mounted || _generation != generation) return;
         setState(() {
           _retired.addAll(_ctrls);
           _round++;
@@ -290,11 +309,12 @@ class _QuizPageState extends State<QuizPage> {
         });
       });
     } else {
-      // النقاط حسب المستوى المتبقي في المؤشر.
-      AppScope.read(context).addPoints((_total * 10 * _level / 100).round());
       showFeedback(context, 'ممتاز! أنهيت هذا التمرين');
       Future.delayed(const Duration(milliseconds: 1200), () {
-        if (mounted) setState(widget.handle.markComplete);
+        if (!mounted || _generation != generation) return;
+        // النقاط حسب المستوى المتبقي في المؤشر.
+        AppScope.read(context).addPoints((_total * 10 * _level / 100).round());
+        setState(widget.handle.markComplete);
       });
     }
   }

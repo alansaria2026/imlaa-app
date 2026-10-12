@@ -320,6 +320,39 @@ void main() {
       expect(find.byType(PageDoneMessage), findsOneWidget);
     });
 
+    testWidgets('فتح القاعدة بين جولتين يعيد الأسئلة دون تخطي جولة', (t) async {
+      await open(t, 1);
+      await t.tap(inPage(find.text(shown(t).hamza.label)));
+      await t.tap(inPage(find.text('إدخال')));
+      await t.pump();
+      expect(scoreLabel('بقيت ٩ أسئلة'), findsOneWidget);
+      // قبل انتقال الجولة: القائمة ← القاعدة.
+      await t.tap(find.byTooltip('القائمة'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('القاعدة').last);
+      await t.pumpAndSettle();
+      await t.tapAt(const Offset(20, 20));
+      await t.pumpAndSettle(const Duration(seconds: 2));
+      expect(scoreLabel('بقيت ١٠ أسئلة'), findsOneWidget);
+      var answered = 0;
+      while (find.byType(PageDoneMessage).evaluate().isEmpty) {
+        expect(++answered, lessThanOrEqualTo(10));
+        await t.tap(inPage(find.text(shown(t).hamza.label)));
+        await t.tap(inPage(find.text('إدخال')));
+        await t.pumpAndSettle(const Duration(seconds: 2));
+      }
+      expect(answered, 10);
+    });
+
+    testWidgets('قبل التطبيق: التلميح والاستماع للمثال', (t) async {
+      await open(t, 9);
+      await t.tap(find.byTooltip('القائمة'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('استمع').last);
+      await t.pumpAndSettle();
+      expect(lastSpoken, verbCombos.first.example.spoken);
+    });
+
     testWidgets('اختيار متعدد: تُختار الإجابات الثلاث معًا', (t) async {
       await open(t, 21);
       for (var i = 0; i < 5; i++) {

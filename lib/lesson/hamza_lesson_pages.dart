@@ -26,6 +26,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
     _example(
       title: 'القاعدة',
       emoji: '📖',
+      tappable: true,
       heading: 'الفرق بين همزة القطع وهمزة الوصل',
       rule: const HamzaBasicsRule(),
       speech: hamzaRuleSpeech,
@@ -58,6 +59,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
     _example(
       title: '(ال) التعريف',
       emoji: '🔤',
+      tappable: true,
       heading: 'همزة (ال) التعريف',
       rule: const AlHamzaRule(),
       speech: alRuleSpeech,
@@ -130,6 +132,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
           tag: 'مثال ثم تطبيق',
           title: 'حلّل الفعل',
           intro: VerbComboExample(c),
+          introSpeech: c.example.spoken,
           rule: VerbComboExample(c),
           build: (rnd, attempt) => [_analysis(c.practice, rnd, attempt)],
         ),
@@ -240,6 +243,7 @@ LessonPageSpec _example({
   required Widget rule,
   required String speech,
   required String hint,
+  bool tappable = false,
 }) => LessonPageSpec(
   tag: 'مثال وقاعدة',
   title: title,
@@ -251,6 +255,7 @@ LessonPageSpec _example({
     heading: heading,
     speech: speech,
     hint: hint,
+    tappable: tappable,
     child: rule,
   ),
 );
@@ -262,6 +267,7 @@ class _ExamplePage extends StatefulWidget {
     required this.speech,
     required this.hint,
     required this.child,
+    this.tappable = false,
   });
 
   final PageHandle handle;
@@ -269,6 +275,9 @@ class _ExamplePage extends StatefulWidget {
   final String speech;
   final String hint;
   final Widget child;
+
+  /// في المحتوى أمثلة تُسمع بالضغط عليها.
+  final bool tappable;
 
   @override
   State<_ExamplePage> createState() => _ExamplePageState();
@@ -294,7 +303,7 @@ class _ExamplePageState extends State<_ExamplePage> {
   Widget build(BuildContext context) => PageCard(
     tag: 'مثال وقاعدة',
     title: widget.heading,
-    subtitle: 'اضغط على المثال لتسمعه',
+    subtitle: widget.tappable ? 'اضغط على المثال لتسمعه' : null,
     child: widget.child,
   );
 }
