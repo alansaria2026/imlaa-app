@@ -120,9 +120,16 @@ class _LessonSection extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 22, 16, 4),
           child: Row(
             children: [
-              Text(
-                'محطات الدرس',
-                style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              // يصغر العنوان مع خط الجهاز الكبير جدًا بدل أن يتجاوز السطر.
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    'محطات الدرس',
+                    style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               const Spacer(),
@@ -518,6 +525,10 @@ class _UnitBanner extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     title,
+                    // لا تنقسم كلمات العنوان مع خط الجهاز الكبير جدًا.
+                    textScaler: MediaQuery.textScalerOf(
+                      context,
+                    ).clamp(maxScaleFactor: 1.5),
                     style: t.titleLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,

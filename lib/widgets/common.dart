@@ -98,6 +98,10 @@ class PageCard extends StatelessWidget {
         Text(
           title,
           textAlign: TextAlign.center,
+          // العنوان كبير أصلًا: لا يتجاوز تكبيره مرة ونصفًا ليبقى التمرين ظاهرًا.
+          textScaler: MediaQuery.textScalerOf(
+            context,
+          ).clamp(maxScaleFactor: 1.5),
           style: AppTheme.word(26).copyWith(height: 1.5),
         ),
         if (subtitle != null) ...[
@@ -134,17 +138,16 @@ class LamChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: moon ? AppColors.moon : AppColors.sun),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            type.label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: moon ? AppColors.moon : AppColors.sun,
-            ),
+      // يصغر بدل أن يتجاوز مكانه مع خط الجهاز الكبير جدًا.
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          type.label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: moon ? AppColors.moon : AppColors.sun,
           ),
-        ],
+        ),
       ),
     );
   }

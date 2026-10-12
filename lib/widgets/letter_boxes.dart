@@ -22,25 +22,29 @@ class LetterBoxes extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, c) {
-        const gap = 8.0;
+        // الكلمات الطويلة على الشاشات الضيقة: مربعات أصغر في سطر واحد.
+        final gap = length > 7 ? 5.0 : 8.0;
         final size = ((c.maxWidth - gap * (length - 1)) / length).clamp(
-          30.0,
+          22.0,
           58.0,
         );
-        return Wrap(
-          alignment: WrapAlignment.center,
-          spacing: gap,
-          runSpacing: gap,
-          children: [
-            for (var i = 0; i < length; i++)
-              _Box(
-                size: size,
-                letter: i < letters.length ? letters[i] : null,
-                isAl: i < alCount,
-                active: i == letters.length,
-                error: error,
-              ),
-          ],
+        // حجم الحرف من حجم المربع، فلا يكبر مع خط الجهاز.
+        return MediaQuery.withNoTextScaling(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: gap,
+            runSpacing: gap,
+            children: [
+              for (var i = 0; i < length; i++)
+                _Box(
+                  size: size,
+                  letter: i < letters.length ? letters[i] : null,
+                  isAl: i < alCount,
+                  active: i == letters.length,
+                  error: error,
+                ),
+            ],
+          ),
         );
       },
     );
@@ -140,37 +144,40 @@ class ArabicKeyboard extends StatelessWidget {
     final rows = ios ? _iosRows : _androidRows;
     const letterRows = 3;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(2, 6, 2, 6),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Directionality(
-        textDirection: ios ? TextDirection.ltr : TextDirection.rtl,
-        child: Column(
-          children: [
-            for (var r = 0; r < rows.length; r++)
-              Row(
-                children: [
-                  // صف الهمزات أقصر فيتوسط اللوحة بمفاتيح بالعرض نفسه.
-                  if (r == letterRows) Spacer(flex: 11 - rows[r].length),
-                  for (final l in rows[r])
-                    _Key(
-                      label: l,
-                      flex: r == letterRows ? 2 : 1,
-                      onTap: () => onLetter(l),
-                    ),
-                  if (r == letterRows) Spacer(flex: 11 - rows[r].length),
-                  if (r == letterRows - 1)
-                    _Key(
-                      icon: Icons.backspace_outlined,
-                      flex: 11 - rows[r].length,
-                      onTap: onBackspace,
-                    ),
-                ],
-              ),
-          ],
+    // المفاتيح بعرض ثابت، فلا يكبر حرفها مع خط الجهاز.
+    return MediaQuery.withNoTextScaling(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(2, 6, 2, 6),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Directionality(
+          textDirection: ios ? TextDirection.ltr : TextDirection.rtl,
+          child: Column(
+            children: [
+              for (var r = 0; r < rows.length; r++)
+                Row(
+                  children: [
+                    // صف الهمزات أقصر فيتوسط اللوحة بمفاتيح بالعرض نفسه.
+                    if (r == letterRows) Spacer(flex: 11 - rows[r].length),
+                    for (final l in rows[r])
+                      _Key(
+                        label: l,
+                        flex: r == letterRows ? 2 : 1,
+                        onTap: () => onLetter(l),
+                      ),
+                    if (r == letterRows) Spacer(flex: 11 - rows[r].length),
+                    if (r == letterRows - 1)
+                      _Key(
+                        icon: Icons.backspace_outlined,
+                        flex: 11 - rows[r].length,
+                        onTap: onBackspace,
+                      ),
+                  ],
+                ),
+            ],
+          ),
         ),
       ),
     );

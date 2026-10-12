@@ -106,11 +106,16 @@ class _NavItem extends StatelessWidget {
               Icon(icon, color: color, size: 26),
               const SizedBox(height: 2),
               ExcludeSemantics(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w800,
+                // سطر واحد يصغر مع خط الجهاز الكبير جدًا.
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),
