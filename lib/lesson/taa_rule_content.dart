@@ -5,6 +5,7 @@ import '../data/taa_lesson.dart';
 import '../services/speaker.dart';
 import '../theme.dart';
 import '../widgets/taa_text.dart';
+import 'rule_content.dart';
 
 /// قاعدة التاء المربوطة والتاء المفتوحة: سؤال وجواب، ثم جملة المثال
 /// والتاء المربوطة فيها بالأحمر والمفتوحة بالأزرق، ثم كلمتا المثال تتحركان.
@@ -12,7 +13,10 @@ class TaaRuleContent extends StatelessWidget {
   const TaaRuleContent({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      NaskhRule(child: Builder(builder: _content));
+
+  Widget _content(BuildContext context) {
     final t = Theme.of(context).textTheme;
     void say(String s) =>
         Speaker.instance.speak(s, rate: AppScope.read(context).speechRate);

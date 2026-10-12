@@ -5,6 +5,7 @@ import '../data/li_lesson.dart';
 import '../services/speaker.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import 'rule_content.dart';
 
 /// قاعدة اتصال لام الجر (لِـ) بـ(ال) وأمثلتها؛ تُعرض في صفحة القاعدة وفي
 /// نافذة «القاعدة» لصفحات اللام.
@@ -12,7 +13,10 @@ class LiRuleContent extends StatelessWidget {
   const LiRuleContent({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      NaskhRule(child: Builder(builder: _content));
+
+  Widget _content(BuildContext context) {
     void say(String s) =>
         Speaker.instance.speak(s, rate: AppScope.read(context).speechRate);
     final label = Theme.of(context).textTheme.titleSmall?.copyWith(

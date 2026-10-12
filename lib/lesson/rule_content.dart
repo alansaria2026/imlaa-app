@@ -11,15 +11,8 @@ class RuleContent extends StatelessWidget {
   const RuleContent({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Theme(
-      data: theme.copyWith(
-        textTheme: theme.textTheme.apply(fontFamily: 'NotoNaskhArabic'),
-      ),
-      child: Builder(builder: _content),
-    );
-  }
+  Widget build(BuildContext context) =>
+      NaskhRule(child: Builder(builder: _content));
 
   Widget _content(BuildContext context) {
     final t = Theme.of(context).textTheme;
@@ -153,6 +146,28 @@ class _ExampleTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// يكتب كل نصوص القاعدة بخط النسخ (العناوين والنصوص بلا نمط صريح).
+class NaskhRule extends StatelessWidget {
+  const NaskhRule({super.key, required this.child});
+  final Widget child;
+
+  static const family = 'NotoNaskhArabic';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(
+        textTheme: theme.textTheme.apply(fontFamily: family),
+      ),
+      child: DefaultTextStyle.merge(
+        style: const TextStyle(fontFamily: family),
+        child: child,
       ),
     );
   }
