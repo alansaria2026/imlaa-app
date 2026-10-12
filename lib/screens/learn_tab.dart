@@ -11,7 +11,7 @@ import '../widgets/common.dart';
 import '../widgets/mascot.dart';
 import '../widgets/pressable.dart';
 
-/// مسار التعلّم: محطات الدرس متعرّجة، والحالية تنبض بزر «ابدأ».
+/// مسار التعلّم: محطات الدرس مربعات على خط واحد، والحالية تنبض بزر «ابدأ».
 class LearnTab extends StatefulWidget {
   const LearnTab({super.key});
 
@@ -81,7 +81,7 @@ class _LearnTabState extends State<LearnTab> {
   }
 }
 
-/// درس في المسار: بطاقة الوحدة، ثم شريط المحطات، ثم «المحطة التالية».
+/// درس في المسار: بطاقة الدرس، ثم شريط المحطات، ثم زر البدء.
 class _LessonSection extends StatelessWidget {
   const _LessonSection({
     super.key,
@@ -109,7 +109,6 @@ class _LessonSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: _UnitBanner(
-            unit: lesson.unit,
             title: lesson.title,
             done: doneCount,
             total: n,
@@ -118,38 +117,14 @@ class _LessonSection extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 22, 16, 4),
-          child: Row(
-            children: [
-              // يصغر العنوان مع خط الجهاز الكبير جدًا بدل أن يتجاوز السطر.
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    'محطات الدرس',
-                    style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Spacer(),
-              if (n > 3) ...[
-                Flexible(
-                  child: Text(
-                    'اسحب لرؤية المزيد',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: t.labelMedium?.copyWith(color: AppColors.muted),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.swipe_rounded,
-                  size: 18,
-                  color: AppColors.muted,
-                ),
-              ],
-            ],
+          // يصغر العنوان مع خط الجهاز الكبير جدًا بدل أن يتجاوز السطر.
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              'محطات الدرس',
+              style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
           ),
         ),
         // ارتفاع المحطات ثابت، فلا يكبر خط عناوينها مع تكبير خط الجهاز.
@@ -160,7 +135,7 @@ class _LessonSection extends StatelessWidget {
             current: current,
             nodeAt: (i) => i == n
                 ? Padding(
-                    // محاذاة مركز الكأس مع مراكز الدوائر.
+                    // محاذاة مركز الكأس مع مراكز المربعات.
                     padding: const EdgeInsets.only(top: 33),
                     child: _TrophyNode(
                       earned: current == -1,
@@ -193,7 +168,6 @@ class _LessonSection extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: _NextUp(
             finished: current == -1,
-            title: current == -1 ? null : stations[current].title,
             started: doneCount > 0,
             onTap: () => onOpen(current == -1 ? 0 : current),
           ),
@@ -203,7 +177,8 @@ class _LessonSection extends StatelessWidget {
   }
 }
 
-/// شريط المحطات الأفقي: يبدأ من اليمين ويتموّج صعودًا وهبوطًا، وتربطه خطوط.
+/// شريط المحطات الأفقي: يبدأ من اليمين على خط مستقيم، ويتأرجح قليلًا يمينًا
+/// ويسارًا إشارةً إلى إمكانية السحب حتى يسحبه الطالب.
 class _StationStrip extends StatefulWidget {
   const _StationStrip({
     required this.count,
@@ -222,22 +197,57 @@ class _StationStrip extends StatefulWidget {
 
   static const itemWidth = 98.0;
   static const slotHeight = 144.0;
-  static const wave = 26.0;
   static const pad = 12.0;
 
-  /// مركز الدائرة من أعلى الخانة: فقاعة «ابدأ» ٣٤ + نصف الدائرة مع حافتها.
-  static const circleCenter = 34 + 40.0;
+  /// مسافة التأرجح من كل جانب.
+  static const sway = 10.0;
+
+  /// مركز المربع من أعلى الخانة: فقاعة «ابدأ» ٣٤ + نصف المربع مع حافته.
+  static const nodeCenter = 34 + 40.0;
 
   @override
   State<_StationStrip> createState() => _StationStripState();
 }
 
-class _StationStripState extends State<_StationStrip> {
+class _StationStripState extends State<_StationStrip>
+    with SingleTickerProviderStateMixin {
   final _scroll = ScrollController();
   int? _scrolledTo;
 
+  late final _sway = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1600),
+  );
+
+  /// يتوقف التأرجح نهائيًا بعد أول سحب من الطالب.
+  bool _dragged = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncSway();
+  }
+
+  void _syncSway() {
+    if (!_dragged && !MediaQuery.disableAnimationsOf(context)) {
+      if (!_sway.isAnimating) _sway.repeat(reverse: true);
+    } else {
+      _sway.stop();
+      _sway.value = 0.5;
+    }
+  }
+
+  bool _onScroll(ScrollStartNotification n) {
+    if (n.dragDetails != null && !_dragged) {
+      _dragged = true;
+      _syncSway();
+    }
+    return false;
+  }
+
   @override
   void dispose() {
+    _sway.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -260,9 +270,8 @@ class _StationStripState extends State<_StationStrip> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _revealCurrent());
     final items = widget.count + 1;
     final width = _StationStrip.pad * 2 + items * _StationStrip.itemWidth;
-    const height = _StationStrip.slotHeight + _StationStrip.wave + 8;
+    const height = _StationStrip.slotHeight + 8;
     final rtl = Directionality.of(context) == TextDirection.rtl;
-    double top(int i) => i.isOdd ? _StationStrip.wave : 0;
 
     final centers = [
       for (var i = 0; i < items; i++)
@@ -272,37 +281,53 @@ class _StationStripState extends State<_StationStrip> {
               i * _StationStrip.itemWidth +
               _StationStrip.itemWidth / 2;
           return rtl ? width - fromStart : fromStart;
-        }(), top(i) + _StationStrip.circleCenter),
+        }(), _StationStrip.nodeCenter),
     ];
 
-    return SingleChildScrollView(
-      controller: _scroll,
-      scrollDirection: Axis.horizontal,
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _ConnectorPainter(
-                  centers: centers,
-                  reached: [for (var i = 0; i < items; i++) widget.reached(i)],
-                ),
-              ),
+    return NotificationListener<ScrollStartNotification>(
+      onNotification: _onScroll,
+      child: SingleChildScrollView(
+        controller: _scroll,
+        scrollDirection: Axis.horizontal,
+        child: AnimatedBuilder(
+          animation: _sway,
+          builder: (context, child) => Transform.translate(
+            offset: Offset(
+              _StationStrip.sway *
+                  (2 * Curves.easeInOut.transform(_sway.value) - 1),
+              0,
             ),
-            for (var i = 0; i < items; i++)
-              PositionedDirectional(
-                start: _StationStrip.pad + i * _StationStrip.itemWidth,
-                top: top(i),
-                width: _StationStrip.itemWidth,
-                height: _StationStrip.slotHeight,
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: widget.nodeAt(i),
+            child: child,
+          ),
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _ConnectorPainter(
+                      centers: centers,
+                      reached: [
+                        for (var i = 0; i < items; i++) widget.reached(i),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-          ],
+                for (var i = 0; i < items; i++)
+                  PositionedDirectional(
+                    start: _StationStrip.pad + i * _StationStrip.itemWidth,
+                    top: 0,
+                    width: _StationStrip.itemWidth,
+                    height: _StationStrip.slotHeight,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: widget.nodeAt(i),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -331,17 +356,15 @@ class _ConnectorPainter extends CustomPainter {
       old.centers != centers || old.reached.toString() != reached.toString();
 }
 
-/// بطاقة «المحطة التالية» مع القلم وزر البدء.
+/// بطاقة القلم وزر البدء.
 class _NextUp extends StatelessWidget {
   const _NextUp({
     required this.finished,
-    required this.title,
     required this.started,
     required this.onTap,
   });
 
   final bool finished;
-  final String? title;
   final bool started;
   final VoidCallback onTap;
 
@@ -366,16 +389,13 @@ class _NextUp extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  finished ? 'أحسنت! أتممت الدرس 🎉' : 'المحطة التالية',
-                  style: t.labelLarge?.copyWith(color: AppColors.muted),
-                ),
-                if (!finished)
+                if (finished) ...[
                   Text(
-                    title!,
-                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                    'أحسنت! أتممت الدرس 🎉',
+                    style: t.labelLarge?.copyWith(color: AppColors.muted),
                   ),
-                const SizedBox(height: 10),
+                  const SizedBox(height: 10),
+                ],
                 AppButton(
                   label: finished
                       ? 'أعد الدرس'
@@ -481,14 +501,12 @@ class _StatChip extends StatelessWidget {
 
 class _UnitBanner extends StatelessWidget {
   const _UnitBanner({
-    required this.unit,
     required this.title,
     required this.done,
     required this.total,
     required this.onGuide,
   });
 
-  final int unit;
   final String title;
   final int done;
   final int total;
@@ -516,7 +534,7 @@ class _UnitBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'الوحدة ${arDigits(unit)} · الدرس ١',
+                    'الدرس ١',
                     style: t.labelLarge?.copyWith(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w800,
@@ -536,50 +554,36 @@ class _UnitBanner extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ChunkyProgress(
-                    value: done / total,
-                    height: 12,
-                    color: AppColors.sand,
-                    track: Colors.white.withValues(alpha: 0.22),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    // ٣–١٠ «محطات»، وما فوقها «محطة».
-                    '${arDigits(done)} من ${arDigits(total)} ${total >= 3 && total <= 10 ? 'محطات' : 'محطة'}',
-                    style: t.labelMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.85),
+                  Semantics(
+                    label: '${arDigits(done)} من ${arDigits(total)}',
+                    child: ChunkyProgress(
+                      value: done / total,
+                      height: 12,
+                      color: AppColors.sand,
+                      track: Colors.white.withValues(alpha: 0.22),
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 14),
-            Column(
-              children: [
-                Pressable(
-                  onTap: onGuide,
-                  color: Colors.white.withValues(alpha: 0.18),
-                  edgeColor: AppColors.primaryDark,
-                  radius: 16,
-                  child: const SizedBox(
-                    width: 52,
-                    height: 52,
-                    child: Icon(
-                      Icons.menu_book_rounded,
-                      color: Colors.white,
-                      size: 26,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'القاعدة',
-                  style: t.labelSmall?.copyWith(
+            Tooltip(
+              message: 'القاعدة',
+              child: Pressable(
+                onTap: onGuide,
+                color: Colors.white.withValues(alpha: 0.18),
+                edgeColor: AppColors.primaryDark,
+                radius: 16,
+                child: const SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: Icon(
+                    Icons.menu_book_rounded,
                     color: Colors.white,
-                    fontWeight: FontWeight.w800,
+                    size: 26,
                   ),
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -654,7 +658,7 @@ class _StationNodeState extends State<_StationNode>
       onTap: widget.onTap,
       color: color,
       edgeColor: edge,
-      shape: BoxShape.circle,
+      radius: 18,
       depth: 6,
       child: SizedBox(
         width: size,
@@ -735,7 +739,7 @@ class _StationNodeState extends State<_StationNode>
                           width: size + 8 + 12 * v,
                           height: size + 8 + 12 * v,
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
+                            borderRadius: BorderRadius.circular(22 + 4 * v),
                             border: Border.all(
                               color: AppColors.primary.withValues(
                                 alpha: 0.45 * (1 - v),
