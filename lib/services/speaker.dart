@@ -1,13 +1,23 @@
+import 'dart:async';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
-/// نطق النصوص العربية عبر محرك تحويل النص إلى كلام في الجهاز.
+import 'audio_catalog.g.dart';
+
+/// نطق النصوص العربية: تسجيل جاهز من [audioCatalog] إن وُجد (صوت واحد واضح
+/// على كل الأجهزة)، وإلا فمحرك النطق في الجهاز.
 class Speaker {
   Speaker._();
   static final instance = Speaker._();
 
   final FlutterTts _tts = FlutterTts();
+  AudioPlayer? _player;
   bool _ready = false;
+
+  /// يزداد مع كل نطق جديد أو إيقاف، فتتوقف السلاسل القديمة ([speakAll]).
+  int _generation = 0;
 
   Future<void> _init() async {
     if (_ready) return;
@@ -54,20 +64,67 @@ class Speaker {
     });
   }
 
-  /// [rate] بين 0 و 1 حيث 0.5 هي السرعة الطبيعية على الجوال.
+  /// [rate] بين 0 و 1 حيث 0.42 هي السرعة الافتراضية؛ وتنتهي عند انتهاء النطق.
   Future<void> speak(String text, {double rate = 0.42}) async {
+    final generation = ++_generation;
+    await _stopAll();
+    if (generation != _generation) return;
+    final asset = audioCatalog[text];
+    if (asset != null && await _playAsset(asset, rate, generation)) return;
     await _init();
     try {
-      await _tts.stop();
       // على الويب السرعة الطبيعية = 1.
       await _tts.setSpeechRate(kIsWeb ? rate * 2 : rate);
       await _tts.speak(text);
     } catch (_) {}
   }
 
-  Future<void> stop() async {
+  /// ينطق النصوص واحدًا بعد الآخر، ويتوقف إن بدأ نطق آخر.
+  Future<void> speakAll(List<String> texts, {double rate = 0.42}) async {
+    for (final t in texts) {
+      final generation = _generation + 1;
+      await speak(t, rate: rate);
+      if (generation != _generation) return;
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      if (generation != _generation) return;
+    }
+  }
+
+  Future<bool> _playAsset(String asset, double rate, int generation) async {
+    try {
+      final player = _player ??= AudioPlayer();
+      final done = player.onPlayerComplete.first;
+      // سرعة التسجيل نسبةً إلى السرعة الافتراضية (البطيئة ≈ ٠٫٦).
+      await player.setPlaybackRate((rate / 0.42).clamp(0.5, 1.5));
+      await player.play(AssetSource(asset));
+      await Future.any([
+        done,
+        // لا ينتظر إلى الأبد إن أُوقف التشغيل.
+        _until(() => generation != _generation),
+      ]);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> _until(bool Function() test) async {
+    while (!test()) {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
+  Future<void> _stopAll() async {
+    try {
+      await _player?.stop();
+    } catch (_) {}
     try {
       await _tts.stop();
     } catch (_) {}
+  }
+
+  Future<void> stop() async {
+    _generation++;
+    await _stopAll();
   }
 }
