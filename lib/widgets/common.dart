@@ -109,7 +109,10 @@ class PageCard extends StatelessWidget {
           Text(
             subtitle!,
             textAlign: TextAlign.center,
-            style: t.bodyMedium?.copyWith(color: AppColors.muted),
+            style: AppTheme.word(
+              16,
+              color: AppColors.muted,
+            ).copyWith(fontWeight: FontWeight.w400, height: 1.5),
           ),
         ],
         const SizedBox(height: 16),
