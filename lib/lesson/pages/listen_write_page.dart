@@ -20,6 +20,7 @@ class ListenWritePage extends StatefulWidget {
     required this.items,
     this.spare = const [],
     this.newOnError = false,
+    this.explainMistake,
   });
 
   final PageHandle handle;
@@ -31,6 +32,9 @@ class ListenWritePage extends StatefulWidget {
 
   /// بعد الخطأ يُؤجَّل السؤال ويأتي مكانه سؤال جديد من [spare].
   final bool newOnError;
+
+  /// شرح للخطأ من الإجابة المكتوبة والصحيحة؛ null إن لم يوجد شرح.
+  final String? Function(String typed, String answer)? explainMistake;
 
   @override
   State<ListenWritePage> createState() => _ListenWritePageState();
@@ -166,9 +170,13 @@ class _ListenWritePageState extends State<ListenWritePage> {
       _penalty.add(item);
       showFeedback(
         context,
-        widget.newOnError && _spare.isNotEmpty
-            ? 'الإجابة غير صحيحة، إليك جملة جديدة'
-            : 'الإجابة غير صحيحة، سيعاد هذا السؤال لاحقًا',
+        [
+          widget.explainMistake?.call(_typed.join(), item.answer) ??
+              'الإجابة غير صحيحة',
+          widget.newOnError && _spare.isNotEmpty
+              ? 'إليك جملة جديدة'
+              : 'سيعاد هذا السؤال لاحقًا',
+        ].join('، '),
         tone: FeedbackTone.error,
       );
       setState(() {

@@ -36,6 +36,7 @@ List<LessonPageSpec> buildTaaLessonPages([Random? random]) {
           items: items,
           spare: spare,
           newOnError: true,
+          explainMistake: taaMistake,
         );
       },
     ),

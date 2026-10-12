@@ -51,7 +51,7 @@ const taaSentences = [
   TaaSentence('السعوديةُ تُصدِّرُ البترولَ', 'السعودية'),
   TaaSentence('الرياضةُ مفيدةٌ للجسمِ', 'الرياضة'),
   TaaSentence('الحوتُ الأزرقُ حجمُهُ كبيرٌ', 'الحوت'),
-  TaaSentence('أُحبُّ مادةَ التربيةِ البدنيةِ', 'التربية'),
+  TaaSentence('أُحبُّ مادةَ التربيةِ البدنيةِ', 'البدنية'),
   TaaSentence('الكتبُ بها معلوماتٌ مفيدةٌ', 'معلومات'),
   TaaSentence('يومُ الجمعةِ أفضلُ الأيامِ', 'الجمعة'),
   TaaSentence('صوتُ الأذانِ مرتفعٌ', 'صوت'),
@@ -90,6 +90,23 @@ ListenItem _listenItem(TaaSentence s) => ListenItem(
     for (final s in [...taaSpareSentences]..shuffle(rnd)) _listenItem(s),
   ],
 );
+
+/// شرح الخطأ إن اختلفت الإجابة في الحرف الأخير فقط (ة/ت/ه)، وإلا null.
+String? taaMistake(String typed, String answer) {
+  if (typed.length != answer.length || typed == answer) return null;
+  final n = answer.length - 1;
+  if (typed.substring(0, n) != answer.substring(0, n)) return null;
+  final wrote = typed[n];
+  if (answer[n] == 'ة') {
+    return wrote == 'ه'
+        ? 'آخر الكلمة تاء مربوطة (ة) بنقطتين، وليست هاءً (ه)'
+        : 'آخر الكلمة تاء مربوطة (ة): قف عليها تسمعها هاءً';
+  }
+  if (answer[n] == 'ت' && (wrote == 'ة' || wrote == 'ه')) {
+    return 'آخر الكلمة تاء مفتوحة (ت): تبقى تاءً عند الوقف';
+  }
+  return null;
+}
 
 /// «اختر الكلمة المناسبة لإكمال الجملة» (ص ٥): الكلمة تنتهي بتاء مربوطة
 /// أو بهاء، والمعنى يتغير بينهما (مكتبة: تبيع الكتب، مكتبه: واسع).
@@ -131,6 +148,12 @@ const taaChoicePairs = [
 ];
 
 const taaChoiceInstruction = 'اخترِ الكلمةَ المناسبةَ لإكمالِ الجملةِ';
+
+/// الصورة الأخرى للكلمة (مكتبة ← مكتبه).
+TaaChoice taaChoicePartner(TaaChoice c) {
+  final (a, b) = taaChoicePairs.firstWhere((p) => p.$1 == c || p.$2 == c);
+  return a == c ? b : a;
+}
 
 /// خمسة أسئلة: صورة واحدة من كل زوج، والصورة الأخرى بديل يأتي بعد الخطأ.
 (List<TaaChoice>, List<TaaChoice>) taaChoiceItems(Random rnd) {

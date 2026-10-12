@@ -41,25 +41,38 @@ class _LearnTabState extends State<LearnTab> {
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
+    // الدرس المعروض بمحطاته (آخر وحدة اختارها الطالب)؛ بقية الدروس بطاقات
+    // مختصرة تُفتح بالضغط.
+    final selected = lessonById(app.selectedLesson ?? lessons.first.id).id;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: _TopBar(app: app)),
         for (final lesson in lessons)
           SliverToBoxAdapter(
-            child: _LessonSection(
-              key: ValueKey(lesson.id),
-              lesson: lesson,
-              stations: _stations[lesson.id]!,
-              onOpen: (page) => _open(lesson, page),
-            ),
+            child: lesson.id == selected
+                ? _LessonSection(
+                    key: ValueKey(lesson.id),
+                    lesson: lesson,
+                    stations: _stations[lesson.id]!,
+                    onOpen: (page) => _open(lesson, page),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: _UnitCard(
+                      key: ValueKey('unit-${lesson.id}'),
+                      number: lesson.unit,
+                      title: lesson.title,
+                      onTap: () => app.selectLesson(lesson.id),
+                    ),
+                  ),
           ),
         const SliverPadding(
-          padding: EdgeInsets.fromLTRB(16, 24, 16, 32),
+          padding: EdgeInsets.fromLTRB(16, 12, 16, 32),
           sliver: SliverList(
             delegate: SliverChildListDelegate.fixed([
-              _LockedUnit(number: 3, title: 'همزة الوصل وهمزة القطع'),
-              _LockedUnit(number: 4, title: 'الألف اللينة'),
-              _LockedUnit(number: 5, title: 'الهمزة المتوسطة والمتطرفة'),
+              _UnitCard(number: 3, title: 'همزة الوصل وهمزة القطع'),
+              _UnitCard(number: 4, title: 'الألف اللينة'),
+              _UnitCard(number: 5, title: 'الهمزة المتوسطة والمتطرفة'),
             ]),
           ),
         ),
@@ -107,15 +120,27 @@ class _LessonSection extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 22, 16, 4),
           child: Row(
             children: [
-              Text(
-                'محطات الدرس',
-                style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              // يصغر العنوان مع خط الجهاز الكبير جدًا بدل أن يتجاوز السطر.
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    'محطات الدرس',
+                    style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
               ),
+              const SizedBox(width: 8),
               const Spacer(),
               if (n > 3) ...[
-                Text(
-                  'اسحب لرؤية المزيد',
-                  style: t.labelMedium?.copyWith(color: AppColors.muted),
+                Flexible(
+                  child: Text(
+                    'اسحب لرؤية المزيد',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: t.labelMedium?.copyWith(color: AppColors.muted),
+                  ),
                 ),
                 const SizedBox(width: 4),
                 const Icon(
@@ -127,38 +152,42 @@ class _LessonSection extends StatelessWidget {
             ],
           ),
         ),
-        _StationStrip(
-          count: n,
-          current: current,
-          nodeAt: (i) => i == n
-              ? Padding(
-                  // محاذاة مركز الكأس مع مراكز الدوائر.
-                  padding: const EdgeInsets.only(top: 33),
-                  child: _TrophyNode(
-                    earned: current == -1,
-                    onTap: current == -1 ? () => onOpen(0) : null,
+        // ارتفاع المحطات ثابت، فلا يكبر خط عناوينها مع تكبير خط الجهاز.
+        MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1,
+          child: _StationStrip(
+            count: n,
+            current: current,
+            nodeAt: (i) => i == n
+                ? Padding(
+                    // محاذاة مركز الكأس مع مراكز الدوائر.
+                    padding: const EdgeInsets.only(top: 33),
+                    child: _TrophyNode(
+                      earned: current == -1,
+                      onTap: current == -1 ? () => onOpen(0) : null,
+                    ),
+                  )
+                : _StationNode(
+                    spec: stations[i],
+                    state: done[i]
+                        ? _NodeState.done
+                        : i == current
+                        ? _NodeState.current
+                        : _NodeState.locked,
+                    onTap: () {
+                      if (done[i] || i == current) {
+                        onOpen(i);
+                      } else {
+                        showFeedback(
+                          context,
+                          'أكمل المحطات السابقة أولًا لفتح «${stations[i].title}»',
+                          tone: FeedbackTone.hint,
+                        );
+                      }
+                    },
                   ),
-                )
-              : _StationNode(
-                  spec: stations[i],
-                  state: done[i]
-                      ? _NodeState.done
-                      : i == current
-                      ? _NodeState.current
-                      : _NodeState.locked,
-                  onTap: () {
-                    if (done[i] || i == current) {
-                      onOpen(i);
-                    } else {
-                      showFeedback(
-                        context,
-                        'أكمل المحطات السابقة أولًا لفتح «${stations[i].title}»',
-                        tone: FeedbackTone.hint,
-                      );
-                    }
-                  },
-                ),
-          reached: (i) => i < n && (done[i] || i == current),
+            reached: (i) => i < n && (done[i] || i == current),
+          ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -496,6 +525,10 @@ class _UnitBanner extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     title,
+                    // لا تنقسم كلمات العنوان مع خط الجهاز الكبير جدًا.
+                    textScaler: MediaQuery.textScalerOf(
+                      context,
+                    ).clamp(maxScaleFactor: 1.5),
                     style: t.titleLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
@@ -773,53 +806,66 @@ class _TrophyNode extends StatelessWidget {
   }
 }
 
-class _LockedUnit extends StatelessWidget {
-  const _LockedUnit({required this.number, required this.title});
+/// بطاقة وحدة: مقفلة «قريبًا»، أو مفتوحة ([onTap]) تعرض محطات الدرس.
+class _UnitCard extends StatelessWidget {
+  const _UnitCard({
+    super.key,
+    required this.number,
+    required this.title,
+    this.onTap,
+  });
   final int number;
   final String title;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.line, width: 2),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: const BoxDecoration(
-                color: AppColors.locked,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.lock_rounded, color: AppColors.muted),
+    final open = onTap != null;
+    final card = Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.line, width: 2),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: open ? AppColors.primarySoft : AppColors.locked,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'الوحدة ${arDigits(number)}',
-                    style: t.labelMedium?.copyWith(color: AppColors.muted),
-                  ),
-                  Text(
-                    title,
-                    style: t.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.muted,
-                    ),
-                  ),
-                ],
-              ),
+            child: Icon(
+              open ? Icons.lock_open_rounded : Icons.lock_rounded,
+              color: open ? AppColors.primary : AppColors.muted,
             ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'الوحدة ${arDigits(number)}',
+                  style: t.labelMedium?.copyWith(color: AppColors.muted),
+                ),
+                Text(
+                  title,
+                  style: t.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: open ? AppColors.ink : AppColors.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (open)
+            // يُعكس في الكتابة من اليمين فيشير إلى الأمام.
+            const Icon(Icons.chevron_right_rounded, color: AppColors.muted)
+          else
             Text(
               'قريبًا',
               style: t.labelLarge?.copyWith(
@@ -827,9 +873,17 @@ class _LockedUnit extends StatelessWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
-          ],
-        ),
+        ],
       ),
+    );
+    return Padding(
+      padding: EdgeInsets.only(bottom: open ? 0 : 12),
+      child: open
+          ? Semantics(
+              button: true,
+              child: GestureDetector(onTap: onTap, child: card),
+            )
+          : card,
     );
   }
 }

@@ -7,6 +7,8 @@ import 'package:imlaa/lesson/lesson_complete_screen.dart';
 import 'package:imlaa/lesson/lesson_screen.dart';
 import 'package:imlaa/lesson/lessons.dart';
 import 'package:imlaa/lesson/taa_lesson_pages.dart';
+import 'package:imlaa/screens/home_screen.dart';
+import 'package:imlaa/services/speech_texts.dart';
 import 'package:imlaa/utils/arabic.dart';
 import 'package:imlaa/widgets/letter_boxes.dart';
 
@@ -54,6 +56,36 @@ void main() {
       for (var i = 0; i < 5; i++) {
         expect(items[i].answer, spare[i].wrong);
       }
+    });
+
+    test('شرح الخطأ في الحرف الأخير فقط', () {
+      expect(taaMistake('الجمعت', 'الجمعة'), contains('تاء مربوطة'));
+      expect(taaMistake('الجمعه', 'الجمعة'), contains('وليست هاءً'));
+      expect(taaMistake('السبة', 'السبت'), contains('تاء مفتوحة'));
+      expect(taaMistake('السبه', 'السبت'), contains('تاء مفتوحة'));
+      expect(taaMistake('الصبت', 'السبت'), isNull);
+      expect(taaMistake('السبت', 'السبت'), isNull);
+    });
+
+    test('لكل كلمة اختيار صورة أخرى', () {
+      for (final (a, b) in taaChoicePairs) {
+        expect(taaChoicePartner(a), same(b));
+        expect(taaChoicePartner(b), same(a));
+      }
+    });
+
+    test('كل نصوص الدرس المنطوقة في قائمة التسجيلات', () {
+      final texts = allSpeechTexts();
+      for (final s in [...taaSentences, ...taaSpareSentences]) {
+        expect(texts, contains(s.spoken));
+      }
+      for (final (a, b) in taaChoicePairs) {
+        expect(texts, containsAll([a.spoken, b.spoken]));
+      }
+      for (final (_, spoken) in taaRuleWords) {
+        expect(texts, contains(spoken));
+      }
+      expect(texts, containsAll([taaRuleSpeech, taaRuleSentence]));
     });
 
     test('درس التاء في المسار بعد درس اللام', () {
@@ -133,6 +165,7 @@ void main() {
       final last = wrong.endsWith('ة') ? 'ت' : 'ة';
       await type('${wrong.substring(0, wrong.length - 1)}$last');
       expect(find.textContaining('إليك جملة جديدة'), findsOneWidget);
+      expect(find.textContaining('آخر الكلمة تاء'), findsOneWidget);
       await settle();
       expect(lastSpoken, isNot(firstSpoken));
       var guard = 0;
@@ -182,6 +215,47 @@ void main() {
       await t.pumpAndSettle();
       expect(find.byType(LessonCompleteScreen), findsOneWidget);
       expect(state.lessonsCompleted, 1);
+    });
+
+    testWidgets('شاشة صغيرة وخط كبير: لا تجاوز في الصفحات والقاعدة', (t) async {
+      t.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+      for (var i = 0; i < 3; i++) {
+        await pumpScreen(
+          t,
+          size: const Size(960, 1700), // ٣٢٠ × ٥٦٧
+          LessonScreen(
+            key: ValueKey(i),
+            lessonId: 'qa',
+            title: taaLessonTitle,
+            pages: buildTaaLessonPages(Random(i)),
+            initialPage: i,
+          ),
+        );
+        // القاعدة من القائمة هي قاعدة التاء في كل صفحة.
+        await t.tap(find.byTooltip('القائمة'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('القاعدة').last);
+        await t.pumpAndSettle();
+        expect(
+          find.text('كيف نفرّق بين التاء المربوطة والتاء المفتوحة؟'),
+          findsWidgets,
+        );
+        expect(find.text('كلتاهما تُكتب'), findsNothing);
+        await t.tapAt(const Offset(10, 10));
+        await t.pumpAndSettle();
+      }
+      // مسار التعلّم والوحدة الثانية مفتوحة.
+      final state = await pumpScreen(
+        t,
+        const HomeScreen(),
+        size: const Size(960, 1700),
+      );
+      state.selectLesson(taaLessonId);
+      await t.pumpAndSettle();
+      expect(find.text('اختر الكلمة'), findsOneWidget);
+      await t.drag(find.byType(CustomScrollView), const Offset(0, -600));
+      await t.pumpAndSettle();
     });
   });
 }

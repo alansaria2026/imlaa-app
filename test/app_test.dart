@@ -12,7 +12,7 @@ void main() {
   setUp(mockPlatform);
 
   testWidgets('مسار التعلّم: فتح المحطة الحالية والتنقل والعودة', (t) async {
-    final state = await pumpScreen(t, const HomeScreen());
+    var state = await pumpScreen(t, const HomeScreen());
     expect(find.text('إملائي'), findsOneWidget);
     expect(find.text('٠ من ١٢ محطة'), findsOneWidget);
 
@@ -22,10 +22,30 @@ void main() {
     expect(find.textContaining('أكمل المحطات السابقة'), findsOneWidget);
     await t.pumpAndSettle(const Duration(seconds: 5));
 
-    // درس اللام أولًا ثم درس التاء، ولكل منهما محطته الحالية.
+    // الوحدة الثانية بطاقة مفتوحة (بلا «قريبًا») تعرض محطاتها بالضغط.
+    final taaCard = find.byKey(const ValueKey('unit-taa'));
+    expect(taaCard, findsOneWidget);
+    expect(
+      find.descendant(of: taaCard, matching: find.text('قريبًا')),
+      findsNothing,
+    );
+    await t.ensureVisible(taaCard);
+    await t.tap(taaCard);
+    await t.pumpAndSettle();
     expect(find.text('٠ من ٣ محطات'), findsOneWidget);
-    expect(find.text('ابدأ'), findsNWidgets(2));
-    await t.tap(find.text('ابدأ').first);
+    expect(find.text('٠ من ١٢ محطة'), findsNothing);
+    // يتذكر التطبيق آخر وحدة اختارها الطالب بعد إعادة فتحه.
+    expect(state.selectedLesson, 'taa');
+    state = await pumpScreen(t, const HomeScreen(key: ValueKey('again')));
+    expect(find.text('٠ من ٣ محطات'), findsOneWidget);
+    await t.drag(find.byType(CustomScrollView), const Offset(0, 2000));
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('unit-lam')), findsOneWidget);
+    await t.tap(find.byKey(const ValueKey('unit-lam')));
+    await t.pumpAndSettle();
+    expect(find.text('٠ من ١٢ محطة'), findsOneWidget);
+    expect(find.text('ابدأ'), findsOneWidget);
+    await t.tap(find.text('ابدأ'));
     await t.pumpAndSettle();
     expect(find.text('عنوان الدرس'), findsNothing);
     expect(find.text('اللام القمرية واللام الشمسية'), findsOneWidget);

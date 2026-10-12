@@ -57,9 +57,13 @@ Finder scoreLabel(String text) => find.byWidgetPredicate(
   (w) => w is Semantics && (w.properties.label ?? '').contains(text),
 );
 
-/// يعرض [home] على شاشة جوال بعرض ٣٦٠.
-Future<AppState> pumpScreen(WidgetTester tester, Widget home) async {
-  tester.view.physicalSize = const Size(1080, 2340);
+/// يعرض [home] على شاشة جوال بعرض ٣٦٠ (أو [size] بالبكسل الفعلي).
+Future<AppState> pumpScreen(
+  WidgetTester tester,
+  Widget home, {
+  Size size = const Size(1080, 2340),
+}) async {
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
   // «تقليل الحركة» يوقف الحركات المتكررة (التميمة ونبض المحطة).

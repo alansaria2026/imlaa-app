@@ -9,7 +9,8 @@ class AppState extends ChangeNotifier {
       _speechRate = _prefs.getDouble(_kRate) ?? 0.42,
       _streak = _prefs.getInt(_kStreak) ?? 0,
       _lastDay = _prefs.getString(_kLastDay),
-      _lessonsCompleted = _prefs.getInt(_kLessons) ?? 0;
+      _lessonsCompleted = _prefs.getInt(_kLessons) ?? 0,
+      _selectedLesson = _prefs.getString(_kSelected);
 
   /// قابل للاستبدال في الاختبارات.
   static DateTime Function() clock = DateTime.now;
@@ -20,6 +21,7 @@ class AppState extends ChangeNotifier {
   static const _kLessons = 'lessons_completed';
   static const _kDone = 'done_pages';
   static const _kRate = 'speech_rate';
+  static const _kSelected = 'selected_lesson';
 
   final SharedPreferences _prefs;
   int _points;
@@ -28,6 +30,7 @@ class AppState extends ChangeNotifier {
   int _streak;
   String? _lastDay;
   int _lessonsCompleted;
+  String? _selectedLesson;
 
   static Future<AppState> load() async {
     try {
@@ -44,6 +47,16 @@ class AppState extends ChangeNotifier {
   double get speechRate => _speechRate;
 
   int get lessonsCompleted => _lessonsCompleted;
+
+  /// آخر وحدة اختارها الطالب في مسار التعلّم.
+  String? get selectedLesson => _selectedLesson;
+
+  void selectLesson(String id) {
+    _selectedLesson = id;
+    _prefs.setString(_kSelected, id);
+    notifyListeners();
+  }
+
   int get totalDonePages => _donePages.length;
 
   static String _day(DateTime d) =>
@@ -108,8 +121,16 @@ class AppState extends ChangeNotifier {
     _streak = 0;
     _lastDay = null;
     _lessonsCompleted = 0;
+    _selectedLesson = null;
     _donePages.clear();
-    for (final k in [_kPoints, _kDone, _kStreak, _kLastDay, _kLessons]) {
+    for (final k in [
+      _kPoints,
+      _kDone,
+      _kStreak,
+      _kLastDay,
+      _kLessons,
+      _kSelected,
+    ]) {
       await _prefs.remove(k);
     }
     notifyListeners();
