@@ -70,8 +70,10 @@ class _ListenWritePageState extends State<ListenWritePage> {
   void _speak() {
     final item = _item;
     if (item == null) return;
-    final rate = AppScope.read(context).speechRate;
-    Speaker.instance.speak(item.spoken, rate: rate);
+    Speaker.instance.speak(
+      item.spoken,
+      rate: AppScope.read(context).speechRate,
+    );
   }
 
   /// بعد الرجوع للقاعدة: سؤال جديد مكان السؤال الحالي.

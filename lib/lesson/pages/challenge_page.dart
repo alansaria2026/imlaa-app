@@ -59,8 +59,7 @@ class _ChallengePageState extends State<ChallengePage> {
   void _speak() {
     final s = _s;
     if (s != null) {
-      final rate = AppScope.read(context).speechRate;
-      Speaker.instance.speak(s.spoken, rate: rate);
+      Speaker.instance.speak(s.spoken, rate: AppScope.read(context).speechRate);
     }
   }
 

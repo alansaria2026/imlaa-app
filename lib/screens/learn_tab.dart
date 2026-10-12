@@ -217,6 +217,7 @@ class _StationStripState extends State<_StationStrip>
   late final _sway = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1600),
+    value: 0.5, // في المنتصف حين لا يتأرجح.
   );
 
   /// يتوقف التأرجح نهائيًا بعد أول سحب من الطالب.
@@ -228,10 +229,13 @@ class _StationStripState extends State<_StationStrip>
     _syncSway();
   }
 
+  /// يتأرجح فقط إن كان في الشريط ما يُسحب إليه.
   void _syncSway() {
-    if (!_dragged && !MediaQuery.disableAnimationsOf(context)) {
+    final scrollable =
+        !_scroll.hasClients || _scroll.position.maxScrollExtent > 0;
+    if (!_dragged && scrollable && !MediaQuery.disableAnimationsOf(context)) {
       if (!_sway.isAnimating) _sway.repeat(reverse: true);
-    } else {
+    } else if (_sway.isAnimating) {
       _sway.stop();
       _sway.value = 0.5;
     }
@@ -267,7 +271,11 @@ class _StationStripState extends State<_StationStrip>
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _revealCurrent());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _revealCurrent();
+      _syncSway();
+    });
     final items = widget.count + 1;
     final width = _StationStrip.pad * 2 + items * _StationStrip.itemWidth;
     const height = _StationStrip.slotHeight + 8;
