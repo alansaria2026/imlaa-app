@@ -14,10 +14,16 @@ void main() {
   testWidgets('مسار التعلّم: فتح المحطة الحالية والتنقل والعودة', (t) async {
     var state = await pumpScreen(t, const HomeScreen());
     expect(find.text('إملائي'), findsOneWidget);
-    expect(find.text('٠ من ١٢ محطة'), findsOneWidget);
+    expect(find.byKey(const ValueKey('lam')), findsOneWidget);
+    // أُلغيت عبارات «الوحدة» و«٠ من ١٢ محطة» و«اسحب لرؤية المزيد».
+    expect(find.text('الدرس ١'), findsOneWidget);
+    expect(find.textContaining('من ١٢'), findsNothing);
+    expect(find.text('اسحب لرؤية المزيد'), findsNothing);
+    expect(find.text('المحطة التالية'), findsNothing);
+    expect(find.text('ابدأ الآن'), findsOneWidget);
 
     // محطة مقفلة تُظهر تلميحًا ولا تُفتح.
-    await t.tap(find.text('أمثلة'));
+    await t.tap(find.text('مثال الحذف'));
     await t.pump();
     expect(find.textContaining('أكمل المحطات السابقة'), findsOneWidget);
     await t.pumpAndSettle(const Duration(seconds: 5));
@@ -32,18 +38,18 @@ void main() {
     await t.ensureVisible(taaCard);
     await t.tap(taaCard);
     await t.pumpAndSettle();
-    expect(find.text('٠ من ٣ محطات'), findsOneWidget);
-    expect(find.text('٠ من ١٢ محطة'), findsNothing);
+    expect(find.byKey(const ValueKey('taa')), findsOneWidget);
+    expect(find.byKey(const ValueKey('lam')), findsNothing);
     // يتذكر التطبيق آخر وحدة اختارها الطالب بعد إعادة فتحه.
     expect(state.selectedLesson, 'taa');
     state = await pumpScreen(t, const HomeScreen(key: ValueKey('again')));
-    expect(find.text('٠ من ٣ محطات'), findsOneWidget);
+    expect(find.byKey(const ValueKey('taa')), findsOneWidget);
     await t.drag(find.byType(CustomScrollView), const Offset(0, 2000));
     await t.pumpAndSettle();
     expect(find.byKey(const ValueKey('unit-lam')), findsOneWidget);
     await t.tap(find.byKey(const ValueKey('unit-lam')));
     await t.pumpAndSettle();
-    expect(find.text('٠ من ١٢ محطة'), findsOneWidget);
+    expect(find.byKey(const ValueKey('lam')), findsOneWidget);
     expect(find.text('ابدأ'), findsOneWidget);
     await t.tap(find.text('ابدأ'));
     await t.pumpAndSettle();
@@ -56,10 +62,17 @@ void main() {
     // «إنهاء» لا يظهر إلا في آخر صفحة.
     expect(find.text('إنهاء'), findsNothing);
 
-    // ص ١ ← ص ٢ ← ص ٣
+    // ص ١ ← مثال الحذف ← مثال الإضافة ← أضف (الـ)
     await t.tap(nextButton());
     await t.pumpAndSettle();
-    expect(find.text('أضف (الـ) أو احذفها'), findsOneWidget);
+    expect(find.text('احذف (الـ) من الكلمة'), findsOneWidget);
+    expect(find.text('لحم'), findsOneWidget);
+    expect(find.text('صلاة'), findsNothing);
+    await t.tap(nextButton());
+    await t.pumpAndSettle();
+    expect(find.text('أضف (الـ) إلى الكلمة'), findsOneWidget);
+    expect(find.text('صلاة'), findsOneWidget);
+    expect(find.text('لحم'), findsNothing);
     await t.tap(nextButton());
     await t.pumpAndSettle();
     expect(find.text('أضف (الـ) إلى الكلمة واكتب الناتج'), findsOneWidget);
@@ -91,16 +104,18 @@ void main() {
     expect(find.text('مساعدة'), findsOneWidget);
     await t.tap(find.text('القاعدة'));
     await t.pumpAndSettle();
-    expect(find.text('كلتاهما تُكتب'), findsWidgets);
+    expect(find.text('اللام القمرية'), findsWidgets);
+    expect(find.text('كلتاهما تُكتب'), findsNothing);
     await t.tapAt(const Offset(20, 20));
     await t.pumpAndSettle();
 
-    // العودة للرئيسية: أُنجزت محطتان وصارت «أضف (الـ)» الحالية.
+    // العودة للرئيسية: أُنجزت ثلاث محطات وصارت «أضف (الـ)» الحالية.
     await t.tap(find.byTooltip('الصفحة الرئيسية'));
     await t.pumpAndSettle();
     expect(state.isPageDone('lam', 0), isTrue);
     expect(state.isPageDone('lam', 1), isTrue);
-    expect(find.text('٢ من ١٢ محطة'), findsOneWidget);
+    expect(state.isPageDone('lam', 2), isTrue);
+    expect(find.text('تابع'), findsOneWidget);
   });
 
   testWidgets('تبويبا الإنجازات والإعدادات', (t) async {

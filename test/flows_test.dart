@@ -55,7 +55,7 @@ void main() {
   setUp(mockPlatform);
 
   testWidgets('تحدي الجمل: خطأ ثم إكمال العشر', (t) async {
-    final state = await pumpScreen(t, _single(4));
+    final state = await pumpScreen(t, _single(5));
 
     await t.enterText(find.byType(TextField).first, 'كلمة');
     await _submit(t);
@@ -86,7 +86,7 @@ void main() {
   });
 
   testWidgets('الصور: خطأ يعيد السؤال ثم إكمال الثمانية', (t) async {
-    await pumpScreen(t, _single(3));
+    await pumpScreen(t, _single(4));
     Future<void> type(String word) async {
       for (final l in word.split('')) {
         await t.tap(find.text(l).last);
@@ -121,7 +121,7 @@ void main() {
   });
 
   testWidgets('حذف (الـ): أي خطأ يعيد الكلمات بترتيب جديد', (t) async {
-    final state = await pumpScreen(t, _single(5));
+    final state = await pumpScreen(t, _single(6));
     final fields = find.byType(TextField);
     List<String> group() =>
         _visibleTexts(t).where(removeAlWords.contains).toList();
@@ -157,7 +157,7 @@ void main() {
   });
 
   testWidgets('إضافة (الـ): أي خطأ يعيد الكلمات بترتيب جديد', (t) async {
-    final state = await pumpScreen(t, _single(2));
+    final state = await pumpScreen(t, _single(3));
     final fields = find.byType(TextField);
     // الكلمات الظاهرة في المجموعة الحالية بترتيبها.
     List<String> group() =>
@@ -194,7 +194,7 @@ void main() {
   });
 
   testWidgets('أضف (لِـ): عشر كلمات بلا خطأ', (t) async {
-    final state = await pumpScreen(t, _single(6));
+    final state = await pumpScreen(t, _single(7));
     final fields = find.byType(TextField);
     List<String> group() =>
         _visibleTexts(t).where(liWordBank.contains).toList();
@@ -212,7 +212,7 @@ void main() {
   });
 
   testWidgets('احذف (لِـ): للحن − لِـ = اللحن', (t) async {
-    await pumpScreen(t, _single(7));
+    await pumpScreen(t, _single(8));
     final fields = find.byType(TextField);
     final byLi = {for (final w in liWordBank) liForm(w): w};
     List<String> group() => _visibleTexts(t).where(byLi.containsKey).toList();
@@ -229,7 +229,7 @@ void main() {
   });
 
   testWidgets('الرجوع للقاعدة يغيّر كلمات (لِـ)', (t) async {
-    await pumpScreen(t, _single(6));
+    await pumpScreen(t, _single(7));
     List<String> group() =>
         _visibleTexts(t).where(liWordBank.contains).toList();
     final seen = <String>{};
@@ -249,7 +249,7 @@ void main() {
   });
 
   testWidgets('أضف (بـ): خطأ ثم عشر كلمات', (t) async {
-    await pumpScreen(t, _single(9));
+    await pumpScreen(t, _single(10));
     final fields = find.byType(TextField);
     List<String> group() =>
         _visibleTexts(t).where(biWordBank.contains).toList();
@@ -284,7 +284,7 @@ void main() {
   });
 
   testWidgets('احذف (بـ): تبقى (ال) كما هي', (t) async {
-    await pumpScreen(t, _single(10));
+    await pumpScreen(t, _single(11));
     final fields = find.byType(TextField);
     final byBi = {for (final w in biWordBank) biForm(w): w};
     for (var round = 0; round < 5; round++) {
@@ -306,7 +306,7 @@ void main() {
     }
   }
 
-  for (final (page, prep) in [(8, Prep.li), (11, Prep.bi)]) {
+  for (final (page, prep) in [(9, Prep.li), (12, Prep.bi)]) {
     testWidgets('استماع ${prep.name}: كلمات وجمل بحرف واحد', (t) async {
       await pumpScreen(t, _single(page));
       final bySpoken = {

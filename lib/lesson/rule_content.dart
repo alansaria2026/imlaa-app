@@ -6,12 +6,15 @@ import '../theme.dart';
 import '../utils/arabic.dart';
 import '../widgets/common.dart';
 
-/// مخطط القاعدة وأمثلتها؛ يُعرض في الصفحة الأولى وفي نافذة «القاعدة».
+/// القاعدة مكتوبة بخط النسخ مع أمثلتها؛ تُعرض في الصفحة الأولى وفي نافذة «القاعدة».
 class RuleContent extends StatelessWidget {
   const RuleContent({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      NaskhRule(child: Builder(builder: _content));
+
+  Widget _content(BuildContext context) {
     final t = Theme.of(context).textTheme;
     void say(String s) =>
         Speaker.instance.speak(s, rate: AppScope.read(context).speechRate);
@@ -19,8 +22,6 @@ class RuleContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _Diagram(),
-        const SizedBox(height: 22),
         Text(
           'القاعدة',
           style: t.titleSmall?.copyWith(
@@ -55,121 +56,6 @@ class RuleContent extends StatelessWidget {
       ],
     );
   }
-}
-
-class _Diagram extends StatelessWidget {
-  const _Diagram();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Row(
-          children: [
-            Expanded(child: _Branch(type: LamType.moon)),
-            SizedBox(width: 12),
-            Expanded(child: _Branch(type: LamType.sun)),
-          ],
-        ),
-        SizedBox(
-          height: 34,
-          child: CustomPaint(
-            size: const Size(double.infinity, 34),
-            painter: _MergePainter(),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 4),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.al),
-          ),
-          child: Text('الـ', style: AppTheme.word(30, color: AppColors.al)),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'كلتاهما تُكتب',
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(color: AppColors.muted),
-        ),
-      ],
-    );
-  }
-}
-
-class _Branch extends StatelessWidget {
-  const _Branch({required this.type});
-  final LamType type;
-
-  @override
-  Widget build(BuildContext context) {
-    final moon = type == LamType.moon;
-    final t = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.line, width: 1.5),
-      ),
-      child: Column(
-        children: [
-          Text(
-            type.label,
-            style: t.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: AppColors.line),
-            ),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    moon ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-                    size: 16,
-                    color: moon ? AppColors.moon : AppColors.sun,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    moon ? 'تُنطق' : 'لا تُنطق',
-                    style: t.labelLarge?.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MergePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()
-      ..color = AppColors.muted.withValues(alpha: 0.45)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    final mid = Offset(size.width / 2, size.height - 2);
-    final path = Path()
-      ..moveTo(size.width * 0.25, 0)
-      ..quadraticBezierTo(size.width * 0.25, size.height, mid.dx, mid.dy)
-      ..moveTo(size.width * 0.75, 0)
-      ..quadraticBezierTo(size.width * 0.75, size.height, mid.dx, mid.dy);
-    canvas.drawPath(path, p);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _RuleLine extends StatelessWidget {
@@ -260,6 +146,28 @@ class _ExampleTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// يكتب كل نصوص القاعدة بخط النسخ (العناوين والنصوص بلا نمط صريح).
+class NaskhRule extends StatelessWidget {
+  const NaskhRule({super.key, required this.child});
+  final Widget child;
+
+  static const family = 'NotoNaskhArabic';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(
+        textTheme: theme.textTheme.apply(fontFamily: family),
+      ),
+      child: DefaultTextStyle.merge(
+        style: const TextStyle(fontFamily: family),
+        child: child,
       ),
     );
   }

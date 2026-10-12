@@ -47,10 +47,11 @@ class _RulePageState extends State<RulePage> {
   }
 }
 
-/// ص ٢: أمثلة إضافة (الـ) وحذفها.
+/// أمثلة حذف (الـ) أو إضافتها حسب [add]؛ لكلٍّ صفحة مستقلة.
 class ExamplesPage extends StatefulWidget {
-  const ExamplesPage({super.key, required this.handle});
+  const ExamplesPage({super.key, required this.handle, required this.add});
   final PageHandle handle;
+  final bool add;
 
   @override
   State<ExamplesPage> createState() => _ExamplesPageState();
@@ -58,6 +59,10 @@ class ExamplesPage extends StatefulWidget {
 
 class _ExamplesPageState extends State<ExamplesPage> {
   int? _playing;
+  late final _rows = [
+    for (final e in lamExamples)
+      if (e.add == widget.add) e,
+  ];
 
   @override
   void initState() {
@@ -66,7 +71,9 @@ class _ExamplesPageState extends State<ExamplesPage> {
       ..onListen = _playAll
       ..onHint = () => showFeedback(
         context,
-        'علامة (+) تعني أضف «الـ» إلى أول الكلمة، وعلامة (−) تعني احذفها.',
+        widget.add
+            ? 'علامة (+) تعني أضف «الـ» إلى أول الكلمة.'
+            : 'علامة (−) تعني احذف «الـ» من أول الكلمة.',
         tone: FeedbackTone.hint,
       );
     WidgetsBinding.instance.addPostFrameCallback(
@@ -76,7 +83,7 @@ class _ExamplesPageState extends State<ExamplesPage> {
 
   Future<void> _play(int i) async {
     setState(() => _playing = i);
-    final e = lamExamples[i];
+    final e = _rows[i];
     await Speaker.instance.speakAll([
       spokenForm(e.from),
       spokenForm(e.result),
@@ -85,7 +92,7 @@ class _ExamplesPageState extends State<ExamplesPage> {
   }
 
   Future<void> _playAll() async {
-    for (var i = 0; i < lamExamples.length; i++) {
+    for (var i = 0; i < _rows.length; i++) {
       if (!mounted) return;
       await _play(i);
     }
@@ -95,17 +102,17 @@ class _ExamplesPageState extends State<ExamplesPage> {
   Widget build(BuildContext context) {
     return PageCard(
       tag: 'مثال',
-      title: 'أضف (الـ) أو احذفها',
+      title: widget.add ? 'أضف (الـ) إلى الكلمة' : 'احذف (الـ) من الكلمة',
       subtitle: 'لاحظ كيف تتغير الكلمة، واضغط على أي سطر لتسمعه',
       child: Column(
         children: [
-          for (var i = 0; i < lamExamples.length; i++) ...[
+          for (var i = 0; i < _rows.length; i++) ...[
             _ExampleEquation(
-              row: lamExamples[i],
+              row: _rows[i],
               active: _playing == i,
               onTap: () => _play(i),
             ),
-            if (i < lamExamples.length - 1) const SizedBox(height: 10),
+            if (i < _rows.length - 1) const SizedBox(height: 10),
           ],
         ],
       ),

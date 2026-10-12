@@ -241,7 +241,7 @@ void main() {
           find.text('كيف نفرّق بين التاء المربوطة والتاء المفتوحة؟'),
           findsWidgets,
         );
-        expect(find.text('كلتاهما تُكتب'), findsNothing);
+        expect(find.text('اللام القمرية'), findsNothing);
         await t.tapAt(const Offset(10, 10));
         await t.pumpAndSettle();
       }

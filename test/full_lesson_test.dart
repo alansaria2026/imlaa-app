@@ -110,15 +110,18 @@ void main() {
       }
     }
 
-    // ١ القاعدة، ٢ أمثلة: لا تمرين فيهما.
+    // ١ القاعدة، ٢ مثال الحذف، ٣ مثال الإضافة: لا تمرين فيها.
     expect(find.text('تعرّف على اللام القمرية واللام الشمسية'), findsOneWidget);
     await next();
     await t.pumpAndSettle();
-    expect(find.text('أضف (الـ) أو احذفها'), findsOneWidget);
+    expect(find.text('احذف (الـ) من الكلمة'), findsOneWidget);
+    await next();
+    await t.pumpAndSettle();
+    expect(find.text('أضف (الـ) إلى الكلمة'), findsOneWidget);
     await next();
     await t.pumpAndSettle();
 
-    // ٣ أضف (الـ): خطأ أولًا يعيد الكلمات وينقص النتيجة.
+    // ٤ أضف (الـ): خطأ أولًا يعيد الكلمات وينقص النتيجة.
     final first = texts().where(addAlWordBank.contains).toList();
     final fields = inPage(find.byType(TextField));
     await t.enterText(fields.at(0), 'خطأ');
@@ -126,12 +129,12 @@ void main() {
     await enter();
     expect(find.textContaining('لا يُسمح بالخطأ'), findsOneWidget);
     await settle();
-    await equations(2, {for (final w in addAlWordBank) w: 'ال$w'});
+    await equations(3, {for (final w in addAlWordBank) w: 'ال$w'});
     await next();
     await t.pumpAndSettle();
 
-    // ٤ سمِّ الصورة.
-    await boxes(3, () {
+    // ٥ سمِّ الصورة.
+    await boxes(4, () {
       if (inPage(find.byType(FootballPitch)).evaluate().isNotEmpty) {
         return 'الملعب';
       }
@@ -141,9 +144,9 @@ void main() {
     await next();
     await t.pumpAndSettle();
 
-    // ٥ تحدي الاستماع: الجملة تُشغَّل تلقائيًا.
+    // ٦ تحدي الاستماع: الجملة تُشغَّل تلقائيًا.
     var guard = 0;
-    while (!done(4)) {
+    while (!done(5)) {
       expect(++guard, lessThan(20));
       final s = challengeSentences.firstWhere((c) => c.spoken == lastSpoken);
       final f = inPage(find.byType(TextField));
@@ -155,42 +158,42 @@ void main() {
     await next();
     await t.pumpAndSettle();
 
-    // ٦ احذف (الـ).
-    await equations(5, {for (final w in removeAlWords) w: w.substring(2)});
+    // ٧ احذف (الـ).
+    await equations(6, {for (final w in removeAlWords) w: w.substring(2)});
     await next();
     await t.pumpAndSettle();
 
-    // ٧ اتصال اللام، ٨ حذف اللام.
-    await equations(6, {for (final w in liWordBank) w: liForm(w)});
+    // ٨ اتصال اللام، ٩ حذف اللام.
+    await equations(7, {for (final w in liWordBank) w: liForm(w)});
     await next();
     await t.pumpAndSettle();
-    await equations(7, {for (final w in liWordBank) liForm(w): w});
+    await equations(8, {for (final w in liWordBank) liForm(w): w});
     await next();
     await t.pumpAndSettle();
 
-    // ٩ استماع اللام.
+    // ١٠ استماع اللام.
     final liSpokenMap = {
       for (final w in liWordBank) liSpoken(w): liForm(w),
       for (final s in prepSentences) s.spoken: s.answer,
     };
-    await boxes(8, () => liSpokenMap[lastSpoken]!);
+    await boxes(9, () => liSpokenMap[lastSpoken]!);
     await next();
     await t.pumpAndSettle();
 
-    // ١٠ اتصال الباء، ١١ حذف الباء.
-    await equations(9, {for (final w in biWordBank) w: biForm(w)});
+    // ١١ اتصال الباء، ١٢ حذف الباء.
+    await equations(10, {for (final w in biWordBank) w: biForm(w)});
     await next();
     await t.pumpAndSettle();
-    await equations(10, {for (final w in biWordBank) biForm(w): w});
+    await equations(11, {for (final w in biWordBank) biForm(w): w});
     await next();
     await t.pumpAndSettle();
 
-    // ١٢ استماع الباء ثم «إنهاء».
+    // ١٣ استماع الباء ثم «إنهاء».
     final biSpokenMap = {
       for (final w in biWordBank) biSpoken(w): biForm(w),
       for (final s in prepSentences) s.spoken: s.answer,
     };
-    await boxes(11, () => biSpokenMap[lastSpoken]!);
+    await boxes(12, () => biSpokenMap[lastSpoken]!);
     expect(find.text('إنهاء'), findsOneWidget);
     for (var i = 0; i < pages.length; i++) {
       expect(done(i), isTrue, reason: 'الصفحة ${i + 1}');
