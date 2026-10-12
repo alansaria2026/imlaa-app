@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../app_state.dart';
-import '../data/lam_lesson.dart';
-import '../lesson/lam_lesson_pages.dart';
 import '../lesson/lesson_screen.dart';
+import '../lesson/lessons.dart';
 import '../lesson/page_handle.dart';
 import '../lesson/rule_content.dart';
 import '../theme.dart';
@@ -22,15 +21,17 @@ class LearnTab extends StatefulWidget {
 
 class _LearnTabState extends State<LearnTab> {
   /// للعرض فقط (العناوين والأيقونات)؛ يُبنى الدرس من جديد عند فتحه.
-  final List<LessonPageSpec> _stations = buildLamLessonPages();
+  final Map<String, List<LessonPageSpec>> _stations = {
+    for (final l in lessons) l.id: l.build(),
+  };
 
-  void _open(int page) {
+  void _open(LessonDef lesson, int page) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => LessonScreen(
-          lessonId: lamLessonId,
-          title: lamLessonTitle,
-          pages: buildLamLessonPages(),
+          lessonId: lesson.id,
+          title: lesson.title,
+          pages: lesson.build(),
           initialPage: page,
         ),
       ),
@@ -40,35 +41,78 @@ class _LearnTabState extends State<LearnTab> {
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
-    final n = _stations.length;
-    final done = [for (var i = 0; i < n; i++) app.isPageDone(lamLessonId, i)];
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(child: _TopBar(app: app)),
+        for (final lesson in lessons)
+          SliverToBoxAdapter(
+            child: _LessonSection(
+              key: ValueKey(lesson.id),
+              lesson: lesson,
+              stations: _stations[lesson.id]!,
+              onOpen: (page) => _open(lesson, page),
+            ),
+          ),
+        const SliverPadding(
+          padding: EdgeInsets.fromLTRB(16, 24, 16, 32),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate.fixed([
+              _LockedUnit(number: 3, title: 'همزة الوصل وهمزة القطع'),
+              _LockedUnit(number: 4, title: 'الألف اللينة'),
+              _LockedUnit(number: 5, title: 'الهمزة المتوسطة والمتطرفة'),
+            ]),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// درس في المسار: بطاقة الوحدة، ثم شريط المحطات، ثم «المحطة التالية».
+class _LessonSection extends StatelessWidget {
+  const _LessonSection({
+    super.key,
+    required this.lesson,
+    required this.stations,
+    required this.onOpen,
+  });
+
+  final LessonDef lesson;
+  final List<LessonPageSpec> stations;
+  final void Function(int page) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppScope.of(context);
+    final n = stations.length;
+    final done = [for (var i = 0; i < n; i++) app.isPageDone(lesson.id, i)];
     final current = done.indexOf(false); // -1 = أنهى الدرس كله
     final doneCount = done.where((d) => d).length;
     final t = Theme.of(context).textTheme;
 
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(child: _TopBar(app: app)),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          sliver: SliverToBoxAdapter(
-            child: _UnitBanner(
-              done: doneCount,
-              total: n,
-              onGuide: () => showRuleSheet(context),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: _UnitBanner(
+            unit: lesson.unit,
+            title: lesson.title,
+            done: doneCount,
+            total: n,
+            onGuide: () => showRuleSheet(context, content: lesson.rule),
           ),
         ),
-        SliverPadding(
+        Padding(
           padding: const EdgeInsets.fromLTRB(16, 22, 16, 4),
-          sliver: SliverToBoxAdapter(
-            child: Row(
-              children: [
-                Text(
-                  'محطات الدرس',
-                  style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const Spacer(),
+          child: Row(
+            children: [
+              Text(
+                'محطات الدرس',
+                style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const Spacer(),
+              if (n > 3) ...[
                 Text(
                   'اسحب لرؤية المزيد',
                   style: t.labelMedium?.copyWith(color: AppColors.muted),
@@ -80,64 +124,49 @@ class _LearnTabState extends State<LearnTab> {
                   color: AppColors.muted,
                 ),
               ],
-            ),
+            ],
           ),
         ),
-        SliverToBoxAdapter(
-          child: _StationStrip(
-            count: n,
-            current: current,
-            nodeAt: (i) => i == n
-                ? Padding(
-                    // محاذاة مركز الكأس مع مراكز الدوائر.
-                    padding: const EdgeInsets.only(top: 33),
-                    child: _TrophyNode(
-                      earned: current == -1,
-                      onTap: current == -1 ? () => _open(0) : null,
-                    ),
-                  )
-                : _StationNode(
-                    spec: _stations[i],
-                    state: done[i]
-                        ? _NodeState.done
-                        : i == current
-                        ? _NodeState.current
-                        : _NodeState.locked,
-                    onTap: () {
-                      if (done[i] || i == current) {
-                        _open(i);
-                      } else {
-                        showFeedback(
-                          context,
-                          'أكمل المحطات السابقة أولًا لفتح «${_stations[i].title}»',
-                          tone: FeedbackTone.hint,
-                        );
-                      }
-                    },
+        _StationStrip(
+          count: n,
+          current: current,
+          nodeAt: (i) => i == n
+              ? Padding(
+                  // محاذاة مركز الكأس مع مراكز الدوائر.
+                  padding: const EdgeInsets.only(top: 33),
+                  child: _TrophyNode(
+                    earned: current == -1,
+                    onTap: current == -1 ? () => onOpen(0) : null,
                   ),
-            reached: (i) => i < n && (done[i] || i == current),
-          ),
+                )
+              : _StationNode(
+                  spec: stations[i],
+                  state: done[i]
+                      ? _NodeState.done
+                      : i == current
+                      ? _NodeState.current
+                      : _NodeState.locked,
+                  onTap: () {
+                    if (done[i] || i == current) {
+                      onOpen(i);
+                    } else {
+                      showFeedback(
+                        context,
+                        'أكمل المحطات السابقة أولًا لفتح «${stations[i].title}»',
+                        tone: FeedbackTone.hint,
+                      );
+                    }
+                  },
+                ),
+          reached: (i) => i < n && (done[i] || i == current),
         ),
-        SliverPadding(
+        Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          sliver: SliverToBoxAdapter(
-            child: _NextUp(
-              finished: current == -1,
-              title: current == -1 ? null : _stations[current].title,
-              started: doneCount > 0,
-              onTap: () => _open(current == -1 ? 0 : current),
-            ),
-          ),
-        ),
-        const SliverPadding(
-          padding: EdgeInsets.fromLTRB(16, 24, 16, 32),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate.fixed([
-              _LockedUnit(number: 2, title: 'التاء المربوطة والتاء المفتوحة'),
-              _LockedUnit(number: 3, title: 'همزة الوصل وهمزة القطع'),
-              _LockedUnit(number: 4, title: 'الألف اللينة'),
-              _LockedUnit(number: 5, title: 'الهمزة المتوسطة والمتطرفة'),
-            ]),
+          child: _NextUp(
+            finished: current == -1,
+            title: current == -1 ? null : stations[current].title,
+            started: doneCount > 0,
+            onTap: () => onOpen(current == -1 ? 0 : current),
           ),
         ),
       ],
@@ -423,11 +452,15 @@ class _StatChip extends StatelessWidget {
 
 class _UnitBanner extends StatelessWidget {
   const _UnitBanner({
+    required this.unit,
+    required this.title,
     required this.done,
     required this.total,
     required this.onGuide,
   });
 
+  final int unit;
+  final String title;
   final int done;
   final int total;
   final VoidCallback onGuide;
@@ -454,7 +487,7 @@ class _UnitBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'الوحدة ١ · الدرس ١',
+                    'الوحدة ${arDigits(unit)} · الدرس ١',
                     style: t.labelLarge?.copyWith(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w800,
@@ -462,7 +495,7 @@ class _UnitBanner extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    lamLessonTitle,
+                    title,
                     style: t.titleLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,

@@ -8,6 +8,7 @@ import '../../utils/arabic.dart';
 import '../../widgets/common.dart';
 import '../../widgets/letter_boxes.dart';
 import '../../widgets/pressable.dart';
+import '../../widgets/taa_text.dart';
 import '../page_handle.dart';
 
 /// اسمع الكلمة (أو الجملة) واكتب الكلمة بحرف الجر في المربعات ثم «إدخال».
@@ -18,6 +19,7 @@ class ListenWritePage extends StatefulWidget {
     required this.title,
     required this.items,
     this.spare = const [],
+    this.newOnError = false,
   });
 
   final PageHandle handle;
@@ -26,6 +28,9 @@ class ListenWritePage extends StatefulWidget {
 
   /// أسئلة بديلة: الرجوع للقاعدة يعيد الطالب «بكلمة جديدة».
   final List<ListenItem> spare;
+
+  /// بعد الخطأ يُؤجَّل السؤال ويأتي مكانه سؤال جديد من [spare].
+  final bool newOnError;
 
   @override
   State<ListenWritePage> createState() => _ListenWritePageState();
@@ -161,7 +166,9 @@ class _ListenWritePageState extends State<ListenWritePage> {
       _penalty.add(item);
       showFeedback(
         context,
-        'الإجابة غير صحيحة، سيعاد هذا السؤال لاحقًا',
+        widget.newOnError && _spare.isNotEmpty
+            ? 'الإجابة غير صحيحة، إليك جملة جديدة'
+            : 'الإجابة غير صحيحة، سيعاد هذا السؤال لاحقًا',
         tone: FeedbackTone.error,
       );
       setState(() {
@@ -173,7 +180,12 @@ class _ListenWritePageState extends State<ListenWritePage> {
         setState(() {
           _error = false;
           _typed.clear();
-          if (_queue.length > 1) _queue.add(_queue.removeAt(0));
+          if (widget.newOnError && _spare.isNotEmpty) {
+            _spare.add(_queue.removeAt(0));
+            _queue.add(_spare.removeAt(0));
+          } else if (_queue.length > 1) {
+            _queue.add(_queue.removeAt(0));
+          }
         });
         _speak();
       });
@@ -226,12 +238,14 @@ class _ListenWritePageState extends State<ListenWritePage> {
                   height: 64,
                   child: _showWord
                       ? Center(
-                          child: AlText(
-                            item.answer,
-                            size: 40,
-                            color: AppColors.blue,
-                            redPrefix: item.redPrefix,
-                          ),
+                          child: item.colorTaa
+                              ? TaaText(item.answer, size: 40)
+                              : AlText(
+                                  item.answer,
+                                  size: 40,
+                                  color: AppColors.blue,
+                                  redPrefix: item.redPrefix,
+                                ),
                         )
                       : ShakeOnChange(
                           trigger: _shake,
@@ -275,10 +289,12 @@ class _SentenceWithBlank extends StatelessWidget {
         children: [
           TextSpan(text: '( ${parts.first}'),
           filled
-              ? TextSpan(
-                  text: item.answer,
-                  style: const TextStyle(color: AppColors.blue),
-                )
+              ? item.colorTaa
+                    ? taaSpan(item.answer)
+                    : TextSpan(
+                        text: item.answer,
+                        style: const TextStyle(color: AppColors.blue),
+                      )
               : const TextSpan(
                   text: '………',
                   style: TextStyle(color: AppColors.muted),

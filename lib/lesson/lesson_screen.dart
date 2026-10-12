@@ -123,8 +123,11 @@ class _LessonScreenState extends State<LessonScreen> {
       final earned = app.points - _startPoints;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) =>
-              LessonCompleteScreen(title: widget.title, earned: earned),
+          builder: (_) => LessonCompleteScreen(
+            lessonId: widget.lessonId,
+            title: widget.title,
+            earned: earned,
+          ),
         ),
       );
     }
