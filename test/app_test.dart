@@ -97,7 +97,8 @@ void main() {
     expect(find.text('مساعدة'), findsOneWidget);
     await t.tap(find.text('القاعدة'));
     await t.pumpAndSettle();
-    expect(find.text('كلتاهما تُكتب'), findsWidgets);
+    expect(find.text('اللام القمرية'), findsWidgets);
+    expect(find.text('كلتاهما تُكتب'), findsNothing);
     await t.tapAt(const Offset(20, 20));
     await t.pumpAndSettle();
 
