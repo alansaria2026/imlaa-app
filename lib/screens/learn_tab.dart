@@ -38,6 +38,9 @@ class _LearnTabState extends State<LearnTab> {
     );
   }
 
+  /// الدرس المعروض بمحطاته؛ بقية الدروس بطاقات مختصرة تُفتح بالضغط.
+  String _selected = lessons.first.id;
+
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
@@ -46,20 +49,30 @@ class _LearnTabState extends State<LearnTab> {
         SliverToBoxAdapter(child: _TopBar(app: app)),
         for (final lesson in lessons)
           SliverToBoxAdapter(
-            child: _LessonSection(
-              key: ValueKey(lesson.id),
-              lesson: lesson,
-              stations: _stations[lesson.id]!,
-              onOpen: (page) => _open(lesson, page),
-            ),
+            child: lesson.id == _selected
+                ? _LessonSection(
+                    key: ValueKey(lesson.id),
+                    lesson: lesson,
+                    stations: _stations[lesson.id]!,
+                    onOpen: (page) => _open(lesson, page),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: _UnitCard(
+                      key: ValueKey('unit-${lesson.id}'),
+                      number: lesson.unit,
+                      title: lesson.title,
+                      onTap: () => setState(() => _selected = lesson.id),
+                    ),
+                  ),
           ),
         const SliverPadding(
-          padding: EdgeInsets.fromLTRB(16, 24, 16, 32),
+          padding: EdgeInsets.fromLTRB(16, 12, 16, 32),
           sliver: SliverList(
             delegate: SliverChildListDelegate.fixed([
-              _LockedUnit(number: 3, title: 'همزة الوصل وهمزة القطع'),
-              _LockedUnit(number: 4, title: 'الألف اللينة'),
-              _LockedUnit(number: 5, title: 'الهمزة المتوسطة والمتطرفة'),
+              _UnitCard(number: 3, title: 'همزة الوصل وهمزة القطع'),
+              _UnitCard(number: 4, title: 'الألف اللينة'),
+              _UnitCard(number: 5, title: 'الهمزة المتوسطة والمتطرفة'),
             ]),
           ),
         ),
@@ -773,53 +786,66 @@ class _TrophyNode extends StatelessWidget {
   }
 }
 
-class _LockedUnit extends StatelessWidget {
-  const _LockedUnit({required this.number, required this.title});
+/// بطاقة وحدة: مقفلة «قريبًا»، أو مفتوحة ([onTap]) تعرض محطات الدرس.
+class _UnitCard extends StatelessWidget {
+  const _UnitCard({
+    super.key,
+    required this.number,
+    required this.title,
+    this.onTap,
+  });
   final int number;
   final String title;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.line, width: 2),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: const BoxDecoration(
-                color: AppColors.locked,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.lock_rounded, color: AppColors.muted),
+    final open = onTap != null;
+    final card = Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.line, width: 2),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: open ? AppColors.primarySoft : AppColors.locked,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'الوحدة ${arDigits(number)}',
-                    style: t.labelMedium?.copyWith(color: AppColors.muted),
-                  ),
-                  Text(
-                    title,
-                    style: t.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.muted,
-                    ),
-                  ),
-                ],
-              ),
+            child: Icon(
+              open ? Icons.lock_open_rounded : Icons.lock_rounded,
+              color: open ? AppColors.primary : AppColors.muted,
             ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'الوحدة ${arDigits(number)}',
+                  style: t.labelMedium?.copyWith(color: AppColors.muted),
+                ),
+                Text(
+                  title,
+                  style: t.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: open ? AppColors.ink : AppColors.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (open)
+            // يُعكس في الكتابة من اليمين فيشير إلى الأمام.
+            const Icon(Icons.chevron_right_rounded, color: AppColors.muted)
+          else
             Text(
               'قريبًا',
               style: t.labelLarge?.copyWith(
@@ -827,9 +853,17 @@ class _LockedUnit extends StatelessWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
-          ],
-        ),
+        ],
       ),
+    );
+    return Padding(
+      padding: EdgeInsets.only(bottom: open ? 0 : 12),
+      child: open
+          ? Semantics(
+              button: true,
+              child: GestureDetector(onTap: onTap, child: card),
+            )
+          : card,
     );
   }
 }
