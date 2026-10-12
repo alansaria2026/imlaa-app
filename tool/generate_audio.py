@@ -16,6 +16,7 @@ assets/audio/ والفهرس في lib/services/audio_catalog.g.dart، ولا ي�
 """
 
 import argparse
+import array
 import base64
 import hashlib
 import json
@@ -77,6 +78,10 @@ def synthesize(key, text, voice, rate):
 
 def synthesize_gemini(key, text, voice, rate, model=GEMINI_MODEL):
     """Gemini يعيد PCM خامًا (24kHz)، فنحوّله إلى MP3 بـ ffmpeg."""
+    return to_mp3(gemini_pcm(key, text, voice, model), rate)
+
+
+def gemini_pcm(key, text, voice, model=GEMINI_MODEL):
     body = {
         "contents": [{"parts": [{"text": text}]}],
         "generationConfig": {
@@ -113,6 +118,10 @@ def synthesize_gemini(key, text, voice, rate, model=GEMINI_MODEL):
                 time.sleep(int(m.group(1)) + 2 if m else min(60, 8 * (attempt + 1)))
                 continue
             sys.exit(f"خطأ من Gemini ({e.code}): {err[:300]}")
+    return pcm
+
+
+def to_mp3(pcm, rate):
     with tempfile.NamedTemporaryFile(suffix=".pcm") as raw:
         raw.write(pcm)
         raw.flush()
@@ -123,6 +132,71 @@ def synthesize_gemini(key, text, voice, rate, model=GEMINI_MODEL):
             check=True, capture_output=True,
         )
     return out.stdout
+
+
+RATE_HZ = 24000
+FRAME = RATE_HZ // 50  # إطار ٢٠ ملّي ثانية
+
+
+def split_pcm(pcm, count):
+    """يقطع تسجيلًا فيه عدة نصوص عند أطول (count-1) فترات صمت.
+
+    يعيد القطع مرتبة، أو None إن لم تكن الفواصل واضحة."""
+    samples = array.array("h", pcm)
+    frames = [
+        max((abs(x) for x in samples[i:i + FRAME]), default=0)
+        for i in range(0, len(samples), FRAME)
+    ]
+    loud = [f > 600 for f in frames]
+    if True not in loud:
+        return None
+    first = loud.index(True)
+    last = len(loud) - 1 - loud[::-1].index(True)
+    gaps, start = [], None  # (الطول، البداية، النهاية) بالإطارات
+    for i in range(first, last + 1):
+        if not loud[i] and start is None:
+            start = i
+        elif loud[i] and start is not None:
+            gaps.append((i - start, start, i))
+            start = None
+    if len(gaps) < count - 1:
+        return None
+    gaps.sort(reverse=True)
+    cuts = sorted(gaps[:count - 1], key=lambda g: g[1])
+    # الفاصل بين النصوص يجب أن يكون أطول بوضوح من أي وقفة داخل نص.
+    if count > 1 and cuts and min(g[0] for g in cuts) < 15:
+        return None
+    if len(gaps) >= count and gaps[count - 1][0] * 1.3 > gaps[count - 2][0]:
+        return None
+    pad = 5  # ١٠٠ ملّي ثانية من الصمت حول كل مقطع
+    bounds = [first] + [x for g in cuts for x in (g[1], g[2])] + [last + 1]
+    pieces = []
+    for a, b in zip(bounds[::2], bounds[1::2]):
+        a, b = max(0, a - pad), min(len(frames), b + pad)
+        pieces.append(samples[a * FRAME:b * FRAME].tobytes())
+    return pieces
+
+
+def plausible(pieces, texts):
+    """طول كل مقطع يتناسب مع طول نصه، وإلا فالقطع خاطئ."""
+    per_char = [len(p) / 2 / RATE_HZ / max(1, len(t)) for p, t in zip(pieces, texts)]
+    mid = sorted(per_char)[len(per_char) // 2]
+    return all(mid / 2.2 < x < mid * 2.2 for x in per_char)
+
+
+def generate_batch(key, texts, voice, rate):
+    """يولّد عدة نصوص بطلب واحد ثم يقطعها، ويقسم الدفعة إن فشل القطع."""
+    if len(texts) == 1:
+        return [synthesize_gemini(key, texts[0], voice, rate)]
+    joined = "\n\n".join(t.rstrip(".،؟!") + "." for t in texts)
+    for _ in range(2):
+        pieces = split_pcm(gemini_pcm(key, joined, voice), len(texts))
+        if pieces and plausible(pieces, texts):
+            return [to_mp3(p, rate) for p in pieces]
+    half = len(texts) // 2
+    print(f"  تعذّر قطع دفعة من {len(texts)} نصوص، تُقسم نصفين")
+    return (generate_batch(key, texts[:half], voice, rate)
+            + generate_batch(key, texts[half:], voice, rate))
 
 
 def file_name(text):
@@ -150,6 +224,7 @@ def main():
     ap.add_argument("--voice", default=None, help="اسم الصوت (الافتراضي أول المرشحين)")
     ap.add_argument("--rate", type=float, default=0.9, help="سرعة النطق (1 = عادية)")
     ap.add_argument("--force", action="store_true", help="إعادة توليد الموجود")
+    ap.add_argument("--batch", type=int, default=30, help="عدد النصوص في الطلب الواحد (Gemini)")
     args = ap.parse_args()
 
     if os.environ.get("GEMINI_API_KEY"):
@@ -176,14 +251,20 @@ def main():
     with open(TEXTS, encoding="utf-8") as f:
         texts = json.load(f)
     os.makedirs(AUDIO_DIR, exist_ok=True)
+    todo = [t for t in texts
+            if args.force or not os.path.exists(os.path.join(AUDIO_DIR, file_name(t)))]
+    # الحد اليومي المجاني لـ Gemini صغير، فنجمع عدة نصوص في الطلب الواحد.
+    size = args.batch if say is synthesize_gemini else 1
     made = 0
-    for t in texts:
-        path = os.path.join(AUDIO_DIR, file_name(t))
-        if os.path.exists(path) and not args.force:
-            continue
-        with open(path, "wb") as f:
-            f.write(say(key, t, voice, args.rate))
-        made += 1
+    for i in range(0, len(todo), size):
+        group = todo[i:i + size]
+        audios = (generate_batch(key, group, voice, args.rate) if size > 1
+                  else [say(key, group[0], voice, args.rate)])
+        for t, audio in zip(group, audios):
+            with open(os.path.join(AUDIO_DIR, file_name(t)), "wb") as f:
+                f.write(audio)
+        made += len(group)
+        print(f"{made}/{len(todo)}", flush=True)
     # تسجيلات لم تعد مستخدمة.
     wanted = {file_name(t) for t in texts}
     for name in os.listdir(AUDIO_DIR):
