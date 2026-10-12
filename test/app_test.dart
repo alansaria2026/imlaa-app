@@ -12,7 +12,7 @@ void main() {
   setUp(mockPlatform);
 
   testWidgets('مسار التعلّم: فتح المحطة الحالية والتنقل والعودة', (t) async {
-    final state = await pumpScreen(t, const HomeScreen());
+    var state = await pumpScreen(t, const HomeScreen());
     expect(find.text('إملائي'), findsOneWidget);
     expect(find.text('٠ من ١٢ محطة'), findsOneWidget);
 
@@ -34,6 +34,10 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text('٠ من ٣ محطات'), findsOneWidget);
     expect(find.text('٠ من ١٢ محطة'), findsNothing);
+    // يتذكر التطبيق آخر وحدة اختارها الطالب بعد إعادة فتحه.
+    expect(state.selectedLesson, 'taa');
+    state = await pumpScreen(t, const HomeScreen(key: ValueKey('again')));
+    expect(find.text('٠ من ٣ محطات'), findsOneWidget);
     await t.drag(find.byType(CustomScrollView), const Offset(0, 2000));
     await t.pumpAndSettle();
     expect(find.byKey(const ValueKey('unit-lam')), findsOneWidget);

@@ -38,18 +38,18 @@ class _LearnTabState extends State<LearnTab> {
     );
   }
 
-  /// الدرس المعروض بمحطاته؛ بقية الدروس بطاقات مختصرة تُفتح بالضغط.
-  String _selected = lessons.first.id;
-
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
+    // الدرس المعروض بمحطاته (آخر وحدة اختارها الطالب)؛ بقية الدروس بطاقات
+    // مختصرة تُفتح بالضغط.
+    final selected = lessonById(app.selectedLesson ?? lessons.first.id).id;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: _TopBar(app: app)),
         for (final lesson in lessons)
           SliverToBoxAdapter(
-            child: lesson.id == _selected
+            child: lesson.id == selected
                 ? _LessonSection(
                     key: ValueKey(lesson.id),
                     lesson: lesson,
@@ -62,7 +62,7 @@ class _LearnTabState extends State<LearnTab> {
                       key: ValueKey('unit-${lesson.id}'),
                       number: lesson.unit,
                       title: lesson.title,
-                      onTap: () => setState(() => _selected = lesson.id),
+                      onTap: () => app.selectLesson(lesson.id),
                     ),
                   ),
           ),
