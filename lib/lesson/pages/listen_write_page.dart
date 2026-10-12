@@ -67,11 +67,11 @@ class _ListenWritePageState extends State<ListenWritePage> {
     );
   }
 
-  void _speak({bool slow = false}) {
+  void _speak() {
     final item = _item;
     if (item == null) return;
     final rate = AppScope.read(context).speechRate;
-    Speaker.instance.speak(item.spoken, rate: slow ? rate * 0.6 : rate);
+    Speaker.instance.speak(item.spoken, rate: rate);
   }
 
   /// بعد الرجوع للقاعدة: سؤال جديد مكان السؤال الحالي.
@@ -210,32 +210,15 @@ class _ListenWritePageState extends State<ListenWritePage> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    RoundIconButton(
-                      tooltip: 'استمع',
-                      icon: Icons.volume_up_rounded,
-                      size: 58,
-                      color: AppColors.ink,
-                      iconColor: Colors.white,
-                      onTap: _speak,
-                    ),
-                    const SizedBox(width: 14),
-                    Pressable(
-                      onTap: () => _speak(slow: true),
-                      color: AppColors.surface,
-                      borderColor: AppColors.ink,
-                      shape: BoxShape.circle,
-                      child: const SizedBox(
-                        width: 46,
-                        height: 46,
-                        child: Center(
-                          child: Text('🐢', style: TextStyle(fontSize: 22)),
-                        ),
-                      ),
-                    ),
-                  ],
+                Center(
+                  child: RoundIconButton(
+                    tooltip: 'استمع',
+                    icon: Icons.volume_up_rounded,
+                    size: 58,
+                    color: AppColors.ink,
+                    iconColor: Colors.white,
+                    onTap: _speak,
+                  ),
                 ),
                 if (item.sentence != null) ...[
                   const SizedBox(height: 10),

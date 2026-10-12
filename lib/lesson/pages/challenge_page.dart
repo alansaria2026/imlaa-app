@@ -56,11 +56,11 @@ class _ChallengePageState extends State<ChallengePage> {
     super.dispose();
   }
 
-  void _speak({bool slow = false}) {
+  void _speak() {
     final s = _s;
     if (s != null) {
       final rate = AppScope.read(context).speechRate;
-      Speaker.instance.speak(s.spoken, rate: slow ? rate * 0.6 : rate);
+      Speaker.instance.speak(s.spoken, rate: rate);
     }
   }
 
@@ -155,32 +155,15 @@ class _ChallengePageState extends State<ChallengePage> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    RoundIconButton(
-                      tooltip: 'استمع',
-                      icon: Icons.volume_up_rounded,
-                      size: 60,
-                      color: AppColors.ink,
-                      iconColor: Colors.white,
-                      onTap: _speak,
-                    ),
-                    const SizedBox(width: 14),
-                    Pressable(
-                      onTap: () => _speak(slow: true),
-                      color: AppColors.surface,
-                      borderColor: AppColors.ink,
-                      shape: BoxShape.circle,
-                      child: const SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: Center(
-                          child: Text('🐢', style: TextStyle(fontSize: 22)),
-                        ),
-                      ),
-                    ),
-                  ],
+                Center(
+                  child: RoundIconButton(
+                    tooltip: 'استمع',
+                    icon: Icons.volume_up_rounded,
+                    size: 60,
+                    color: AppColors.ink,
+                    iconColor: Colors.white,
+                    onTap: _speak,
+                  ),
                 ),
                 if (_solvedCurrent) ...[
                   const SizedBox(height: 16),

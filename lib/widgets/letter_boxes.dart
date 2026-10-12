@@ -197,7 +197,7 @@ class _Key extends StatelessWidget {
     return Expanded(
       flex: flex,
       child: Padding(
-        padding: const EdgeInsets.all(2.5),
+        padding: const EdgeInsets.all(2),
         child: Pressable(
           onTap: onTap,
           color: icon != null ? AppColors.primarySoft : AppColors.surface,
@@ -205,15 +205,22 @@ class _Key extends StatelessWidget {
           radius: 10,
           depth: 3,
           child: SizedBox(
-            height: 40,
+            height: 48,
             child: Center(
               child: icon != null
-                  ? Icon(icon, size: 20, color: AppColors.primary)
-                  : Text(
-                      label!,
-                      style: AppTheme.word(
-                        19,
-                      ).copyWith(height: 1.1, fontWeight: FontWeight.w600),
+                  ? Icon(icon, size: 24, color: AppColors.primary)
+                  // حرف كبير يصغر فقط إن ضاق المفتاح على شاشة صغيرة جدًا.
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          label!,
+                          style: AppTheme.word(
+                            26,
+                          ).copyWith(height: 1.1, fontWeight: FontWeight.w700),
+                        ),
+                      ),
                     ),
             ),
           ),
