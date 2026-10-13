@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 
 import '../app_state.dart';
 import '../data/hamza_lesson.dart';
+import '../data/lam_lesson.dart';
 import '../services/speaker.dart';
+import '../theme.dart';
 import '../widgets/common.dart';
 import 'hamza_rule_content.dart';
 import 'page_handle.dart';
 import 'pages/equation_page.dart';
 import 'pages/quiz_page.dart';
+import 'rule_content.dart';
 
 const _tenseEmoji = {
   Tense.past: '⏮️',
@@ -29,6 +32,9 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       tappable: true,
       heading: 'الفرق بين همزة القطع وهمزة الوصل',
       rule: const HamzaBasicsRule(),
+      // الصفحة تعرض صورتي الهمزة فقط، والقاعدة الذهبية مخفية في «مساعدة».
+      content: const HamzaBasicsRule(golden: false),
+      hintContent: const HamzaGoldenRule(),
       speech: hamzaRuleSpeech,
       hint:
           'أدخل (ثم) قبل الكلمة وانطقها: إن ظهرت الهمزة فهي قطع، وإن اختفت فهي وصل.',
@@ -40,7 +46,6 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
-        subtitle: 'اسمع الجملة، ثم أدخل (ثم) قبل الفعل وانطقه',
         rule: const HamzaBasicsRule(),
         autoSpeak: true,
         build: _qatOrWasl,
@@ -63,7 +68,23 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       tappable: true,
       heading: 'همزة (ال) التعريف',
       rule: const AlHamzaRule(),
+      content: const AlStatementRule(),
+      hintContent: const AlRememberRule(),
       speech: alRuleSpeech,
+      hint: 'كل اسم تدخل عليه (ال) يبدأ بهمزة وصل.',
+    ),
+    _example(
+      title: 'إضافة (ال)',
+      emoji: '➕',
+      tappable: true,
+      heading: 'إضافة (ال) التعريف إلى الأسماء',
+      rule: const AlHamzaRule(),
+      content: const AlExamplesRule(),
+      hintContent: const AlRememberRule(),
+      speech: alRuleSpeech,
+      speechAll: [
+        for (final w in alExampleWords) ...[spokenForm(w), spokenForm('ال$w')],
+      ],
       hint: 'كل اسم تدخل عليه (ال) يبدأ بهمزة وصل.',
     ),
     LessonPageSpec(
@@ -76,6 +97,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
         refill: () => hamzaAlRounds(rnd),
         op: EquationOp.addAl,
         title: 'أضف (ال) التعريف إلى الكلمة واكتب الناتج',
+        titleColor: AppColors.red,
         strict: true,
       ),
     ),
@@ -95,9 +117,19 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       emoji: '⚖️',
       heading: 'وزن الفعل',
       rule: const WeightRule(),
+      content: const WeightLettersRule(),
       speech:
           'لمعرفةِ وزنِ الفعلِ نحوِّلُهُ إلى الماضي، والوزنُ هو عددُ '
           'حروفِ الفعلِ الماضي.',
+      hint: 'حوّل الفعل إلى الماضي ثم عُدّ حروفه.',
+    ),
+    _example(
+      title: 'أمثلة الوزن',
+      emoji: '📋',
+      heading: 'أمثلة على وزن الفعل',
+      rule: const WeightRule(),
+      content: const WeightExamplesRule(),
+      speech: weightExamplesSpeech,
       hint: 'حوّل الفعل إلى الماضي ثم عُدّ حروفه.',
     ),
     LessonPageSpec(
@@ -244,6 +276,9 @@ LessonPageSpec _example({
   required Widget rule,
   required String speech,
   required String hint,
+  Widget? content,
+  Widget? hintContent,
+  List<String>? speechAll,
   bool tappable = false,
 }) => LessonPageSpec(
   tag: 'مثال وقاعدة',
@@ -256,8 +291,10 @@ LessonPageSpec _example({
     heading: heading,
     speech: speech,
     hint: hint,
+    hintContent: hintContent,
+    speechAll: speechAll,
     tappable: tappable,
-    child: rule,
+    child: content ?? rule,
   ),
 );
 
@@ -268,6 +305,8 @@ class _ExamplePage extends StatefulWidget {
     required this.speech,
     required this.hint,
     required this.child,
+    this.hintContent,
+    this.speechAll,
     this.tappable = false,
   });
 
@@ -276,6 +315,12 @@ class _ExamplePage extends StatefulWidget {
   final String speech;
   final String hint;
   final Widget child;
+
+  /// محتوى «مساعدة» في نافذة بدل رسالة [hint] القصيرة.
+  final Widget? hintContent;
+
+  /// نصوص «استمع» تُنطق متتالية بدل [speech].
+  final List<String>? speechAll;
 
   /// في المحتوى أمثلة تُسمع بالضغط عليها.
   final bool tappable;
@@ -289,12 +334,17 @@ class _ExamplePageState extends State<_ExamplePage> {
   void initState() {
     super.initState();
     widget.handle
-      ..onListen = (() => Speaker.instance.speak(
-        widget.speech,
-        rate: AppScope.read(context).speechRate,
-      ))
-      ..onHint = () =>
-          showFeedback(context, widget.hint, tone: FeedbackTone.hint);
+      ..onListen = () {
+        final rate = AppScope.read(context).speechRate;
+        if (widget.speechAll case final texts?) {
+          Speaker.instance.speakAll(texts, rate: rate);
+        } else {
+          Speaker.instance.speak(widget.speech, rate: rate);
+        }
+      }
+      ..onHint = () => widget.hintContent == null
+          ? showFeedback(context, widget.hint, tone: FeedbackTone.hint)
+          : showRuleSheet(context, title: 'تلميح', content: widget.hintContent);
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => widget.handle.markComplete(),
     );
@@ -435,7 +485,8 @@ List<QuizRound> _nounWithAl(Random rnd, int attempt) {
 List<QuizRound> _weights(Random rnd, int attempt) {
   final used = <String>{};
   final rounds = <QuizRound>[];
-  for (var r = 0; r < 4; r++) {
+  // خمس جولات في كل منها أربعة أفعال، فعل لكل وزن، حتى يبقى «إدخال» ظاهرًا.
+  for (var r = 0; r < 5; r++) {
     final verbs = <(String, String, Weight)>[];
     if (r == 0 && attempt == 0) {
       verbs.addAll(weightVerbs.where((v) => weightFirstVerbs.contains(v.$1)));
@@ -455,18 +506,6 @@ List<QuizRound> _weights(Random rnd, int attempt) {
       }
     }
     used.addAll(verbs.map((v) => v.$1));
-    verbs.add(
-      _pick(
-        weightVerbs,
-        1,
-        rnd,
-        avoid: {
-          for (final v in weightVerbs)
-            if (used.contains(v.$1)) v,
-        },
-      ).first,
-    );
-    used.add(verbs.last.$1);
     verbs.shuffle(rnd);
     rounds.add(
       QuizRound(
@@ -594,30 +633,15 @@ List<QuizRound> _masdarQuiz(Random rnd, int attempt) {
           options: ['فعل', 'اسم'],
           answers: {'اسم'},
         ),
-        const QuizItem(
-          prompt: 'مصدر …… الخماسي والسداسي همزته (وصل):',
-          options: ['الفعل المضارع', 'فعل الأمر'],
-          answers: {'فعل الأمر'},
-        ),
         QuizItem(
           prompt: 'مصدر الفعل (${a.$1}):',
           options: [masdarDistractor(a.$1), a.$2],
           answers: {a.$2},
         ),
-        const QuizItem(
-          prompt: 'مصدر الفعل الماضي الخماسي والسداسي همزته (……):',
-          options: ['وصل', 'قطع'],
-          answers: {'وصل'},
-        ),
         QuizItem(
           prompt: 'مصدر الفعل (${b.$1}):',
           options: [masdarDistractor(b.$1), b.$2],
           answers: {b.$2},
-        ),
-        const QuizItem(
-          prompt: 'مصدر الفعل الماضي …… همزته (وصل):',
-          options: ['الثلاثي والرباعي', 'الخماسي والسداسي'],
-          answers: {'الخماسي والسداسي'},
         ),
         const QuizItem(
           prompt: 'مصدر فعل الأمر الخماسي والسداسي همزته (……):',

@@ -81,39 +81,107 @@ TextSpan _colored(String text, Color color) => TextSpan(
 );
 
 /// ص ١–٣: الفرق بين الهمزتين، والقاعدة الذهبية (أدخل «ثم»).
+/// في صفحة المثال تظهر صورتا الهمزة وحدهما، والقاعدة الذهبية في «مساعدة».
 class HamzaBasicsRule extends StatelessWidget {
-  const HamzaBasicsRule({super.key});
+  const HamzaBasicsRule({super.key, this.golden = true});
+
+  /// تُعرض القاعدة الذهبية وأمثلتها تحت صورتي الهمزة.
+  final bool golden;
 
   @override
   Widget build(BuildContext context) => NaskhRule(
     child: Builder(
       builder: (context) {
         final t = Theme.of(context).textTheme;
-        Widget card(Hamza h, String letters, String where) => Expanded(
-          child: _Box(
-            child: Column(
-              children: [
-                Text(
-                  h.label,
-                  style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                Text(letters, style: AppTheme.word(40, color: hamzaColor(h))),
-                Text(where, textAlign: TextAlign.center, style: t.bodyLarge),
-              ],
+        // مستطيل من ثلاثة حقول رأسية: الاسم، والصورة، وموضع النطق.
+        Widget card(Hamza h, String letters, String where) {
+          Widget field(Widget child) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            child: Center(child: child),
+          );
+          const divider = Divider(
+            height: 1.2,
+            thickness: 1.2,
+            color: AppColors.ink,
+          );
+          return Expanded(
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.ink, width: 1.2),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  field(
+                    Text(
+                      h.label,
+                      style: t.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: hamzaColor(h),
+                      ),
+                    ),
+                  ),
+                  divider,
+                  field(
+                    Text(
+                      letters,
+                      style: AppTheme.word(40, color: hamzaColor(h)),
+                    ),
+                  ),
+                  divider,
+                  field(
+                    Text(
+                      where,
+                      textAlign: TextAlign.center,
+                      style: t.bodyLarge,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
+          );
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                card(Hamza.qat, 'أ   إ', 'تُنطق في أول الكلام وفي وسطه'),
-                const SizedBox(width: 10),
-                card(Hamza.wasl, 'ا', 'تُنطق في أول الكلام ولا تُنطق في وسطه'),
-              ],
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  card(Hamza.qat, 'أ   إ', 'تُنطق في أول الكلام وفي وسطه'),
+                  const SizedBox(width: 10),
+                  card(
+                    Hamza.wasl,
+                    'ا',
+                    'تُنطق في أول الكلام ولا تُنطق في وسطه',
+                  ),
+                ],
+              ),
             ),
+            if (golden) const HamzaGoldenRule(),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+/// القاعدة الذهبية (أدخل «ثم») وأمثلتها التي تُسمع بالضغط عليها.
+class HamzaGoldenRule extends StatelessWidget {
+  const HamzaGoldenRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Builder(
+      builder: (context) {
+        final t = Theme.of(context).textTheme;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             const _Heading('القاعدة الذهبية'),
             const _Line(TextSpan(text: 'أدخل (ثم) قبل الكلمة وانطقها:')),
             _Line(
@@ -178,22 +246,70 @@ class HamzaBasicsRule extends StatelessWidget {
   );
 }
 
-/// ص ٧–٨ و١٠: همزة (ال) التعريف همزة وصل دائمًا.
+/// مستطيل بإطار يحيط بالمحتوى.
+BoxDecoration _framed() => BoxDecoration(
+  color: AppColors.background,
+  borderRadius: BorderRadius.circular(16),
+  border: Border.all(color: AppColors.ink, width: 1.2),
+);
+
+/// ص ٧–٨ و١٠: همزة (ال) التعريف همزة وصل دائمًا (نافذة «القاعدة» كاملة).
 class AlHamzaRule extends StatelessWidget {
   const AlHamzaRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      AlStatementRule(),
+      NaskhRule(child: _Heading('إضافة (ال) التعريف إلى الأسماء')),
+      AlExamplesRule(),
+      AlRememberRule(),
+    ],
+  );
+}
+
+/// القاعدة في مستطيل، وتحتها كلماتها في مستطيلات متساوية: ثلاث فوق وثلاث تحت.
+class AlStatementRule extends StatelessWidget {
+  const AlStatementRule({super.key});
 
   @override
   Widget build(BuildContext context) => NaskhRule(
     child: Builder(
       builder: (context) {
-        final op = Theme.of(context).textTheme.titleLarge?.copyWith(
-          color: AppColors.muted,
-          fontWeight: FontWeight.w700,
+        Widget word(String w) => Expanded(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _say(context, spokenForm(w)),
+              child: Container(
+                height: 64,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                decoration: _framed(),
+                alignment: Alignment.center,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AlText(w, size: 28),
+                ),
+              ),
+            ),
+          ),
+        );
+        Widget row(Iterable<String> words) => Row(
+          children: [
+            for (final (i, w) in words.indexed) ...[
+              if (i > 0) const SizedBox(width: 10),
+              word(w),
+            ],
+          ],
         );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Box(
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: _framed(),
               child: Text.rich(
                 TextSpan(
                   children: [
@@ -206,20 +322,32 @@ class AlHamzaRule extends StatelessWidget {
                 style: AppTheme.word(24),
               ),
             ),
+            const SizedBox(height: 14),
+            row(alRuleWords.take(3)),
             const SizedBox(height: 10),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 18,
-              runSpacing: 4,
-              children: [
-                for (final w in alRuleWords)
-                  InkWell(
-                    onTap: () => _say(context, spokenForm(w)),
-                    child: AlText(w, size: 30),
-                  ),
-              ],
-            ),
-            const _Heading('أمثلة'),
+            row(alRuleWords.skip(3).take(3)),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+/// أمثلة إضافة (ال) التعريف إلى الأسماء: قلب + ال = القلب.
+class AlExamplesRule extends StatelessWidget {
+  const AlExamplesRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Builder(
+      builder: (context) {
+        final op = Theme.of(context).textTheme.titleLarge?.copyWith(
+          color: AppColors.muted,
+          fontWeight: FontWeight.w700,
+        );
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             for (final w in alExampleWords)
               InkWell(
                 onTap: () => Speaker.instance.speakAll([
@@ -245,21 +373,33 @@ class AlHamzaRule extends StatelessWidget {
                   ),
                 ),
               ),
-            const _Heading('تذكّر'),
-            const _Line(
-              TextSpan(text: '• (ال) التعريف لا تدخل إلا على الأسماء'),
-            ),
-            _Line(
-              TextSpan(
-                children: [
-                  const TextSpan(text: '• (ال) التعريف دائمًا تبدأ بـ'),
-                  _colored('همزة الوصل', AppColors.al),
-                ],
-              ),
-            ),
           ],
         );
       },
+    ),
+  );
+}
+
+/// «تذكّر»: (ال) لا تدخل إلا على الأسماء، وتبدأ بهمزة الوصل.
+class AlRememberRule extends StatelessWidget {
+  const AlRememberRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _Heading('تذكّر'),
+        const _Line(TextSpan(text: '• (ال) التعريف لا تدخل إلا على الأسماء')),
+        _Line(
+          TextSpan(
+            children: [
+              const TextSpan(text: '• (ال) التعريف دائمًا تبدأ بـ'),
+              _colored('همزة الوصل', AppColors.al),
+            ],
+          ),
+        ),
+      ],
     ),
   );
 }
@@ -271,21 +411,39 @@ const _letterCounts = {
   Weight.six: 'ستة حروف',
 };
 
-/// ص ١١–١٢: وزن الفعل = عدد حروف الفعل الماضي.
+/// ص ١١–١٢: وزن الفعل = عدد حروف الفعل الماضي (نافذة «القاعدة» كاملة).
 class WeightRule extends StatelessWidget {
   const WeightRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      WeightLettersRule(),
+      NaskhRule(child: _Heading('أمثلة')),
+      WeightExamplesRule(),
+    ],
+  );
+}
+
+/// الأفعال الأربعة بحروفها المرقّمة في وسط الصفحة على شكل هرم،
+/// ثم القاعدة: الوزن = عدد حروف الفعل الماضي.
+class WeightLettersRule extends StatelessWidget {
+  const WeightLettersRule({super.key});
 
   @override
   Widget build(BuildContext context) => NaskhRule(
     child: Builder(
       builder: (context) {
         final t = Theme.of(context).textTheme;
-        Widget letters(String word) => Wrap(
-          spacing: 4,
+        final bold = t.titleMedium?.copyWith(fontWeight: FontWeight.w800);
+        Widget letters(String word) => Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             for (var i = 0; i < word.length; i++)
               Container(
                 width: 34,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
                 padding: const EdgeInsets.only(bottom: 2),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
@@ -307,19 +465,14 @@ class WeightRule extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             for (final (word, weight) in weightExampleLetters) ...[
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 10,
-                runSpacing: 4,
-                children: [
-                  letters(word),
-                  Text(
-                    'فعل ${weight.label} (${_letterCounts[weight]})',
-                    style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                ],
+              FittedBox(fit: BoxFit.scaleDown, child: letters(word)),
+              const SizedBox(height: 2),
+              Text(
+                'فعل ${weight.label} (${_letterCounts[weight]})',
+                textAlign: TextAlign.center,
+                style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
             ],
             _Box(
               child: Column(
@@ -327,29 +480,79 @@ class WeightRule extends StatelessWidget {
                   Text(
                     'لمعرفة وزن الفعل نحوّله إلى الماضي',
                     textAlign: TextAlign.center,
-                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                    style: bold,
                   ),
-                  Text(
-                    'الوزن = عدد حروف الفعل الماضي',
-                    textAlign: TextAlign.center,
-                    style: t.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        _colored('الوزن', AppColors.blue),
+                        const TextSpan(text: ' = '),
+                        _colored('عدد حروف الفعل الماضي', AppColors.red),
+                      ],
                     ),
+                    textAlign: TextAlign.center,
+                    style: bold,
                   ),
                 ],
               ),
             ),
-            const _Heading('أمثلة'),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+/// أمثلة الوزن في جدول: الفعل، وتحويله للماضي، ووزنه.
+class WeightExamplesRule extends StatelessWidget {
+  const WeightExamplesRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Builder(
+      builder: (context) {
+        final t = Theme.of(context).textTheme;
+        Widget cell(Widget child) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+          child: Center(
+            child: FittedBox(fit: BoxFit.scaleDown, child: child),
+          ),
+        );
+        Widget head(String text) => cell(
+          Text(
+            text,
+            style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+        );
+        return Table(
+          border: TableBorder.all(
+            color: AppColors.ink,
+            width: 1.2,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          columnWidths: const {
+            0: FlexColumnWidth(),
+            1: FlexColumnWidth(1.6),
+            2: FlexColumnWidth(),
+          },
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          children: [
+            TableRow(
+              decoration: const BoxDecoration(color: AppColors.primarySoft),
+              children: [head('الفعل'), head('تحويل للماضي'), head('الوزن')],
+            ),
             for (final (present, past, weight) in weightExampleVerbs)
-              _Line(
-                TextSpan(
-                  children: [
-                    TextSpan(text: '$present: الماضي $past ('),
-                    _colored(past.split('').join('-'), AppColors.al),
-                    TextSpan(text: ') = فعل ${weight.label}'),
-                  ],
-                ),
+              TableRow(
+                children: [
+                  cell(Text(present, style: AppTheme.word(28))),
+                  cell(
+                    Text(
+                      '(${past.split('').join('-')})',
+                      style: AppTheme.word(28, color: AppColors.al),
+                    ),
+                  ),
+                  cell(Text(weight.label, style: AppTheme.word(28))),
+                ],
               ),
           ],
         );
@@ -358,60 +561,122 @@ class WeightRule extends StatelessWidget {
   );
 }
 
-/// ص ١٣ مكرر: القاعدة العامة لهمزة الأفعال.
+/// ص ١٣ مكرر: القاعدة العامة لهمزة الأفعال: جدول لكل زمن، صف لأوزانه
+/// وتحته الهمزة، وتُدمج خانات الأوزان المتتالية التي لها الهمزة نفسها.
 class VerbChartRule extends StatelessWidget {
   const VerbChartRule({super.key});
+
+  static const _tenseTitles = {
+    Tense.present: 'الفعل المضارع',
+    Tense.past: 'الفعل الماضي',
+    Tense.imperative: 'فعل الأمر',
+  };
 
   @override
   Widget build(BuildContext context) => NaskhRule(
     child: Builder(
       builder: (context) {
         final t = Theme.of(context).textTheme;
+        const side = BorderSide(color: AppColors.ink, width: 1.2);
+        // خانة بفاصل بعدها؛ الحدود الخارجية من إطار الجدول.
+        Widget cell(
+          String text, {
+          int flex = 1,
+          Color fill = AppColors.surface,
+          Color color = AppColors.ink,
+          double size = 18,
+          double height = 42,
+          bool last = false,
+        }) => Expanded(
+          flex: flex,
+          child: Container(
+            height: height,
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            decoration: BoxDecoration(
+              color: fill,
+              border: BorderDirectional(end: last ? BorderSide.none : side),
+            ),
+            alignment: Alignment.center,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(text, style: AppTheme.word(size, color: color)),
+            ),
+          ),
+        );
+        Widget table(Tense tense) {
+          // أوزان متتالية لها الهمزة نفسها تُدمج في خانة واحدة.
+          final groups = <(Hamza, int)>[];
+          for (final w in Weight.values) {
+            final h = hamzaOf(tense, w);
+            if (groups.isNotEmpty && groups.last.$1 == h) {
+              groups.last = (h, groups.last.$2 + 1);
+            } else {
+              groups.add((h, 1));
+            }
+          }
+          return Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.ink, width: 1.2),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  color: AppColors.primarySoft,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    _tenseTitles[tense]!,
+                    textAlign: TextAlign.center,
+                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
+                const Divider(
+                  height: 1.2,
+                  thickness: 1.2,
+                  color: AppColors.ink,
+                ),
+                Row(
+                  children: [
+                    for (final (i, w) in Weight.values.indexed)
+                      cell('ال${w.label}', last: i == Weight.values.length - 1),
+                  ],
+                ),
+                const Divider(
+                  height: 1.2,
+                  thickness: 1.2,
+                  color: AppColors.ink,
+                ),
+                Row(
+                  children: [
+                    for (final (i, (h, span)) in groups.indexed)
+                      cell(
+                        h.label,
+                        flex: span,
+                        size: 22,
+                        height: 50,
+                        color: hamzaColor(h),
+                        fill: h == Hamza.qat
+                            ? AppColors.successSoft
+                            : AppColors.errorSoft,
+                        last: i == groups.length - 1,
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final tense in [
+            for (final (i, tense) in [
               Tense.present,
               Tense.past,
               Tense.imperative,
-            ]) ...[
-              Text(
-                tense.label,
-                textAlign: TextAlign.center,
-                style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  for (final w in Weight.values)
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(3),
-                        child: _Box(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Column(
-                              children: [
-                                Text(w.label, style: t.titleSmall),
-                                Text(
-                                  hamzaOf(tense, w) == Hamza.qat
-                                      ? 'قطع'
-                                      : 'وصل',
-                                  style: AppTheme.word(
-                                    22,
-                                    color: hamzaColor(hamzaOf(tense, w)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-            ],
+            ].indexed) ...[if (i > 0) const SizedBox(height: 16), table(tense)],
           ],
         );
       },

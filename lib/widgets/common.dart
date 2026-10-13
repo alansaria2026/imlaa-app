@@ -69,12 +69,16 @@ class PageCard extends StatelessWidget {
     required this.title,
     required this.child,
     this.subtitle,
+    this.titleColor,
   });
 
   final String? tag;
   final String title;
   final String? subtitle;
   final Widget child;
+
+  /// لون العنوان؛ الافتراضي لون النص.
+  final Color? titleColor;
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +106,10 @@ class PageCard extends StatelessWidget {
           textScaler: MediaQuery.textScalerOf(
             context,
           ).clamp(maxScaleFactor: 1.5),
-          style: AppTheme.word(26).copyWith(height: 1.5),
+          style: AppTheme.word(
+            26,
+            color: titleColor ?? AppColors.ink,
+          ).copyWith(height: 1.5),
         ),
         if (subtitle != null) ...[
           const SizedBox(height: 2),

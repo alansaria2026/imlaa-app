@@ -98,10 +98,10 @@ void main() {
       expect(texts, containsAll([hamzaRuleSpeech, alRuleSpeech]));
     });
 
-    test('الدرس الثالث في المسار بتسع وعشرين محطة', () {
+    test('الدرس الثالث في المسار بإحدى وثلاثين محطة', () {
       expect(lessons.map((l) => l.id).last, hamzaLessonId);
       expect(lessonById(hamzaLessonId).unit, 3);
-      expect(buildHamzaLessonPages().length, 29);
+      expect(buildHamzaLessonPages().length, 31);
     });
   });
 
@@ -151,13 +151,15 @@ void main() {
       final page = pages['ما وزنه؟']!;
       for (var attempt = 0; attempt < 5; attempt++) {
         final rounds = page.build(Random(attempt), attempt);
-        expect(rounds.length, 4);
+        expect(rounds.length, 5);
+        expect(rounds.every((r) => r.items.length == 4), isTrue);
         final prompts = [
           for (final r in rounds)
             for (final i in r.items) i.prompt,
         ];
         expect(prompts.toSet().length, 20);
-        for (final r in rounds) {
+        // أول جولة في أول محاولة أفعال الكتاب كما هي (فيها خماسيان).
+        for (final r in attempt == 0 ? rounds.skip(1) : rounds) {
           expect(
             {for (final i in r.items) i.answers.single}.length,
             4,
@@ -294,7 +296,7 @@ void main() {
 
     testWidgets('مثال القاعدة ثم تطبيقها', (t) async {
       final c = verbCombos.first;
-      await open(t, 9);
+      await open(t, 11);
       // المثال محلول والقاعدة ظاهرة قبل التطبيق.
       expect(find.textContaining('همزة وصل'), findsWidgets);
       await t.tap(find.text('طبّق الآن'));
@@ -310,7 +312,7 @@ void main() {
     });
 
     testWidgets('الكتابة تراعي الهمزة: «أسكين» خطأ', (t) async {
-      await open(t, 5);
+      await open(t, 6);
       await t.tap(inPage(find.text('اسم')));
       await t.tap(inPage(find.text('وصل')));
       await t.enterText(inPage(find.byType(TextField)), 'ألسكين');
@@ -360,8 +362,53 @@ void main() {
       expect(answered, 10);
     });
 
+    testWidgets('الصفحة الأولى: القاعدة الذهبية مخفية في «مساعدة»', (t) async {
+      await open(t, 0);
+      expect(find.text('أ   إ'), findsOneWidget);
+      expect(find.text('القاعدة الذهبية'), findsNothing);
+      await t.tap(find.byTooltip('القائمة'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('مساعدة').last);
+      await t.pumpAndSettle();
+      expect(find.text('تلميح'), findsOneWidget);
+      expect(find.text('القاعدة الذهبية'), findsOneWidget);
+    });
+
+    testWidgets(
+      '(ال) التعريف: الأمثلة في الصفحة التالية و«تذكّر» في «مساعدة»',
+      (t) async {
+        await open(t, 3);
+        expect(find.text('تذكّر'), findsNothing);
+        expect(find.byType(AlBox), findsNothing);
+        await t.tap(find.byTooltip('القائمة'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('مساعدة').last);
+        await t.pumpAndSettle();
+        expect(find.text('تذكّر'), findsOneWidget);
+      },
+    );
+
+    testWidgets('صفحة إضافة (ال) التعريف إلى الأسماء', (t) async {
+      await open(t, 4);
+      expect(find.text('إضافة (ال) التعريف إلى الأسماء'), findsOneWidget);
+      expect(find.byType(AlBox), findsNWidgets(alExampleWords.length));
+    });
+
+    testWidgets('وزن الفعل: الأمثلة في جدول في الصفحة التالية', (t) async {
+      await open(t, 7);
+      expect(find.byType(Table), findsNothing);
+      expect(find.text('أمثلة'), findsNothing);
+    });
+
+    testWidgets('أمثلة الوزن في جدول', (t) async {
+      await open(t, 8);
+      expect(find.byType(Table), findsOneWidget);
+      expect(find.text('تحويل للماضي'), findsOneWidget);
+      expect(find.text('(ر-ت-ب)'), findsOneWidget);
+    });
+
     testWidgets('قبل التطبيق: التلميح والاستماع للمثال', (t) async {
-      await open(t, 9);
+      await open(t, 11);
       await t.tap(find.byTooltip('القائمة'));
       await t.pumpAndSettle();
       await t.tap(find.text('استمع').last);
@@ -370,7 +417,7 @@ void main() {
     });
 
     testWidgets('اختيار متعدد: تُختار الإجابات الثلاث معًا', (t) async {
-      await open(t, 21);
+      await open(t, 23);
       for (var i = 0; i < 5; i++) {
         final s = shown(t);
         for (final label in [
