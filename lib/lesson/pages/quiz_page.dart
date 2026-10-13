@@ -364,6 +364,7 @@ class _QuizPageState extends State<QuizPage> {
     return PageCard(
       tag: widget.tag,
       title: widget.title,
+      titleColor: AppColors.red,
       subtitle: widget.subtitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -378,7 +379,7 @@ class _QuizPageState extends State<QuizPage> {
                   Text(
                     s,
                     textAlign: TextAlign.center,
-                    style: AppTheme.word(22, color: AppColors.primary),
+                    style: AppTheme.word(22, color: AppColors.red),
                   ),
                 if (round.sentence case final s?)
                   GestureDetector(
@@ -418,7 +419,14 @@ class _QuizPageState extends State<QuizPage> {
     ].join(' ');
     final promptText = prompt.isEmpty
         ? null
-        : Text(prompt, style: AppTheme.word(22).copyWith(height: 1.5));
+        : Text(
+            prompt,
+            // السؤال بالأزرق، وتعليمات الاختيار بالأحمر.
+            style: AppTheme.word(
+              22,
+              color: AppColors.blue,
+            ).copyWith(height: 1.5),
+          );
     final state = _states[i];
 
     if (item.writes) {
