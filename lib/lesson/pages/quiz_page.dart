@@ -379,7 +379,7 @@ class _QuizPageState extends State<QuizPage> {
                   Text(
                     s,
                     textAlign: TextAlign.center,
-                    style: AppTheme.word(22, color: AppColors.red),
+                    style: AppTheme.word(22, color: AppColors.primary),
                   ),
                 if (round.sentence case final s?)
                   GestureDetector(
@@ -421,7 +421,7 @@ class _QuizPageState extends State<QuizPage> {
         ? null
         : Text(
             prompt,
-            // السؤال بالأزرق، وتعليمات الاختيار بالأحمر.
+            // السؤال بالأزرق، والعنوان بالأحمر.
             style: AppTheme.word(
               22,
               color: AppColors.blue,
