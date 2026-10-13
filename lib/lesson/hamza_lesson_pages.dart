@@ -44,7 +44,6 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
-        subtitle: 'اسمع الجملة، ثم أدخل (ثم) قبل الفعل وانطقه',
         rule: const HamzaBasicsRule(),
         autoSpeak: true,
         build: _qatOrWasl,
