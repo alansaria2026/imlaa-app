@@ -98,10 +98,10 @@ void main() {
       expect(texts, containsAll([hamzaRuleSpeech, alRuleSpeech]));
     });
 
-    test('الدرس الثالث في المسار بتسع وعشرين محطة', () {
+    test('الدرس الثالث في المسار بثلاثين محطة', () {
       expect(lessons.map((l) => l.id).last, hamzaLessonId);
       expect(lessonById(hamzaLessonId).unit, 3);
-      expect(buildHamzaLessonPages().length, 29);
+      expect(buildHamzaLessonPages().length, 30);
     });
   });
 
@@ -294,7 +294,7 @@ void main() {
 
     testWidgets('مثال القاعدة ثم تطبيقها', (t) async {
       final c = verbCombos.first;
-      await open(t, 9);
+      await open(t, 10);
       // المثال محلول والقاعدة ظاهرة قبل التطبيق.
       expect(find.textContaining('همزة وصل'), findsWidgets);
       await t.tap(find.text('طبّق الآن'));
@@ -310,7 +310,7 @@ void main() {
     });
 
     testWidgets('الكتابة تراعي الهمزة: «أسكين» خطأ', (t) async {
-      await open(t, 5);
+      await open(t, 6);
       await t.tap(inPage(find.text('اسم')));
       await t.tap(inPage(find.text('وصل')));
       await t.enterText(inPage(find.byType(TextField)), 'ألسكين');
@@ -372,8 +372,28 @@ void main() {
       expect(find.text('القاعدة الذهبية'), findsOneWidget);
     });
 
+    testWidgets(
+      '(ال) التعريف: الأمثلة في الصفحة التالية و«تذكّر» في «مساعدة»',
+      (t) async {
+        await open(t, 3);
+        expect(find.text('تذكّر'), findsNothing);
+        expect(find.byType(AlBox), findsNothing);
+        await t.tap(find.byTooltip('القائمة'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('مساعدة').last);
+        await t.pumpAndSettle();
+        expect(find.text('تذكّر'), findsOneWidget);
+      },
+    );
+
+    testWidgets('صفحة إضافة (ال) التعريف إلى الأسماء', (t) async {
+      await open(t, 4);
+      expect(find.text('إضافة (ال) التعريف إلى الأسماء'), findsOneWidget);
+      expect(find.byType(AlBox), findsNWidgets(alExampleWords.length));
+    });
+
     testWidgets('قبل التطبيق: التلميح والاستماع للمثال', (t) async {
-      await open(t, 9);
+      await open(t, 10);
       await t.tap(find.byTooltip('القائمة'));
       await t.pumpAndSettle();
       await t.tap(find.text('استمع').last);
@@ -382,7 +402,7 @@ void main() {
     });
 
     testWidgets('اختيار متعدد: تُختار الإجابات الثلاث معًا', (t) async {
-      await open(t, 21);
+      await open(t, 22);
       for (var i = 0; i < 5; i++) {
         final s = shown(t);
         for (final label in [

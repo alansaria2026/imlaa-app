@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../app_state.dart';
 import '../data/hamza_lesson.dart';
+import '../data/lam_lesson.dart';
 import '../services/speaker.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
@@ -67,7 +68,23 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       tappable: true,
       heading: 'همزة (ال) التعريف',
       rule: const AlHamzaRule(),
+      content: const AlStatementRule(),
+      hintContent: const AlRememberRule(),
       speech: alRuleSpeech,
+      hint: 'كل اسم تدخل عليه (ال) يبدأ بهمزة وصل.',
+    ),
+    _example(
+      title: 'إضافة (ال)',
+      emoji: '➕',
+      tappable: true,
+      heading: 'إضافة (ال) التعريف إلى الأسماء',
+      rule: const AlHamzaRule(),
+      content: const AlExamplesRule(),
+      hintContent: const AlRememberRule(),
+      speech: alRuleSpeech,
+      speechAll: [
+        for (final w in alExampleWords) ...[spokenForm(w), spokenForm('ال$w')],
+      ],
       hint: 'كل اسم تدخل عليه (ال) يبدأ بهمزة وصل.',
     ),
     LessonPageSpec(
@@ -251,6 +268,7 @@ LessonPageSpec _example({
   required String hint,
   Widget? content,
   Widget? hintContent,
+  List<String>? speechAll,
   bool tappable = false,
 }) => LessonPageSpec(
   tag: 'مثال وقاعدة',
@@ -264,6 +282,7 @@ LessonPageSpec _example({
     speech: speech,
     hint: hint,
     hintContent: hintContent,
+    speechAll: speechAll,
     tappable: tappable,
     child: content ?? rule,
   ),
@@ -277,6 +296,7 @@ class _ExamplePage extends StatefulWidget {
     required this.hint,
     required this.child,
     this.hintContent,
+    this.speechAll,
     this.tappable = false,
   });
 
@@ -288,6 +308,9 @@ class _ExamplePage extends StatefulWidget {
 
   /// محتوى «مساعدة» في نافذة بدل رسالة [hint] القصيرة.
   final Widget? hintContent;
+
+  /// نصوص «استمع» تُنطق متتالية بدل [speech].
+  final List<String>? speechAll;
 
   /// في المحتوى أمثلة تُسمع بالضغط عليها.
   final bool tappable;
@@ -301,10 +324,14 @@ class _ExamplePageState extends State<_ExamplePage> {
   void initState() {
     super.initState();
     widget.handle
-      ..onListen = (() => Speaker.instance.speak(
-        widget.speech,
-        rate: AppScope.read(context).speechRate,
-      ))
+      ..onListen = () {
+        final rate = AppScope.read(context).speechRate;
+        if (widget.speechAll case final texts?) {
+          Speaker.instance.speakAll(texts, rate: rate);
+        } else {
+          Speaker.instance.speak(widget.speech, rate: rate);
+        }
+      }
       ..onHint = () => widget.hintContent == null
           ? showFeedback(context, widget.hint, tone: FeedbackTone.hint)
           : showRuleSheet(context, title: 'تلميح', content: widget.hintContent);

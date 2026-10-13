@@ -246,22 +246,70 @@ class HamzaGoldenRule extends StatelessWidget {
   );
 }
 
-/// ص ٧–٨ و١٠: همزة (ال) التعريف همزة وصل دائمًا.
+/// مستطيل بإطار يحيط بالمحتوى.
+BoxDecoration _framed() => BoxDecoration(
+  color: AppColors.background,
+  borderRadius: BorderRadius.circular(16),
+  border: Border.all(color: AppColors.ink, width: 1.2),
+);
+
+/// ص ٧–٨ و١٠: همزة (ال) التعريف همزة وصل دائمًا (نافذة «القاعدة» كاملة).
 class AlHamzaRule extends StatelessWidget {
   const AlHamzaRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      AlStatementRule(),
+      NaskhRule(child: _Heading('إضافة (ال) التعريف إلى الأسماء')),
+      AlExamplesRule(),
+      AlRememberRule(),
+    ],
+  );
+}
+
+/// القاعدة في مستطيل، وتحتها كلماتها في مستطيلات متساوية: ثلاث فوق وثلاث تحت.
+class AlStatementRule extends StatelessWidget {
+  const AlStatementRule({super.key});
 
   @override
   Widget build(BuildContext context) => NaskhRule(
     child: Builder(
       builder: (context) {
-        final op = Theme.of(context).textTheme.titleLarge?.copyWith(
-          color: AppColors.muted,
-          fontWeight: FontWeight.w700,
+        Widget word(String w) => Expanded(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _say(context, spokenForm(w)),
+              child: Container(
+                height: 64,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                decoration: _framed(),
+                alignment: Alignment.center,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AlText(w, size: 28),
+                ),
+              ),
+            ),
+          ),
+        );
+        Widget row(Iterable<String> words) => Row(
+          children: [
+            for (final (i, w) in words.indexed) ...[
+              if (i > 0) const SizedBox(width: 10),
+              word(w),
+            ],
+          ],
         );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Box(
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: _framed(),
               child: Text.rich(
                 TextSpan(
                   children: [
@@ -274,20 +322,32 @@ class AlHamzaRule extends StatelessWidget {
                 style: AppTheme.word(24),
               ),
             ),
+            const SizedBox(height: 14),
+            row(alRuleWords.take(3)),
             const SizedBox(height: 10),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 18,
-              runSpacing: 4,
-              children: [
-                for (final w in alRuleWords)
-                  InkWell(
-                    onTap: () => _say(context, spokenForm(w)),
-                    child: AlText(w, size: 30),
-                  ),
-              ],
-            ),
-            const _Heading('أمثلة'),
+            row(alRuleWords.skip(3).take(3)),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+/// أمثلة إضافة (ال) التعريف إلى الأسماء: قلب + ال = القلب.
+class AlExamplesRule extends StatelessWidget {
+  const AlExamplesRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Builder(
+      builder: (context) {
+        final op = Theme.of(context).textTheme.titleLarge?.copyWith(
+          color: AppColors.muted,
+          fontWeight: FontWeight.w700,
+        );
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             for (final w in alExampleWords)
               InkWell(
                 onTap: () => Speaker.instance.speakAll([
@@ -313,21 +373,33 @@ class AlHamzaRule extends StatelessWidget {
                   ),
                 ),
               ),
-            const _Heading('تذكّر'),
-            const _Line(
-              TextSpan(text: '• (ال) التعريف لا تدخل إلا على الأسماء'),
-            ),
-            _Line(
-              TextSpan(
-                children: [
-                  const TextSpan(text: '• (ال) التعريف دائمًا تبدأ بـ'),
-                  _colored('همزة الوصل', AppColors.al),
-                ],
-              ),
-            ),
           ],
         );
       },
+    ),
+  );
+}
+
+/// «تذكّر»: (ال) لا تدخل إلا على الأسماء، وتبدأ بهمزة الوصل.
+class AlRememberRule extends StatelessWidget {
+  const AlRememberRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _Heading('تذكّر'),
+        const _Line(TextSpan(text: '• (ال) التعريف لا تدخل إلا على الأسماء')),
+        _Line(
+          TextSpan(
+            children: [
+              const TextSpan(text: '• (ال) التعريف دائمًا تبدأ بـ'),
+              _colored('همزة الوصل', AppColors.al),
+            ],
+          ),
+        ),
+      ],
     ),
   );
 }
