@@ -561,60 +561,122 @@ class WeightExamplesRule extends StatelessWidget {
   );
 }
 
-/// ص ١٣ مكرر: القاعدة العامة لهمزة الأفعال.
+/// ص ١٣ مكرر: القاعدة العامة لهمزة الأفعال: جدول لكل زمن، صف لأوزانه
+/// وتحته الهمزة، وتُدمج خانات الأوزان المتتالية التي لها الهمزة نفسها.
 class VerbChartRule extends StatelessWidget {
   const VerbChartRule({super.key});
+
+  static const _tenseTitles = {
+    Tense.present: 'الفعل المضارع',
+    Tense.past: 'الفعل الماضي',
+    Tense.imperative: 'فعل الأمر',
+  };
 
   @override
   Widget build(BuildContext context) => NaskhRule(
     child: Builder(
       builder: (context) {
         final t = Theme.of(context).textTheme;
+        const side = BorderSide(color: AppColors.ink, width: 1.2);
+        // خانة بفاصل بعدها؛ الحدود الخارجية من إطار الجدول.
+        Widget cell(
+          String text, {
+          int flex = 1,
+          Color fill = AppColors.surface,
+          Color color = AppColors.ink,
+          double size = 18,
+          double height = 42,
+          bool last = false,
+        }) => Expanded(
+          flex: flex,
+          child: Container(
+            height: height,
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            decoration: BoxDecoration(
+              color: fill,
+              border: BorderDirectional(end: last ? BorderSide.none : side),
+            ),
+            alignment: Alignment.center,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(text, style: AppTheme.word(size, color: color)),
+            ),
+          ),
+        );
+        Widget table(Tense tense) {
+          // أوزان متتالية لها الهمزة نفسها تُدمج في خانة واحدة.
+          final groups = <(Hamza, int)>[];
+          for (final w in Weight.values) {
+            final h = hamzaOf(tense, w);
+            if (groups.isNotEmpty && groups.last.$1 == h) {
+              groups.last = (h, groups.last.$2 + 1);
+            } else {
+              groups.add((h, 1));
+            }
+          }
+          return Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.ink, width: 1.2),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  color: AppColors.primarySoft,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    _tenseTitles[tense]!,
+                    textAlign: TextAlign.center,
+                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
+                const Divider(
+                  height: 1.2,
+                  thickness: 1.2,
+                  color: AppColors.ink,
+                ),
+                Row(
+                  children: [
+                    for (final (i, w) in Weight.values.indexed)
+                      cell('ال${w.label}', last: i == Weight.values.length - 1),
+                  ],
+                ),
+                const Divider(
+                  height: 1.2,
+                  thickness: 1.2,
+                  color: AppColors.ink,
+                ),
+                Row(
+                  children: [
+                    for (final (i, (h, span)) in groups.indexed)
+                      cell(
+                        h.label,
+                        flex: span,
+                        size: 22,
+                        height: 50,
+                        color: hamzaColor(h),
+                        fill: h == Hamza.qat
+                            ? AppColors.successSoft
+                            : AppColors.errorSoft,
+                        last: i == groups.length - 1,
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final tense in [
+            for (final (i, tense) in [
               Tense.present,
               Tense.past,
               Tense.imperative,
-            ]) ...[
-              Text(
-                tense.label,
-                textAlign: TextAlign.center,
-                style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  for (final w in Weight.values)
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(3),
-                        child: _Box(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Column(
-                              children: [
-                                Text(w.label, style: t.titleSmall),
-                                Text(
-                                  hamzaOf(tense, w) == Hamza.qat
-                                      ? 'قطع'
-                                      : 'وصل',
-                                  style: AppTheme.word(
-                                    22,
-                                    color: hamzaColor(hamzaOf(tense, w)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-            ],
+            ].indexed) ...[if (i > 0) const SizedBox(height: 16), table(tense)],
           ],
         );
       },
