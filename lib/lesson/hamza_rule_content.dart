@@ -411,21 +411,39 @@ const _letterCounts = {
   Weight.six: 'ستة حروف',
 };
 
-/// ص ١١–١٢: وزن الفعل = عدد حروف الفعل الماضي.
+/// ص ١١–١٢: وزن الفعل = عدد حروف الفعل الماضي (نافذة «القاعدة» كاملة).
 class WeightRule extends StatelessWidget {
   const WeightRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      WeightLettersRule(),
+      NaskhRule(child: _Heading('أمثلة')),
+      WeightExamplesRule(),
+    ],
+  );
+}
+
+/// الأفعال الأربعة بحروفها المرقّمة في وسط الصفحة على شكل هرم،
+/// ثم القاعدة: الوزن = عدد حروف الفعل الماضي.
+class WeightLettersRule extends StatelessWidget {
+  const WeightLettersRule({super.key});
 
   @override
   Widget build(BuildContext context) => NaskhRule(
     child: Builder(
       builder: (context) {
         final t = Theme.of(context).textTheme;
-        Widget letters(String word) => Wrap(
-          spacing: 4,
+        final bold = t.titleMedium?.copyWith(fontWeight: FontWeight.w800);
+        Widget letters(String word) => Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             for (var i = 0; i < word.length; i++)
               Container(
                 width: 34,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
                 padding: const EdgeInsets.only(bottom: 2),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
@@ -447,19 +465,14 @@ class WeightRule extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             for (final (word, weight) in weightExampleLetters) ...[
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 10,
-                runSpacing: 4,
-                children: [
-                  letters(word),
-                  Text(
-                    'فعل ${weight.label} (${_letterCounts[weight]})',
-                    style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                ],
+              FittedBox(fit: BoxFit.scaleDown, child: letters(word)),
+              const SizedBox(height: 2),
+              Text(
+                'فعل ${weight.label} (${_letterCounts[weight]})',
+                textAlign: TextAlign.center,
+                style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
             ],
             _Box(
               child: Column(
@@ -467,29 +480,79 @@ class WeightRule extends StatelessWidget {
                   Text(
                     'لمعرفة وزن الفعل نحوّله إلى الماضي',
                     textAlign: TextAlign.center,
-                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                    style: bold,
                   ),
-                  Text(
-                    'الوزن = عدد حروف الفعل الماضي',
-                    textAlign: TextAlign.center,
-                    style: t.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        _colored('الوزن', AppColors.blue),
+                        const TextSpan(text: ' = '),
+                        _colored('عدد حروف الفعل الماضي', AppColors.red),
+                      ],
                     ),
+                    textAlign: TextAlign.center,
+                    style: bold,
                   ),
                 ],
               ),
             ),
-            const _Heading('أمثلة'),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+/// أمثلة الوزن في جدول: الفعل، وتحويله للماضي، ووزنه.
+class WeightExamplesRule extends StatelessWidget {
+  const WeightExamplesRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Builder(
+      builder: (context) {
+        final t = Theme.of(context).textTheme;
+        Widget cell(Widget child) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+          child: Center(
+            child: FittedBox(fit: BoxFit.scaleDown, child: child),
+          ),
+        );
+        Widget head(String text) => cell(
+          Text(
+            text,
+            style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+        );
+        return Table(
+          border: TableBorder.all(
+            color: AppColors.ink,
+            width: 1.2,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          columnWidths: const {
+            0: FlexColumnWidth(),
+            1: FlexColumnWidth(1.6),
+            2: FlexColumnWidth(),
+          },
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          children: [
+            TableRow(
+              decoration: const BoxDecoration(color: AppColors.primarySoft),
+              children: [head('الفعل'), head('تحويل للماضي'), head('الوزن')],
+            ),
             for (final (present, past, weight) in weightExampleVerbs)
-              _Line(
-                TextSpan(
-                  children: [
-                    TextSpan(text: '$present: الماضي $past ('),
-                    _colored(past.split('').join('-'), AppColors.al),
-                    TextSpan(text: ') = فعل ${weight.label}'),
-                  ],
-                ),
+              TableRow(
+                children: [
+                  cell(Text(present, style: AppTheme.word(28))),
+                  cell(
+                    Text(
+                      '(${past.split('').join('-')})',
+                      style: AppTheme.word(28, color: AppColors.al),
+                    ),
+                  ),
+                  cell(Text(weight.label, style: AppTheme.word(28))),
+                ],
               ),
           ],
         );

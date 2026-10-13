@@ -98,10 +98,10 @@ void main() {
       expect(texts, containsAll([hamzaRuleSpeech, alRuleSpeech]));
     });
 
-    test('الدرس الثالث في المسار بثلاثين محطة', () {
+    test('الدرس الثالث في المسار بإحدى وثلاثين محطة', () {
       expect(lessons.map((l) => l.id).last, hamzaLessonId);
       expect(lessonById(hamzaLessonId).unit, 3);
-      expect(buildHamzaLessonPages().length, 30);
+      expect(buildHamzaLessonPages().length, 31);
     });
   });
 
@@ -294,7 +294,7 @@ void main() {
 
     testWidgets('مثال القاعدة ثم تطبيقها', (t) async {
       final c = verbCombos.first;
-      await open(t, 10);
+      await open(t, 11);
       // المثال محلول والقاعدة ظاهرة قبل التطبيق.
       expect(find.textContaining('همزة وصل'), findsWidgets);
       await t.tap(find.text('طبّق الآن'));
@@ -392,8 +392,21 @@ void main() {
       expect(find.byType(AlBox), findsNWidgets(alExampleWords.length));
     });
 
+    testWidgets('وزن الفعل: الأمثلة في جدول في الصفحة التالية', (t) async {
+      await open(t, 7);
+      expect(find.byType(Table), findsNothing);
+      expect(find.text('أمثلة'), findsNothing);
+    });
+
+    testWidgets('أمثلة الوزن في جدول', (t) async {
+      await open(t, 8);
+      expect(find.byType(Table), findsOneWidget);
+      expect(find.text('تحويل للماضي'), findsOneWidget);
+      expect(find.text('(ر-ت-ب)'), findsOneWidget);
+    });
+
     testWidgets('قبل التطبيق: التلميح والاستماع للمثال', (t) async {
-      await open(t, 10);
+      await open(t, 11);
       await t.tap(find.byTooltip('القائمة'));
       await t.pumpAndSettle();
       await t.tap(find.text('استمع').last);
@@ -402,7 +415,7 @@ void main() {
     });
 
     testWidgets('اختيار متعدد: تُختار الإجابات الثلاث معًا', (t) async {
-      await open(t, 22);
+      await open(t, 23);
       for (var i = 0; i < 5; i++) {
         final s = shown(t);
         for (final label in [

@@ -117,9 +117,19 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       emoji: '⚖️',
       heading: 'وزن الفعل',
       rule: const WeightRule(),
+      content: const WeightLettersRule(),
       speech:
           'لمعرفةِ وزنِ الفعلِ نحوِّلُهُ إلى الماضي، والوزنُ هو عددُ '
           'حروفِ الفعلِ الماضي.',
+      hint: 'حوّل الفعل إلى الماضي ثم عُدّ حروفه.',
+    ),
+    _example(
+      title: 'أمثلة الوزن',
+      emoji: '📋',
+      heading: 'أمثلة على وزن الفعل',
+      rule: const WeightRule(),
+      content: const WeightExamplesRule(),
+      speech: weightExamplesSpeech,
       hint: 'حوّل الفعل إلى الماضي ثم عُدّ حروفه.',
     ),
     LessonPageSpec(

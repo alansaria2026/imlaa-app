@@ -37,6 +37,7 @@ Set<String> allSpeechTexts() => {
   // درس همزة القطع وهمزة الوصل.
   hamzaRuleSpeech,
   alRuleSpeech,
+  weightExamplesSpeech,
   for (final (spoken, _, _) in goldenRuleExamples) spoken,
   for (final s in allVerbSentences) s.spoken,
   for (final w in [...alRuleWords, ...alExampleWords]) ...[
