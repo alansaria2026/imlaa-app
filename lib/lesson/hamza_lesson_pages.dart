@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../app_state.dart';
 import '../data/hamza_lesson.dart';
 import '../services/speaker.dart';
+import '../theme.dart';
 import '../widgets/common.dart';
 import 'hamza_rule_content.dart';
 import 'page_handle.dart';
@@ -79,6 +80,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
         refill: () => hamzaAlRounds(rnd),
         op: EquationOp.addAl,
         title: 'أضف (ال) التعريف إلى الكلمة واكتب الناتج',
+        titleColor: AppColors.red,
         strict: true,
       ),
     ),

@@ -78,6 +78,7 @@ class EquationPage extends StatefulWidget {
     this.refill,
     this.example,
     required this.title,
+    this.titleColor,
     this.strict = false,
     this.showLamType = true,
   });
@@ -95,6 +96,9 @@ class EquationPage extends StatefulWidget {
   final String? example;
   final String? tag;
   final String title;
+
+  /// لون العنوان؛ الافتراضي لون النص.
+  final Color? titleColor;
   final bool strict;
 
   /// إظهار نوع اللام (قمرية/شمسية) بعد الإجابة الصحيحة.
@@ -389,6 +393,7 @@ class _EquationPageState extends State<EquationPage> {
     return PageCard(
       tag: widget.tag,
       title: widget.title,
+      titleColor: widget.titleColor,
       subtitle: widget.strict ? 'أي خطأ يعيد جميع الكلمات بترتيب جديد' : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
