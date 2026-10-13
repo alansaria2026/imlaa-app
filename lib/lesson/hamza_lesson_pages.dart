@@ -485,7 +485,8 @@ List<QuizRound> _nounWithAl(Random rnd, int attempt) {
 List<QuizRound> _weights(Random rnd, int attempt) {
   final used = <String>{};
   final rounds = <QuizRound>[];
-  for (var r = 0; r < 4; r++) {
+  // خمس جولات في كل منها أربعة أفعال، فعل لكل وزن، حتى يبقى «إدخال» ظاهرًا.
+  for (var r = 0; r < 5; r++) {
     final verbs = <(String, String, Weight)>[];
     if (r == 0 && attempt == 0) {
       verbs.addAll(weightVerbs.where((v) => weightFirstVerbs.contains(v.$1)));
@@ -505,18 +506,6 @@ List<QuizRound> _weights(Random rnd, int attempt) {
       }
     }
     used.addAll(verbs.map((v) => v.$1));
-    verbs.add(
-      _pick(
-        weightVerbs,
-        1,
-        rnd,
-        avoid: {
-          for (final v in weightVerbs)
-            if (used.contains(v.$1)) v,
-        },
-      ).first,
-    );
-    used.add(verbs.last.$1);
     verbs.shuffle(rnd);
     rounds.add(
       QuizRound(

@@ -151,13 +151,15 @@ void main() {
       final page = pages['ما وزنه؟']!;
       for (var attempt = 0; attempt < 5; attempt++) {
         final rounds = page.build(Random(attempt), attempt);
-        expect(rounds.length, 4);
+        expect(rounds.length, 5);
+        expect(rounds.every((r) => r.items.length == 4), isTrue);
         final prompts = [
           for (final r in rounds)
             for (final i in r.items) i.prompt,
         ];
         expect(prompts.toSet().length, 20);
-        for (final r in rounds) {
+        // أول جولة في أول محاولة أفعال الكتاب كما هي (فيها خماسيان).
+        for (final r in attempt == 0 ? rounds.skip(1) : rounds) {
           expect(
             {for (final i in r.items) i.answers.single}.length,
             4,
