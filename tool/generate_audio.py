@@ -184,6 +184,11 @@ def plausible(pieces, texts):
     return all(mid / 2.2 < x < mid * 2.2 for x in per_char)
 
 
+def multi_sentence(text):
+    """نص فيه أكثر من جملة أو وقفة (فاصلة، نقطة، نقطتان) أو طويل."""
+    return bool(re.search(r"[.،:؟!]", text.rstrip(".،:؟! "))) or len(text) > 60
+
+
 def generate_batch(key, texts, voice, rate):
     """يولّد عدة نصوص بطلب واحد ثم يقطعها، ويقسم الدفعة إن فشل القطع."""
     if len(texts) == 1:
@@ -255,10 +260,15 @@ def main():
             if args.force or not os.path.exists(os.path.join(AUDIO_DIR, file_name(t)))]
     # الحد اليومي المجاني لـ Gemini صغير، فنجمع عدة نصوص في الطلب الواحد.
     size = args.batch if say is synthesize_gemini else 1
+    # النصوص ذات الجمل المتعددة فيها وقفات طويلة تُفسد القطع، فتُولَّد وحدها.
+    solo = [t for t in todo if size > 1 and multi_sentence(t)]
+    rest = [t for t in todo if t not in solo]
+    groups = [rest[i:i + size] for i in range(0, len(rest), size)] + [
+        [t] for t in solo
+    ]
     made = 0
-    for i in range(0, len(todo), size):
-        group = todo[i:i + size]
-        audios = (generate_batch(key, group, voice, args.rate) if size > 1
+    for group in groups:
+        audios = (generate_batch(key, group, voice, args.rate) if len(group) > 1
                   else [say(key, group[0], voice, args.rate)])
         for t, audio in zip(group, audios):
             with open(os.path.join(AUDIO_DIR, file_name(t)), "wb") as f:
