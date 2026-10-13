@@ -633,30 +633,15 @@ List<QuizRound> _masdarQuiz(Random rnd, int attempt) {
           options: ['فعل', 'اسم'],
           answers: {'اسم'},
         ),
-        const QuizItem(
-          prompt: 'مصدر …… الخماسي والسداسي همزته (وصل):',
-          options: ['الفعل المضارع', 'فعل الأمر'],
-          answers: {'فعل الأمر'},
-        ),
         QuizItem(
           prompt: 'مصدر الفعل (${a.$1}):',
           options: [masdarDistractor(a.$1), a.$2],
           answers: {a.$2},
         ),
-        const QuizItem(
-          prompt: 'مصدر الفعل الماضي الخماسي والسداسي همزته (……):',
-          options: ['وصل', 'قطع'],
-          answers: {'وصل'},
-        ),
         QuizItem(
           prompt: 'مصدر الفعل (${b.$1}):',
           options: [masdarDistractor(b.$1), b.$2],
           answers: {b.$2},
-        ),
-        const QuizItem(
-          prompt: 'مصدر الفعل الماضي …… همزته (وصل):',
-          options: ['الثلاثي والرباعي', 'الخماسي والسداسي'],
-          answers: {'الخماسي والسداسي'},
         ),
         const QuizItem(
           prompt: 'مصدر فعل الأمر الخماسي والسداسي همزته (……):',
