@@ -81,39 +81,107 @@ TextSpan _colored(String text, Color color) => TextSpan(
 );
 
 /// ص ١–٣: الفرق بين الهمزتين، والقاعدة الذهبية (أدخل «ثم»).
+/// في صفحة المثال تظهر صورتا الهمزة وحدهما، والقاعدة الذهبية في «مساعدة».
 class HamzaBasicsRule extends StatelessWidget {
-  const HamzaBasicsRule({super.key});
+  const HamzaBasicsRule({super.key, this.golden = true});
+
+  /// تُعرض القاعدة الذهبية وأمثلتها تحت صورتي الهمزة.
+  final bool golden;
 
   @override
   Widget build(BuildContext context) => NaskhRule(
     child: Builder(
       builder: (context) {
         final t = Theme.of(context).textTheme;
-        Widget card(Hamza h, String letters, String where) => Expanded(
-          child: _Box(
-            child: Column(
-              children: [
-                Text(
-                  h.label,
-                  style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                Text(letters, style: AppTheme.word(40, color: hamzaColor(h))),
-                Text(where, textAlign: TextAlign.center, style: t.bodyLarge),
-              ],
+        // مستطيل من ثلاثة حقول رأسية: الاسم، والصورة، وموضع النطق.
+        Widget card(Hamza h, String letters, String where) {
+          Widget field(Widget child) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            child: Center(child: child),
+          );
+          const divider = Divider(
+            height: 1.2,
+            thickness: 1.2,
+            color: AppColors.ink,
+          );
+          return Expanded(
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.ink, width: 1.2),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  field(
+                    Text(
+                      h.label,
+                      style: t.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: hamzaColor(h),
+                      ),
+                    ),
+                  ),
+                  divider,
+                  field(
+                    Text(
+                      letters,
+                      style: AppTheme.word(40, color: hamzaColor(h)),
+                    ),
+                  ),
+                  divider,
+                  field(
+                    Text(
+                      where,
+                      textAlign: TextAlign.center,
+                      style: t.bodyLarge,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
+          );
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                card(Hamza.qat, 'أ   إ', 'تُنطق في أول الكلام وفي وسطه'),
-                const SizedBox(width: 10),
-                card(Hamza.wasl, 'ا', 'تُنطق في أول الكلام ولا تُنطق في وسطه'),
-              ],
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  card(Hamza.qat, 'أ   إ', 'تُنطق في أول الكلام وفي وسطه'),
+                  const SizedBox(width: 10),
+                  card(
+                    Hamza.wasl,
+                    'ا',
+                    'تُنطق في أول الكلام ولا تُنطق في وسطه',
+                  ),
+                ],
+              ),
             ),
+            if (golden) const HamzaGoldenRule(),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+/// القاعدة الذهبية (أدخل «ثم») وأمثلتها التي تُسمع بالضغط عليها.
+class HamzaGoldenRule extends StatelessWidget {
+  const HamzaGoldenRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Builder(
+      builder: (context) {
+        final t = Theme.of(context).textTheme;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             const _Heading('القاعدة الذهبية'),
             const _Line(TextSpan(text: 'أدخل (ثم) قبل الكلمة وانطقها:')),
             _Line(

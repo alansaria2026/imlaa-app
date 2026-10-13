@@ -10,6 +10,7 @@ import 'hamza_rule_content.dart';
 import 'page_handle.dart';
 import 'pages/equation_page.dart';
 import 'pages/quiz_page.dart';
+import 'rule_content.dart';
 
 const _tenseEmoji = {
   Tense.past: '⏮️',
@@ -29,6 +30,9 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       tappable: true,
       heading: 'الفرق بين همزة القطع وهمزة الوصل',
       rule: const HamzaBasicsRule(),
+      // الصفحة تعرض صورتي الهمزة فقط، والقاعدة الذهبية مخفية في «مساعدة».
+      content: const HamzaBasicsRule(golden: false),
+      hintContent: const HamzaGoldenRule(),
       speech: hamzaRuleSpeech,
       hint:
           'أدخل (ثم) قبل الكلمة وانطقها: إن ظهرت الهمزة فهي قطع، وإن اختفت فهي وصل.',
@@ -244,6 +248,8 @@ LessonPageSpec _example({
   required Widget rule,
   required String speech,
   required String hint,
+  Widget? content,
+  Widget? hintContent,
   bool tappable = false,
 }) => LessonPageSpec(
   tag: 'مثال وقاعدة',
@@ -256,8 +262,9 @@ LessonPageSpec _example({
     heading: heading,
     speech: speech,
     hint: hint,
+    hintContent: hintContent,
     tappable: tappable,
-    child: rule,
+    child: content ?? rule,
   ),
 );
 
@@ -268,6 +275,7 @@ class _ExamplePage extends StatefulWidget {
     required this.speech,
     required this.hint,
     required this.child,
+    this.hintContent,
     this.tappable = false,
   });
 
@@ -276,6 +284,9 @@ class _ExamplePage extends StatefulWidget {
   final String speech;
   final String hint;
   final Widget child;
+
+  /// محتوى «مساعدة» في نافذة بدل رسالة [hint] القصيرة.
+  final Widget? hintContent;
 
   /// في المحتوى أمثلة تُسمع بالضغط عليها.
   final bool tappable;
@@ -293,8 +304,9 @@ class _ExamplePageState extends State<_ExamplePage> {
         widget.speech,
         rate: AppScope.read(context).speechRate,
       ))
-      ..onHint = () =>
-          showFeedback(context, widget.hint, tone: FeedbackTone.hint);
+      ..onHint = () => widget.hintContent == null
+          ? showFeedback(context, widget.hint, tone: FeedbackTone.hint)
+          : showRuleSheet(context, title: 'تلميح', content: widget.hintContent);
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => widget.handle.markComplete(),
     );

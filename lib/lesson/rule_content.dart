@@ -174,7 +174,11 @@ class NaskhRule extends StatelessWidget {
 }
 
 /// نافذة القاعدة؛ [content] لقاعدة غير قاعدة اللام القمرية والشمسية.
-Future<void> showRuleSheet(BuildContext context, {Widget? content}) {
+Future<void> showRuleSheet(
+  BuildContext context, {
+  Widget? content,
+  String title = 'القاعدة',
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -187,7 +191,7 @@ Future<void> showRuleSheet(BuildContext context, {Widget? content}) {
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
         children: [
           Text(
-            'القاعدة',
+            title,
             textAlign: TextAlign.center,
             style: Theme.of(
               context,

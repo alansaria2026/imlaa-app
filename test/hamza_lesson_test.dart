@@ -360,6 +360,18 @@ void main() {
       expect(answered, 10);
     });
 
+    testWidgets('الصفحة الأولى: القاعدة الذهبية مخفية في «مساعدة»', (t) async {
+      await open(t, 0);
+      expect(find.text('أ   إ'), findsOneWidget);
+      expect(find.text('القاعدة الذهبية'), findsNothing);
+      await t.tap(find.byTooltip('القائمة'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('مساعدة').last);
+      await t.pumpAndSettle();
+      expect(find.text('تلميح'), findsOneWidget);
+      expect(find.text('القاعدة الذهبية'), findsOneWidget);
+    });
+
     testWidgets('قبل التطبيق: التلميح والاستماع للمثال', (t) async {
       await open(t, 9);
       await t.tap(find.byTooltip('القائمة'));
