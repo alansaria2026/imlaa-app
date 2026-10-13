@@ -16,6 +16,9 @@ class Speaker {
   AudioPlayer? _player;
   bool _ready = false;
 
+  /// آخر نص طُلب نطقه (بتسجيل أو بصوت الجهاز)؛ تقرؤه الاختبارات.
+  String? lastText;
+
   /// يزداد مع كل نطق جديد أو إيقاف، فتتوقف السلاسل القديمة ([speakAll]).
   int _generation = 0;
 
@@ -66,6 +69,7 @@ class Speaker {
 
   /// [rate] بين 0 و 1 حيث 0.42 هي السرعة الافتراضية؛ وتنتهي عند انتهاء النطق.
   Future<void> speak(String text, {double rate = 0.42}) async {
+    lastText = text;
     final generation = ++_generation;
     await _stopAll();
     if (generation != _generation) return;

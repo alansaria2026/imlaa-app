@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:imlaa/app_state.dart';
+import 'package:imlaa/services/speaker.dart';
 import 'package:imlaa/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,18 +32,17 @@ Future<void> loadAppFonts() async {
   ]);
 }
 
-/// آخر نص طُلب نطقه.
-String? lastSpoken;
+/// آخر نص طُلب نطقه، بتسجيل جاهز أو بصوت الجهاز.
+String? get lastSpoken => Speaker.instance.lastText;
 
 void mockPlatform() {
   SharedPreferences.setMockInitialValues({});
-  lastSpoken = null;
+  Speaker.instance.lastText = null;
   // محاكاة قناة النطق حتى لا تفشل الاختبارات.
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
         call,
       ) async {
-        if (call.method == 'speak') lastSpoken = call.arguments as String;
         return 1;
       });
 }
