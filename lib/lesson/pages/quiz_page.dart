@@ -440,22 +440,32 @@ class _QuizPageState extends State<QuizPage> {
       );
     }
 
-    final options = Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final o in _orders[i])
-          _OptionChip(
-            label: o,
-            picked: _picked[i].contains(o),
-            // بعد الخطأ تظهر الإجابات الصحيحة بالأخضر.
-            reveal: state == _State.wrong && item.answers.contains(o),
-            state: state,
-            onTap: () => _pick(i, o),
-          ),
-      ],
+    Widget chip(String o, {bool compact = false}) => _OptionChip(
+      label: o,
+      picked: _picked[i].contains(o),
+      // بعد الخطأ تظهر الإجابات الصحيحة بالأخضر.
+      reveal: state == _State.wrong && item.answers.contains(o),
+      state: state,
+      compact: compact,
+      onTap: () => _pick(i, o),
     );
+    // ثلاثة خيارات أو أربعة في سطر واحد بأزرار متساوية، حتى لا تنزل إلى
+    // سطر ثانٍ فتدفع «إدخال» خارج الشاشة الصغيرة.
+    final Widget options = _orders[i].length >= 3 && _orders[i].length <= 4
+        ? Row(
+            children: [
+              for (final (k, o) in _orders[i].indexed) ...[
+                if (k > 0) const SizedBox(width: 6),
+                Expanded(child: chip(o, compact: true)),
+              ],
+            ],
+          )
+        : Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [for (final o in _orders[i]) chip(o)],
+          );
     return ShakeOnChange(
       trigger: state == _State.wrong ? _shake : 0,
       // رقم الفقرة وحده يبقى في سطر الخيارات.
@@ -513,6 +523,7 @@ class _OptionChip extends StatelessWidget {
     required this.reveal,
     required this.state,
     required this.onTap,
+    this.compact = false,
   });
 
   final String label;
@@ -520,6 +531,9 @@ class _OptionChip extends StatelessWidget {
   final bool reveal;
   final _State state;
   final VoidCallback onTap;
+
+  /// زر في سطر متساوي الأزرار: يصغر نصه بدل أن يتجاوز عرضه.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -548,8 +562,18 @@ class _OptionChip extends StatelessWidget {
         radius: 14,
         depth: 3,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: Text(label, style: AppTheme.word(22, color: text)),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 6 : 16,
+            vertical: 6,
+          ),
+          child: compact
+              ? Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(label, style: AppTheme.word(22, color: text)),
+                  ),
+                )
+              : Text(label, style: AppTheme.word(22, color: text)),
         ),
       ),
     );
