@@ -105,7 +105,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       tappable: true,
       heading: 'الأسماء غير الثلاثية',
       rule: const LongNounRule(),
-      // «إضاءة» في نافذة القاعدة فقط، لا في الصفحة.
+      // الأسماء الشاذة في نافذة القاعدة فقط، لا في الصفحة.
       content: const LongNounRule(light: false),
       speech: longRuleSpeech,
       hint: _longHint,

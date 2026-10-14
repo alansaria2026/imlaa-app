@@ -245,13 +245,13 @@ void main() {
           initialPage: pages.indexWhere((p) => p.title == 'غير الثلاثية'),
         ),
       );
-      // لا «إضاءة» في الصفحة، وآخر أمثلتها فوق أزرار التنقل.
-      expect(find.byKey(const ValueKey('alif-light')), findsNothing);
+      // لا أسماء شاذة في الصفحة، وآخر أمثلتها فوق أزرار التنقل.
+      expect(find.text('موسى'), findsNothing);
       final last = find.textContaining('مثل').last.hitTestable();
       expect(t.getRect(last).bottom, lessThan(t.getRect(nextButton()).top));
     });
 
-    testWidgets('«إضاءة» في نافذة القاعدة تعرض الأسماء الشاذة و«يحيى»', (
+    testWidgets('نافذة القاعدة تعرض الأسماء الشاذة و«يحيى» تحت القاعدة', (
       t,
     ) async {
       final i = buildAlifLessonPages(
@@ -270,9 +270,7 @@ void main() {
       await t.pumpAndSettle();
       await t.tap(find.text('القاعدة').last);
       await t.pumpAndSettle();
-      await t.ensureVisible(find.byKey(const ValueKey('alif-light')));
-      await t.tap(find.byKey(const ValueKey('alif-light')));
-      await t.pumpAndSettle();
+      expect(find.textContaining('إضاءة'), findsNothing);
       expect(find.text('موسى'), findsOneWidget);
       expect(find.textContaining('يحيى'), findsWidgets);
     });
