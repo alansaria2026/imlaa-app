@@ -35,20 +35,6 @@ class _Heading extends StatelessWidget {
   );
 }
 
-/// مربع صغير فيه صورة الألف أو العدد (ص ١).
-WidgetSpan _shape(String s) => WidgetSpan(
-  alignment: PlaceholderAlignment.middle,
-  child: Container(
-    margin: const EdgeInsets.symmetric(horizontal: 4),
-    padding: const EdgeInsets.symmetric(horizontal: 12),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: AppColors.al, width: 1.5),
-    ),
-    child: Text(s, style: AppTheme.word(26, color: AppColors.al)),
-  ),
-);
-
 /// مثال يُسمع بالضغط عليه.
 InlineSpan _example(
   BuildContext context,
@@ -63,55 +49,176 @@ InlineSpan _example(
   ),
 );
 
-/// ص ١: الألف الممدودة والمقصورة، والاسم الثلاثي.
+/// مربع بإطار في مخطط ص ١.
+class _Box extends StatelessWidget {
+  const _Box({required this.child, this.padding});
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding:
+        padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColors.ink, width: 1.8),
+    ),
+    child: child,
+  );
+}
+
+/// عنوان المربع بالأحمر، يصغر ليتسع في الشاشات الضيقة.
+class _BoxTitle extends StatelessWidget {
+  const _BoxTitle(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => _Box(
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(text, style: AppTheme.word(22, color: AppColors.al)),
+    ),
+  );
+}
+
+/// سهم نازل يصل المربعات.
+class _DownArrow extends StatelessWidget {
+  const _DownArrow();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(
+    width: 20,
+    height: 34,
+    child: CustomPaint(painter: _ArrowPainter()),
+  );
+}
+
+class _ArrowPainter extends CustomPainter {
+  const _ArrowPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.ink
+      ..strokeWidth = 1.8
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final x = size.width / 2;
+    canvas
+      ..drawLine(Offset(x, 0), Offset(x, size.height - 1), paint)
+      ..drawLine(
+        Offset(x - 6, size.height - 8),
+        Offset(x, size.height - 1),
+        paint,
+      )
+      ..drawLine(
+        Offset(x + 6, size.height - 8),
+        Offset(x, size.height - 1),
+        paint,
+      );
+  }
+
+  @override
+  bool shouldRepaint(_ArrowPainter oldDelegate) => false;
+}
+
+/// فرع الألف: العنوان ← صورة الألف ← المثال.
+class _AlifBranch extends StatelessWidget {
+  const _AlifBranch({
+    required this.title,
+    required this.letter,
+    required this.word,
+    required this.spoken,
+  });
+
+  final String title;
+  final String letter;
+  final String word;
+  final String spoken;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      _BoxTitle(title),
+      const _DownArrow(),
+      _Box(
+        padding: const EdgeInsets.symmetric(horizontal: 26),
+        child: Text(letter, style: AppTheme.word(38, color: AppColors.al)),
+      ),
+      const SizedBox(height: 10),
+      Text.rich(
+        TextSpan(
+          children: [
+            const TextSpan(text: '( '),
+            _example(context, word, spoken),
+            const TextSpan(text: ' )'),
+          ],
+        ),
+        style: AppTheme.word(24),
+      ),
+    ],
+  );
+}
+
+/// ص ١: الألف الممدودة والمقصورة، والاسم الثلاثي، مرسومة مربعات وأسهمًا.
 class AlifBasicsRule extends StatelessWidget {
   const AlifBasicsRule({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final [(mw, ms), (qw, qs), (tw, ts)] = alifRuleExamples;
+    final [(mw, ms), (qw, qs)] = alifRuleExamples;
     return NaskhRule(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _Line(
-            TextSpan(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const TextSpan(text: 'الألف الممدودة', style: _red),
-                const TextSpan(text: ' تُكتب هكذا '),
-                _shape('ا'),
-                const TextSpan(text: ' مثل ( '),
-                _example(context, mw, ms),
-                const TextSpan(text: ' )'),
+                Expanded(
+                  child: _AlifBranch(
+                    title: 'الألف المقصورة',
+                    letter: 'ى',
+                    word: qw,
+                    spoken: qs,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _AlifBranch(
+                    title: 'الألف الممدودة',
+                    letter: 'ا',
+                    word: mw,
+                    spoken: ms,
+                  ),
+                ),
               ],
             ),
-          ),
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: 'الألف المقصورة', style: _red),
-                const TextSpan(text: ' تُكتب هكذا '),
-                _shape('ى'),
-                const TextSpan(text: ' مثل ( '),
-                _example(context, qw, qs),
-                const TextSpan(text: ' )'),
-              ],
+            const SizedBox(height: 36),
+            const FractionallySizedBox(
+              widthFactor: 0.6,
+              child: _BoxTitle('الاسم الثلاثي'),
             ),
-          ),
-          const SizedBox(height: 8),
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: 'الاسم الثلاثي', style: _red),
-                const TextSpan(text: ' هو الذي يتكوّن من '),
-                _shape('٣'),
-                const TextSpan(text: ' حروف أصلية، مثل ( '),
-                _example(context, tw, ts),
-                const TextSpan(text: ' )'),
-              ],
+            const _DownArrow(),
+            _Box(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text.rich(
+                  const TextSpan(
+                    children: [
+                      TextSpan(text: 'يتكوّن من ( '),
+                      TextSpan(text: '٣', style: _red),
+                      TextSpan(text: ' ) حروف أصلية'),
+                    ],
+                  ),
+                  style: AppTheme.word(22),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
