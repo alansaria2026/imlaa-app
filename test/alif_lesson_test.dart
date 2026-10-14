@@ -245,9 +245,36 @@ void main() {
           initialPage: pages.indexWhere((p) => p.title == 'غير الثلاثية'),
         ),
       );
-      // آخر أمثلتها فوق أزرار التنقل.
+      // لا «إضاءة» في الصفحة، وآخر أمثلتها فوق أزرار التنقل.
+      expect(find.byKey(const ValueKey('alif-light')), findsNothing);
       final last = find.textContaining('مثل').last.hitTestable();
       expect(t.getRect(last).bottom, lessThan(t.getRect(nextButton()).top));
+    });
+
+    testWidgets('«إضاءة» في نافذة القاعدة تعرض الأسماء الشاذة و«يحيى»', (
+      t,
+    ) async {
+      final i = buildAlifLessonPages(
+        Random(0),
+      ).indexWhere((p) => p.title == 'غير الثلاثية');
+      await pumpScreen(
+        t,
+        LessonScreen(
+          lessonId: 'qa',
+          title: alifLessonTitle,
+          pages: buildAlifLessonPages(Random(0)),
+          initialPage: i,
+        ),
+      );
+      await t.tap(find.byTooltip('القائمة'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('القاعدة').last);
+      await t.pumpAndSettle();
+      await t.ensureVisible(find.byKey(const ValueKey('alif-light')));
+      await t.tap(find.byKey(const ValueKey('alif-light')));
+      await t.pumpAndSettle();
+      expect(find.text('موسى'), findsOneWidget);
+      expect(find.textContaining('يحيى'), findsWidgets);
     });
 
     for (final title in ['احفظ القاعدتين', 'احفظ القاعدة']) {

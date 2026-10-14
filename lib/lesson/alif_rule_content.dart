@@ -4,6 +4,7 @@ import '../app_state.dart';
 import '../data/alif_lesson.dart';
 import '../services/speaker.dart';
 import '../theme.dart';
+import '../widgets/pressable.dart';
 import 'rule_content.dart';
 
 void _say(BuildContext context, String text) =>
@@ -368,9 +369,13 @@ class TriliteralRemember extends StatelessWidget {
   );
 }
 
-/// ص ١ (الأسماء غير الثلاثية): العناوين بالأحمر والأمثلة بالأزرق.
+/// ص ١ (الأسماء غير الثلاثية): العناوين بالأحمر والأمثلة بالأزرق، ومعها
+/// زر «إضاءة» للأسماء الشاذة.
 class LongNounRule extends StatelessWidget {
-  const LongNounRule({super.key});
+  const LongNounRule({super.key, this.light = true});
+
+  /// زر «إضاءة» فوق القاعدة.
+  final bool light;
 
   @override
   Widget build(BuildContext context) {
@@ -378,6 +383,20 @@ class LongNounRule extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (light) ...[
+            AppButton(
+              key: const ValueKey('alif-light'),
+              label: '💡 إضاءة',
+              style: AppButtonStyle.outline,
+              height: 48,
+              onTap: () => showRuleSheet(
+                context,
+                title: '💡 إضاءة',
+                content: const LongNounLight(),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
           const _CenterHeading('القاعدة'),
           const _RuleCard(
             span: TextSpan(
@@ -477,6 +496,104 @@ class _RuleCard extends StatelessWidget {
           style: AppTheme.word(20).copyWith(height: 1.4),
         ),
       ],
+    ),
+  );
+}
+
+/// ص ٢: «إضاءة»: الأسماء الشاذة، وكلمة تُكتب على وجهين.
+class LongNounLight extends StatelessWidget {
+  const LongNounLight({super.key});
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _Line(
+          TextSpan(
+            children: [
+              TextSpan(text: '١- '),
+              TextSpan(text: 'الأسماء الشاذة', style: _red),
+              TextSpan(text: ' التي تُكتب بالألف المقصورة دائمًا:'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        _LightTable(
+          rows: [
+            [
+              for (final w in irregularMaqsura)
+                _LightCell(w, color: AppColors.blue),
+            ],
+          ],
+        ),
+        const SizedBox(height: 10),
+        const _Line(
+          TextSpan(
+            children: [
+              TextSpan(text: '٢- '),
+              TextSpan(text: 'الكلمة', style: _red),
+              TextSpan(text: ' التي تُكتب على '),
+              TextSpan(text: 'الوجهين', style: _red),
+              TextSpan(text: ':'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        _LightTable(
+          header: true,
+          rows: [
+            [for (final (_, kind) in twoWayWords) _LightCell(kind)],
+            [
+              for (final (w, _) in twoWayWords)
+                _LightCell(w, color: AppColors.blue),
+            ],
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+/// جدول «إضاءة»؛ الصف الأول عناوين بخلفية إن كان [header].
+class _LightTable extends StatelessWidget {
+  const _LightTable({required this.rows, this.header = false});
+  final List<List<Widget>> rows;
+  final bool header;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(12),
+    child: Table(
+      border: TableBorder.all(
+        color: AppColors.lineDark,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: [
+        for (final (i, row) in rows.indexed)
+          TableRow(
+            decoration: header && i == 0
+                ? const BoxDecoration(color: AppColors.primarySoft)
+                : null,
+            children: row,
+          ),
+      ],
+    ),
+  );
+}
+
+class _LightCell extends StatelessWidget {
+  const _LightCell(this.text, {this.color = AppColors.ink});
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(text, style: AppTheme.word(24, color: color)),
     ),
   );
 }
