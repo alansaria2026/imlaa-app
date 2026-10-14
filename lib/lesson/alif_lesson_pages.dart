@@ -31,6 +31,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       tappable: true,
       heading: 'الاسم الثلاثي المنتهي بالألف',
       rule: const TriliteralRule(),
+      content: const TriliteralRule(heading: false),
       speech: triliteralRuleSpeech,
       hint: _triliteralHint,
     ),
