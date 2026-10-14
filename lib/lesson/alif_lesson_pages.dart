@@ -122,7 +122,9 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
     examplePage(
       title: 'احفظ القاعدة',
       emoji: '🧠',
-      heading: 'احفظ هذه القاعدة وافهمها دائمًا للامتحان',
+      heading: 'احفظ هذه القاعدة وافهمها وابدأ الامتحان',
+      titleColor: AppColors.red,
+      action: 'ابدأ الامتحان',
       rule: const LongNounRule(),
       content: const LongNounRemember(),
       speech: longRememberSpeech,

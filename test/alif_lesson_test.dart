@@ -253,5 +253,23 @@ void main() {
       expect(find.text('موسى'), findsOneWidget);
       expect(find.textContaining('يحيى'), findsWidgets);
     });
+
+    testWidgets('«ابدأ الامتحان» ينتقل إلى «أكمل القاعدة»', (t) async {
+      final pages = buildAlifLessonPages(Random(0));
+      final i = pages.indexWhere((p) => p.title == 'احفظ القاعدة');
+      await pumpScreen(
+        t,
+        LessonScreen(
+          lessonId: 'qa',
+          title: alifLessonTitle,
+          pages: pages,
+          initialPage: i,
+        ),
+      );
+      await t.tap(find.text('ابدأ الامتحان'));
+      await t.pumpAndSettle();
+      expect(pages[i + 1].title, 'أكمل القاعدة');
+      expect(find.text('اختر الإجابة الصحيحة').hitTestable(), findsOneWidget);
+    });
   });
 }

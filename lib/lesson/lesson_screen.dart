@@ -36,7 +36,7 @@ class LessonScreen extends StatefulWidget {
 class _LessonScreenState extends State<LessonScreen> {
   late final _pager = PageController(initialPage: widget.initialPage);
   late final List<PageHandle> _handles = [
-    for (final _ in widget.pages) PageHandle(),
+    for (final _ in widget.pages) PageHandle()..next = _next,
   ];
   late final List<Widget> _built = [
     for (var i = 0; i < widget.pages.length; i++)
