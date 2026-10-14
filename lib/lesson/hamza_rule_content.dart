@@ -778,7 +778,7 @@ class VerbComboExample extends StatelessWidget {
   );
 }
 
-/// ص ٤١–٤٤: المصدر وهمزته.
+/// ص ٤١–٤٤: المصدر وهمزته، بجدول صاحب التطبيق: التعريف، ثم المثال، ثم القاعدة.
 class MasdarRule extends StatelessWidget {
   const MasdarRule({super.key});
 
@@ -811,41 +811,31 @@ class MasdarRule extends StatelessWidget {
                 style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
-            const _Heading('القاعدة'),
-            for (final tense in ['الفعل الماضي', 'فعل الأمر'])
-              _Line(
-                TextSpan(
-                  children: [
-                    TextSpan(text: '• مصدر $tense الخماسي والسداسي همزته '),
-                    _colored('وصل', hamzaColor(Hamza.wasl)),
-                  ],
-                ),
-              ),
-            const _Heading('أمثلة'),
+            const _Heading('مثال'),
             Table(
               border: TableBorder.all(
                 color: AppColors.line,
                 borderRadius: BorderRadius.circular(12),
               ),
               children: [
-                TableRow(
-                  children: [
-                    c('الفعل', head),
-                    c('زمنه', head),
-                    c('الوزن', head),
-                    c('المصدر', head),
-                  ],
-                ),
-                for (final (verb, tense, weight, masdar) in masdarExamples)
+                TableRow(children: [c('الفعل', head), c('المصدر', head)]),
+                for (final (verb, masdar) in masdarExamples)
                   TableRow(
                     children: [
                       c(verb, cell),
-                      c(tense == Tense.past ? 'ماضٍ' : 'أمر', cell),
-                      c(weight.label, cell),
                       c(masdar, cell?.copyWith(color: AppColors.al)),
                     ],
                   ),
               ],
+            ),
+            const SizedBox(height: 14),
+            _Line(
+              TextSpan(
+                children: [
+                  const TextSpan(text: 'مصدر الخماسي والسداسي همزته '),
+                  _colored('(وصل)', hamzaColor(Hamza.wasl)),
+                ],
+              ),
             ),
           ],
         );
