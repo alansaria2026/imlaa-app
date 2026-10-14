@@ -48,7 +48,11 @@ class LessonPageSpec {
     required this.builder,
     this.needsCompletion = true,
     this.rule,
+    this.centered = false,
   });
+
+  /// المحتوى في وسط الشاشة عموديًا إن اتسع له (تمارين «اختر الإجابة»).
+  final bool centered;
 
   /// محتوى نافذة «القاعدة» لهذه الصفحة؛ null لقاعدة اللام القمرية والشمسية.
   final Widget? rule;

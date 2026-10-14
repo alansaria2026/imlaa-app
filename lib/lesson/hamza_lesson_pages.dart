@@ -43,6 +43,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'قطع أم وصل؟',
       emoji: '🔍',
       rule: const HamzaBasicsRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
@@ -55,6 +56,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'أين تُنطق؟',
       emoji: '🗣️',
       rule: const HamzaBasicsRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
@@ -105,6 +107,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'اسم أم فعل؟',
       emoji: '🔪',
       rule: const AlHamzaRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
@@ -136,6 +139,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'ما وزنه؟',
       emoji: '🔢',
       rule: const WeightRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر وزن الفعل',
@@ -160,20 +164,19 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
         title: '${_short(c.tense)} ${c.weight.label}',
         emoji: _tenseEmoji[c.tense]!,
         rule: VerbComboExample(c),
+        centered: true,
         builder: (h) => QuizPage(
           handle: h,
-          tag: 'مثال ثم تطبيق',
           title: 'حلّل الفعل',
-          intro: VerbComboExample(c),
-          introSpeech: c.example.spoken,
           rule: VerbComboExample(c),
-          build: (rnd, attempt) => [_analysis(c.practice, rnd, attempt)],
+          build: (rnd, attempt) => _analysis(c, rnd, attempt),
         ),
       ),
     LessonPageSpec(
       title: 'اختر الإجابات',
       emoji: '☑️',
       rule: const VerbChartRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابات الصحيحة',
@@ -185,6 +188,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'صنّف الفعل',
       emoji: '🧩',
       rule: const VerbChartRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
@@ -199,15 +203,15 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       heading: 'همزة القطع وهمزة الوصل في الأسماء',
       rule: const MasdarRule(),
       speech:
-          'المصدرُ هو الاسمُ الذي يُستخرَجُ من الفعلِ. ومصدرُ الفعلِ '
-          'الماضي الخماسيِّ والسداسيِّ همزتُه وصلٌ، وكذلك مصدرُ فعلِ الأمرِ '
-          'الخماسيِّ والسداسيِّ.',
+          'المصدرُ هو الاسمُ الذي يُستخرَجُ من الفعلِ، مثلُ: اعتمدَ اعتمادٌ، '
+          'واستغفرَ استغفارٌ. ومصدرُ الخماسيِّ والسداسيِّ همزتُه وصلٌ.',
       hint: 'مصدر الخماسي والسداسي يبدأ بهمزة وصل: مصدر اعتمد «اعتماد».',
     ),
     LessonPageSpec(
       title: 'اختبر نفسك',
       emoji: '📝',
       rule: const MasdarRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
@@ -219,6 +223,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'الاسم والفعل',
       emoji: '👆',
       rule: const MasdarRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'ميّز الاسم من الفعل',
@@ -230,6 +235,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'ميّز الكلمات',
       emoji: '🎯',
       rule: const MasdarRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'ميّز الأسماء والأفعال',
@@ -241,6 +247,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'حوّل',
       emoji: '🔄',
       rule: const MasdarRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'حوّل الكلمة واكتبها',
@@ -525,10 +532,20 @@ List<QuizRound> _weights(Random rnd, int attempt) {
 }
 
 /// ص ١٤–٣٧: الزمن والوزن ونوع الهمزة لفعل الجملة.
-QuizRound _analysis(List<VerbSentence> practice, Random rnd, int attempt) {
-  final s = attempt == 0
-      ? practice.first
-      : _pick(practice, 1, rnd, avoid: {practice.first}).first;
+/// عدد جمل «حلّل الفعل» في الصفحة، وفي كل جملة ثلاثة أسئلة.
+const _analysisRounds = 3;
+
+/// «حلّل الفعل»: ثلاث جولات بلا مثال محلول. أول مرة جملة المثال ثم جملتا
+/// التطبيق الأوليان، وبعد الخطأ ثلاث جمل أخرى من جمل القاعدة نفسها.
+List<QuizRound> _analysis(VerbCombo c, Random rnd, int attempt) {
+  final all = [c.example, ...c.practice];
+  final sentences = attempt == 0
+      ? all.take(_analysisRounds).toList()
+      : _pick(all, _analysisRounds, rnd);
+  return [for (final s in sentences) _analysisRound(s)];
+}
+
+QuizRound _analysisRound(VerbSentence s) {
   return QuizRound(
     sentence: '( ${s.text} )',
     mark: s.verb,

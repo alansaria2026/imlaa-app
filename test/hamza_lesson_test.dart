@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:imlaa/data/hamza_lesson.dart';
 import 'package:imlaa/lesson/hamza_lesson_pages.dart';
+import 'package:imlaa/lesson/hamza_rule_content.dart';
 import 'package:imlaa/lesson/lesson_screen.dart';
 import 'package:imlaa/lesson/lessons.dart';
 import 'package:imlaa/lesson/page_handle.dart';
@@ -197,7 +198,7 @@ void main() {
       );
     });
 
-    test('لكل قاعدة من قواعد الأفعال تطبيق بجملة الكتاب ثم بجمل جديدة', () {
+    test('حلّل الفعل: ثلاث جولات بلا مثال محلول، ثم جمل القاعدة نفسها', () {
       for (final c in verbCombos) {
         final page =
             pages['${switch (c.tense) {
@@ -205,10 +206,21 @@ void main() {
               Tense.present => 'مضارع',
               Tense.imperative => 'أمر',
             }} ${c.weight.label}']!;
-        expect(page.build(Random(0), 0).single.mark, c.practice.first.verb);
+        final first = page.build(Random(0), 0);
+        expect(first.map((r) => r.mark), [
+          c.example.verb,
+          c.practice[0].verb,
+          c.practice[1].verb,
+        ]);
+        expect(first.every((r) => r.items.length == 3), isTrue);
+        final all = {
+          for (final s in [c.example, ...c.practice]) s.verb,
+        };
         for (var a = 1; a < 6; a++) {
-          final s = page.build(Random(a), a).single;
-          expect(s.sentence, isNot(contains(c.practice.first.text)));
+          final again = page.build(Random(a), a);
+          expect(again.length, 3);
+          expect(all.containsAll(again.map((r) => r.mark)), isTrue);
+          expect(again.map((r) => r.mark).toSet().length, 3);
         }
       }
     });
@@ -294,20 +306,19 @@ void main() {
       expect(find.byType(PageDoneMessage), findsOneWidget);
     });
 
-    testWidgets('مثال القاعدة ثم تطبيقها', (t) async {
+    testWidgets('حلّل الفعل: ثلاث جولات مباشرة بلا مثال محلول', (t) async {
       final c = verbCombos.first;
       await open(t, 11);
-      // المثال محلول والقاعدة ظاهرة قبل التطبيق.
-      expect(find.textContaining('همزة وصل'), findsWidgets);
-      await t.tap(find.text('طبّق الآن'));
-      await t.pumpAndSettle();
-      expect(shown(t).verb, c.practice.first.verb);
-      for (final label in [c.tense.label, c.weight.label, c.hamza.label]) {
-        await t.tap(inPage(find.text(label)));
-        await t.pump();
+      expect(find.text('طبّق الآن'), findsNothing);
+      for (final s in [c.example, c.practice[0], c.practice[1]]) {
+        expect(shown(t).verb, s.verb);
+        for (final label in [c.tense.label, c.weight.label, c.hamza.label]) {
+          await t.tap(inPage(find.text(label)));
+          await t.pump();
+        }
+        await t.tap(nextButton());
+        await t.pumpAndSettle(const Duration(seconds: 2));
       }
-      await t.tap(nextButton());
-      await t.pumpAndSettle(const Duration(seconds: 2));
       expect(find.byType(PageDoneMessage), findsOneWidget);
     });
 
@@ -400,6 +411,20 @@ void main() {
       expect(find.text('أمثلة'), findsNothing);
     });
 
+    testWidgets('همزة الأسماء: القواعد، والأمثلة في جدول من زر «إضاءة»', (
+      t,
+    ) async {
+      final i = buildHamzaLessonPages(
+        Random(0),
+      ).indexWhere((p) => p.title == 'همزة الأسماء');
+      await open(t, i);
+      expect(find.byType(Table), findsNothing);
+      await t.tap(find.byKey(const ValueKey('noun-hamza-light')));
+      await t.pumpAndSettle();
+      expect(find.byType(NounHamzaTable), findsOneWidget);
+      expect(find.text('💡 إضاءة'), findsNWidgets(2)); // الزر وعنوان النافذة
+    });
+
     testWidgets('أمثلة الوزن في جدول', (t) async {
       await open(t, 8);
       expect(find.byType(Table), findsOneWidget);
@@ -407,7 +432,7 @@ void main() {
       expect(find.text('(ر-ت-ب)'), findsOneWidget);
     });
 
-    testWidgets('قبل التطبيق: التلميح والاستماع للمثال', (t) async {
+    testWidgets('حلّل الفعل: «استمع» ينطق جملة الجولة الأولى', (t) async {
       await open(t, 11);
       await t.tap(find.byTooltip('القائمة'));
       await t.pumpAndSettle();

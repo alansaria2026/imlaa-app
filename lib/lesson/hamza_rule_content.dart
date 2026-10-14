@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../app_state.dart';
@@ -7,6 +9,7 @@ import '../services/speaker.dart';
 import '../theme.dart';
 import '../utils/arabic.dart';
 import '../widgets/common.dart';
+import '../widgets/pressable.dart';
 import 'pages/quiz_page.dart';
 import 'rule_content.dart';
 
@@ -778,7 +781,7 @@ class VerbComboExample extends StatelessWidget {
   );
 }
 
-/// ص ٤١–٤٤: المصدر وهمزته.
+/// ص ٤١–٤٤: المصدر وهمزته، بجدول صاحب التطبيق: التعريف، ثم المثال، ثم القاعدة.
 class MasdarRule extends StatelessWidget {
   const MasdarRule({super.key});
 
@@ -811,41 +814,31 @@ class MasdarRule extends StatelessWidget {
                 style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
-            const _Heading('القاعدة'),
-            for (final tense in ['الفعل الماضي', 'فعل الأمر'])
-              _Line(
-                TextSpan(
-                  children: [
-                    TextSpan(text: '• مصدر $tense الخماسي والسداسي همزته '),
-                    _colored('وصل', hamzaColor(Hamza.wasl)),
-                  ],
-                ),
-              ),
-            const _Heading('أمثلة'),
+            const _Heading('مثال'),
             Table(
               border: TableBorder.all(
                 color: AppColors.line,
                 borderRadius: BorderRadius.circular(12),
               ),
               children: [
-                TableRow(
-                  children: [
-                    c('الفعل', head),
-                    c('زمنه', head),
-                    c('الوزن', head),
-                    c('المصدر', head),
-                  ],
-                ),
-                for (final (verb, tense, weight, masdar) in masdarExamples)
+                TableRow(children: [c('الفعل', head), c('المصدر', head)]),
+                for (final (verb, masdar) in masdarExamples)
                   TableRow(
                     children: [
                       c(verb, cell),
-                      c(tense == Tense.past ? 'ماضٍ' : 'أمر', cell),
-                      c(weight.label, cell),
                       c(masdar, cell?.copyWith(color: AppColors.al)),
                     ],
                   ),
               ],
+            ),
+            const SizedBox(height: 14),
+            _Line(
+              TextSpan(
+                children: [
+                  const TextSpan(text: 'مصدر الخماسي والسداسي همزته '),
+                  _colored('(وصل)', hamzaColor(Hamza.wasl)),
+                ],
+              ),
             ),
           ],
         );
@@ -854,65 +847,158 @@ class MasdarRule extends StatelessWidget {
   );
 }
 
-/// ص ٥١: همزة الأسماء.
+/// ص ٥١: همزة الأسماء: القواعد الثلاث، والأمثلة في جدول يفتحه زر «إضاءة».
 class NounHamzaRule extends StatelessWidget {
   const NounHamzaRule({super.key});
 
   @override
   Widget build(BuildContext context) => NaskhRule(
     child: Builder(
-      builder: (context) {
-        Widget words(List<InlineSpan> spans) => Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 16,
-          children: [
-            for (final s in spans) Text.rich(s, style: AppTheme.word(28)),
-          ],
-        );
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _Line(
-              TextSpan(
-                children: [
-                  const TextSpan(
-                    text: '• جميع الأسماء (الأعلام) المبدوءة بالهمزة همزتها ',
-                  ),
-                  _colored('قطع', hamzaColor(Hamza.qat)),
-                ],
-              ),
+      builder: (context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _Line(
+            TextSpan(
+              children: [
+                const TextSpan(
+                  text: '• جميع الأسماء (الأعلام) المبدوءة بالهمزة همزتها ',
+                ),
+                _colored('قطع', hamzaColor(Hamza.qat)),
+              ],
             ),
-            words([for (final w in qatNames) _hamzaWord(w, Hamza.qat)]),
-            const SizedBox(height: 10),
-            _Line(
-              TextSpan(
-                children: [
-                  const TextSpan(text: '• أسماء تبدأ بهمزة '),
-                  _colored('وصل', hamzaColor(Hamza.wasl)),
-                  const TextSpan(text: ' دائمًا:'),
-                ],
-              ),
+          ),
+          _Line(
+            TextSpan(
+              children: [
+                TextSpan(text: '• ${waslNouns.join('، ')} همزتها '),
+                _colored('وصل', hamzaColor(Hamza.wasl)),
+                const TextSpan(text: ' دائمًا'),
+              ],
             ),
-            words([for (final w in waslNouns) _hamzaWord(w, Hamza.wasl)]),
-            const SizedBox(height: 10),
-            _Line(
-              TextSpan(
-                children: [
-                  const TextSpan(text: '• (ال) التعريف دائمًا تبدأ بهمزة '),
-                  _colored('الوصل', hamzaColor(Hamza.wasl)),
-                ],
-              ),
+          ),
+          _Line(
+            TextSpan(
+              children: [
+                const TextSpan(text: '• (ال) التعريف همزتها '),
+                _colored('وصل', hamzaColor(Hamza.wasl)),
+                const TextSpan(text: ' دائمًا'),
+              ],
             ),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 16,
-              children: [for (final w in alNounExamples) AlText(w, size: 28)],
-            ),
-          ],
-        );
-      },
+          ),
+          const SizedBox(height: 16),
+          AppButton(
+            key: const ValueKey('noun-hamza-light'),
+            label: '💡 إضاءة',
+            style: AppButtonStyle.outline,
+            height: 48,
+            onTap: () => showNounHamzaTable(context),
+          ),
+        ],
+      ),
     ),
   );
+}
+
+/// «إضاءة»: أمثلة همزة الأسماء في جدول من ثلاثة أعمدة.
+Future<void> showNounHamzaTable(BuildContext context) =>
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                '💡 إضاءة',
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 12),
+              const NounHamzaTable(),
+            ],
+          ),
+        ),
+      ),
+    );
+
+/// جدول الأمثلة: الأعلام (قطع)، والأسماء الستة (وصل)، و(ال) التعريف (وصل).
+class NounHamzaTable extends StatelessWidget {
+  const NounHamzaTable({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final columns = <(InlineSpan, List<InlineSpan>)>[
+      (
+        TextSpan(
+          children: [
+            const TextSpan(text: 'الأعلام\n'),
+            _colored('قطع', hamzaColor(Hamza.qat)),
+          ],
+        ),
+        [for (final w in qatNames) _hamzaWord(w, Hamza.qat)],
+      ),
+      (
+        TextSpan(
+          children: [
+            const TextSpan(text: 'أسماء\n'),
+            _colored('وصل', hamzaColor(Hamza.wasl)),
+          ],
+        ),
+        [for (final w in waslNouns) _hamzaWord(w, Hamza.wasl)],
+      ),
+      (
+        TextSpan(
+          children: [
+            const TextSpan(text: '(ال) التعريف\n'),
+            _colored('وصل', hamzaColor(Hamza.wasl)),
+          ],
+        ),
+        [
+          for (final w in alNounExamples)
+            TextSpan(
+              children: [
+                _colored(w.substring(0, 2), hamzaColor(Hamza.wasl)),
+                TextSpan(text: w.substring(2)),
+              ],
+            ),
+        ],
+      ),
+    ];
+    final rows = columns.map((c) => c.$2.length).reduce(max);
+    Widget cell(InlineSpan? span, TextStyle? style) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      child: span == null
+          ? const SizedBox.shrink()
+          : Text.rich(span, textAlign: TextAlign.center, style: style),
+    );
+    return Table(
+      border: TableBorder.all(
+        color: AppColors.line,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      children: [
+        TableRow(
+          decoration: const BoxDecoration(color: AppColors.background),
+          children: [
+            for (final (head, _) in columns)
+              cell(head, t.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+          ],
+        ),
+        for (var r = 0; r < rows; r++)
+          TableRow(
+            children: [
+              for (final (_, words) in columns)
+                cell(r < words.length ? words[r] : null, AppTheme.word(24)),
+            ],
+          ),
+      ],
+    );
+  }
 }
 
 /// نافذة «القاعدة» للدرس كله: الأساس، والقاعدة العامة للأفعال، والأسماء.

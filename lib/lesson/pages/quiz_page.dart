@@ -106,12 +106,12 @@ class QuizPage extends StatefulWidget {
   static const levelStep = 10;
 
   @override
-  State<QuizPage> createState() => _QuizPageState();
+  State<QuizPage> createState() => QuizPageState();
 }
 
 enum _State { open, wrong, right }
 
-class _QuizPageState extends State<QuizPage> {
+class QuizPageState extends State<QuizPage> {
   final _rnd = Random();
   int _attempt = 0;
   late List<QuizRound> _rounds = widget.build(_rnd, 0);
@@ -132,6 +132,10 @@ class _QuizPageState extends State<QuizPage> {
   final List<TextEditingController> _retired = [];
 
   QuizRound get _current => _rounds[_round];
+
+  /// الجولة الظاهرة؛ تقرؤها الاختبارات لتجيب بالضغط على الأزرار.
+  @visibleForTesting
+  QuizRound get currentRound => _current;
   int get _total => _rounds.fold(0, (a, r) => a + r.items.length);
   int get _level => max(0, 100 - _mistakes * QuizPage.levelStep);
   bool get _done => widget.handle.complete;
@@ -421,7 +425,8 @@ class _QuizPageState extends State<QuizPage> {
         ? null
         : Text(
             prompt,
-            // السؤال بالأزرق، والعنوان بالأحمر.
+            // السؤال بالأزرق في وسط السطر، والعنوان بالأحمر.
+            textAlign: TextAlign.center,
             style: AppTheme.word(
               22,
               color: AppColors.blue,
@@ -430,17 +435,29 @@ class _QuizPageState extends State<QuizPage> {
     final state = _states[i];
 
     if (item.writes) {
-      // السؤال فوق الحقل حتى لا يضيق السطر مع الخط الكبير.
+      // السؤال القصير (كلمة واحدة) بجانب الحقل حتى يبقى «إدخال» ظاهرًا،
+      // والطويل فوقه حتى لا يضيق السطر مع الخط الكبير.
+      final short = (item.prompt ?? '').length <= 12;
       return ShakeOnChange(
         trigger: state == _State.wrong ? _shake : 0,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [?promptText, const SizedBox(height: 6), _field(i)],
-        ),
+        child: short && promptText != null
+            ? Row(
+                children: [
+                  // عرض ثابت للسؤال حتى تتساوى الحقول تحت بعضها.
+                  Expanded(child: promptText),
+                  const SizedBox(width: 10),
+                  Expanded(flex: 2, child: _field(i)),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [?promptText, const SizedBox(height: 6), _field(i)],
+              ),
       );
     }
 
     Widget chip(String o, {bool compact = false}) => _OptionChip(
+      key: ValueKey('q$i-$o'),
       label: o,
       picked: _picked[i].contains(o),
       // بعد الخطأ تظهر الإجابات الصحيحة بالأخضر.
@@ -451,13 +468,36 @@ class _QuizPageState extends State<QuizPage> {
     );
     // ثلاثة خيارات أو أربعة في سطر واحد بأزرار متساوية، حتى لا تنزل إلى
     // سطر ثانٍ فتدفع «إدخال» خارج الشاشة الصغيرة.
-    final Widget options = _orders[i].length >= 3 && _orders[i].length <= 4
+    final order = _orders[i];
+    final Widget options = order.length >= 3 && order.length <= 4
         ? Row(
             children: [
-              for (final (k, o) in _orders[i].indexed) ...[
+              for (final (k, o) in order.indexed) ...[
                 if (k > 0) const SizedBox(width: 6),
                 Expanded(child: chip(o, compact: true)),
               ],
+            ],
+          )
+        // الخيارات الكثيرة (تسعة أو اثنا عشر) خياران في كل سطر بأزرار
+        // متساوية، بدل خيار في كل سطر يدفع «إدخال» خارج الشاشة.
+        : order.length > 6
+        ? Column(
+            children: [
+              for (var k = 0; k < order.length; k += 2)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      Expanded(child: chip(order[k], compact: true)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: k + 1 < order.length
+                            ? chip(order[k + 1], compact: true)
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           )
         : Wrap(
@@ -488,6 +528,7 @@ class _QuizPageState extends State<QuizPage> {
     final state = _states[i];
     final right = state == _State.right;
     return TextField(
+      key: ValueKey('q$i-field'),
       controller: _ctrls[i],
       enabled: !right && !_busy,
       textAlign: TextAlign.center,
@@ -518,6 +559,7 @@ class _QuizPageState extends State<QuizPage> {
 
 class _OptionChip extends StatelessWidget {
   const _OptionChip({
+    super.key,
     required this.label,
     required this.picked,
     required this.reveal,

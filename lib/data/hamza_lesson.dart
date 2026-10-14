@@ -385,17 +385,8 @@ const masdarPairs = [
   ('استنتج', 'استنتاج'),
 ];
 
-/// أمثلة المصدر في الكتاب: (الفعل، زمنه، وزنه، مصدره).
-const masdarExamples = [
-  ('اعتمد', Tense.past, _w5, 'اعتماد'),
-  ('استشهد', Tense.past, _w6, 'استشهاد'),
-  ('ارتكب', Tense.imperative, _w5, 'ارتكاب'),
-  ('استغفر', Tense.imperative, _w6, 'استغفار'),
-  ('انتشر', Tense.past, _w5, 'انتشار'),
-  ('استقبل', Tense.past, _w6, 'استقبال'),
-  ('استمع', Tense.imperative, _w5, 'استماع'),
-  ('استنكر', Tense.imperative, _w6, 'استنكار'),
-];
+/// مثال المصدر (جدول صاحب التطبيق): (الفعل، مصدره).
+const masdarExamples = [('اعتمد', 'اعتماد'), ('استغفر', 'استغفار')];
 
 /// اسم مشابه للمصدر ليس مصدرًا (استشعر ← مستشعر) خيارًا خاطئًا.
 String masdarDistractor(String verb) => 'م${verb.substring(1)}';
