@@ -100,7 +100,7 @@ void main() {
     });
 
     test('الدرس الثالث في المسار بإحدى وثلاثين محطة', () {
-      expect(lessons.map((l) => l.id).last, hamzaLessonId);
+      expect(lessons.map((l) => l.id).elementAt(2), hamzaLessonId);
       expect(lessonById(hamzaLessonId).unit, 3);
       expect(buildHamzaLessonPages().length, 31);
     });
