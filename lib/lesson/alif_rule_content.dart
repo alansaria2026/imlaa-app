@@ -374,7 +374,7 @@ class TriliteralRemember extends StatelessWidget {
 class LongNounRule extends StatelessWidget {
   const LongNounRule({super.key, this.light = true});
 
-  /// زر «إضاءة» تحت القاعدة.
+  /// زر «إضاءة» فوق القاعدة.
   final bool light;
 
   @override
@@ -383,6 +383,20 @@ class LongNounRule extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (light) ...[
+            AppButton(
+              key: const ValueKey('alif-light'),
+              label: '💡 إضاءة',
+              style: AppButtonStyle.outline,
+              height: 48,
+              onTap: () => showRuleSheet(
+                context,
+                title: '💡 إضاءة',
+                content: const LongNounLight(),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
           const _CenterHeading('القاعدة'),
           const _RuleCard(
             span: TextSpan(
@@ -416,20 +430,6 @@ class LongNounRule extends StatelessWidget {
             ),
             examples: ['دنيا', 'قضايا'],
           ),
-          if (light) ...[
-            const SizedBox(height: 4),
-            AppButton(
-              key: const ValueKey('alif-light'),
-              label: '💡 إضاءة',
-              style: AppButtonStyle.outline,
-              height: 48,
-              onTap: () => showRuleSheet(
-                context,
-                title: '💡 إضاءة',
-                content: const LongNounLight(),
-              ),
-            ),
-          ],
         ],
       ),
     );

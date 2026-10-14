@@ -249,7 +249,10 @@ void main() {
       );
       final light = find.byKey(const ValueKey('alif-light')).hitTestable();
       expect(light, findsOneWidget);
-      expect(t.getRect(light).bottom, lessThan(t.getRect(nextButton()).top));
+      // الزر فوق القاعدة، وآخر أمثلتها فوق أزرار التنقل.
+      final last = find.textContaining('مثل').last.hitTestable();
+      expect(t.getRect(light).bottom, lessThan(t.getRect(last).top));
+      expect(t.getRect(last).bottom, lessThan(t.getRect(nextButton()).top));
     });
 
     testWidgets('زر «إضاءة» يعرض الأسماء الشاذة و«يحيى»', (t) async {
