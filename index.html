@@ -45,7 +45,6 @@
       const js = await crypto.subtle.decrypt({name: 'AES-GCM', iv}, key, data.slice(28));
       window.__imlaaMain = URL.createObjectURL(
         new Blob([js], {type: 'text/javascript'}));
-      try { localStorage.setItem(KEY, password); } catch (_) {}
       form.remove();
       const s = document.createElement('script');
       s.src = 'flutter_bootstrap.js';
@@ -62,11 +61,8 @@
       }
     });
 
-    let saved = null;
-    try { saved = localStorage.getItem(KEY); } catch (_) {}
-    if (saved) unlock(saved).catch(() => {
-      try { localStorage.removeItem(KEY); } catch (_) {}
-    });
+    // تُطلب كلمة المرور في كل دخول؛ ويُمسح ما حفظته النسخ السابقة.
+    try { localStorage.removeItem(KEY); } catch (_) {}
   </script>
 </body>
 </html>
