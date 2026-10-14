@@ -417,7 +417,7 @@ class LongNounRule extends StatelessWidget {
             examples: ['دنيا', 'قضايا'],
           ),
           if (light) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 4),
             AppButton(
               key: const ValueKey('alif-light'),
               label: '💡 إضاءة',
@@ -443,11 +443,11 @@ class _CenterHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 6, bottom: 8),
+    padding: const EdgeInsets.only(top: 2, bottom: 4),
     child: Text(
       text,
       textAlign: TextAlign.center,
-      style: AppTheme.word(24, color: AppColors.al),
+      style: AppTheme.word(21, color: AppColors.al).copyWith(height: 1.4),
     ),
   );
 }
@@ -460,11 +460,11 @@ class _RuleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+    margin: const EdgeInsets.only(bottom: 8),
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
     decoration: BoxDecoration(
       color: AppColors.background,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
       border: Border.all(color: AppColors.lineDark),
     ),
     child: Column(
@@ -473,22 +473,26 @@ class _RuleCard extends StatelessWidget {
         Text.rich(
           span,
           textAlign: TextAlign.center,
-          style: AppTheme.word(22).copyWith(height: 1.7),
+          style: AppTheme.word(19).copyWith(height: 1.55),
         ),
-        const SizedBox(height: 4),
         Text.rich(
           TextSpan(
             children: [
               const TextSpan(text: 'مثل ( '),
               for (final (i, w) in examples.indexed) ...[
                 if (i > 0) const TextSpan(text: ' ـ '),
-                _example(context, w, w),
+                _example(
+                  context,
+                  w,
+                  w,
+                  style: _blue.copyWith(fontSize: 20, height: 1.4),
+                ),
               ],
               const TextSpan(text: ' )'),
             ],
           ),
           textAlign: TextAlign.center,
-          style: AppTheme.word(22),
+          style: AppTheme.word(19).copyWith(height: 1.4),
         ),
       ],
     ),

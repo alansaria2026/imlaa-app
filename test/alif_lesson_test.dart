@@ -234,6 +234,24 @@ void main() {
       }
     });
 
+    testWidgets('قاعدة «غير الثلاثية» و«إضاءة» داخل الصفحة دون تمرير', (
+      t,
+    ) async {
+      final pages = buildAlifLessonPages(Random(0));
+      await pumpScreen(
+        t,
+        LessonScreen(
+          lessonId: 'qa',
+          title: alifLessonTitle,
+          pages: pages,
+          initialPage: pages.indexWhere((p) => p.title == 'غير الثلاثية'),
+        ),
+      );
+      final light = find.byKey(const ValueKey('alif-light')).hitTestable();
+      expect(light, findsOneWidget);
+      expect(t.getRect(light).bottom, lessThan(t.getRect(nextButton()).top));
+    });
+
     testWidgets('زر «إضاءة» يعرض الأسماء الشاذة و«يحيى»', (t) async {
       final i = buildAlifLessonPages(
         Random(0),
