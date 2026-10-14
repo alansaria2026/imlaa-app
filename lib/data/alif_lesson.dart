@@ -56,13 +56,17 @@ const triliteralWords = [
   AlifWord('قرى', 'قُرى', true, vowel: FirstVowel.damm),
   AlifWord('ضحى', 'ضُحى', true, vowel: FirstVowel.damm),
   AlifWord('هدى', 'هُدى', true, vowel: FirstVowel.damm),
+  AlifWord('سهى', 'سُهى', true, vowel: FirstVowel.damm),
   AlifWord('خطى', 'خُطى', true, vowel: FirstVowel.damm),
   AlifWord('دمى', 'دُمى', true, vowel: FirstVowel.damm),
   // مكسور أوله: بالألف المقصورة.
   AlifWord('رضى', 'رِضى', true, vowel: FirstVowel.kasr),
   AlifWord('حمى', 'حِمى', true, vowel: FirstVowel.kasr),
   // مفتوح أوله: ممدودة إن انقلبت واوًا، ومقصورة إن انقلبت ياءً.
+  AlifWord('حلا', 'حَلا', false, vowel: FirstVowel.fath),
   AlifWord('عصا', 'عَصا', false, vowel: FirstVowel.fath),
+  AlifWord('مها', 'مَها', false, vowel: FirstVowel.fath),
+  AlifWord('صفا', 'صَفا', false, vowel: FirstVowel.fath),
   AlifWord('شذا', 'شَذا', false, vowel: FirstVowel.fath),
   AlifWord('سنا', 'سَنا', false, vowel: FirstVowel.fath),
   AlifWord('فتى', 'فَتى', true, vowel: FirstVowel.fath),
@@ -101,19 +105,54 @@ const pairSentences = [
   AlifSentence('هُدى فتاةٌ مجتهدةٌ', 'هدى'),
 ];
 
-/// جمل «اختر الإجابات الصحيحة» (ص ٨): كلمة مضموم أولها، ومكسور، ومفتوح.
-const fourAnswerSentences = [
-  AlifSentence('ذهبتُ إلى قُرى بعيدةٍ', 'قرى'),
-  AlifSentence('خرجْنا وقتَ ضُحى الجمعةِ', 'ضحى'),
-  AlifSentence('مشى الجنديُّ خُطى ثابتةً', 'خطى'),
-  AlifSentence('اشترتْ أختي دُمى جميلةً', 'دمى'),
-  AlifSentence('أسعى إلى رِضى والديَّ', 'رضى'),
-  AlifSentence('نحمي حِمى الوطنِ', 'حمى'),
-  AlifSentence('عَصا الراعي طويلةٌ', 'عصا'),
-  AlifSentence('لمعَ سَنا البرقِ', 'سنا'),
-  AlifSentence('هذا فَتى شجاعٌ', 'فتى'),
-  AlifSentence('تساقطَ نَدى الصباحِ على الزهرِ', 'ندى'),
-  AlifSentence('جمعَ الطفلُ حَصى الشاطئِ', 'حصى'),
+/// «اختر الإجابات الصحيحة» (ص ٨–٩): ثلاث جولات، في كل جولة أربعة أمثلة
+/// إجاباتها واحدة: مضموم أوله، ومفتوح أوله بالممدودة، ومفتوح أوله بالمقصورة.
+const fourAnswerGroups = [
+  [
+    AlifSentence('ذهبتُ إلى قُرى بعيدةٍ', 'قرى'),
+    AlifSentence('خرجْنا وقتَ ضُحى الجمعةِ', 'ضحى'),
+    AlifSentence('رأيتُ سُهى في السماءِ', 'سهى'),
+    AlifSentence('مشى الجنديُّ خُطى ثابتةً', 'خطى'),
+  ],
+  [
+    AlifSentence('حَلا طالبةٌ مجتهدةٌ', 'حلا'),
+    AlifSentence('عَصا الراعي طويلةٌ', 'عصا'),
+    AlifSentence('رسمتْ مَها لوحةً جميلةً', 'مها'),
+    AlifSentence('صَفا تحبُّ القراءةَ', 'صفا'),
+  ],
+  [
+    AlifSentence('هذا فَتى شجاعٌ', 'فتى'),
+    AlifSentence('سمعتُ صَدى صوتي', 'صدى'),
+    AlifSentence('تساقطَ نَدى الصباحِ على الزهرِ', 'ندى'),
+    AlifSentence('جمعَ الطفلُ حَصى الشاطئِ', 'حصى'),
+  ],
+];
+
+/// جمل جديدة للكلمات نفسها بعد الخطأ، بترتيب [fourAnswerGroups].
+const fourAnswerSpare = [
+  [
+    AlifSentence('زرْنا قُرى الجنوبِ', 'قرى'),
+    AlifSentence('نلتقي ضُحى الغدِ', 'ضحى'),
+    AlifSentence('سُهى نجمٌ صغيرٌ', 'سهى'),
+    AlifSentence('سارَ الطفلُ خُطى قصيرةً', 'خطى'),
+  ],
+  [
+    AlifSentence('نجحتْ حَلا في الاختبارِ', 'حلا'),
+    AlifSentence('اتّكأَ جدّي على عَصا خشبيةٍ', 'عصا'),
+    AlifSentence('مَها طالبةٌ متفوقةٌ', 'مها'),
+    AlifSentence('كتبتْ صَفا رسالةً', 'صفا'),
+  ],
+  [
+    AlifSentence('صالحٌ فَتى مهذبٌ', 'فتى'),
+    AlifSentence('تردّدَ صَدى الأذانِ', 'صدى'),
+    AlifSentence('لمعَ نَدى الفجرِ على العشبِ', 'ندى'),
+    AlifSentence('رمى الولدُ حَصى صغيرةً', 'حصى'),
+  ],
+];
+
+/// كل جمل التمرين، للتسجيلات والاختبارات.
+final fourAnswerSentences = [
+  for (final g in [...fourAnswerGroups, ...fourAnswerSpare]) ...g,
 ];
 
 /// خيارات «اختر الإجابات الصحيحة» (ص ٨) بترتيب الكتاب.

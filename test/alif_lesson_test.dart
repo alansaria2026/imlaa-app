@@ -59,6 +59,19 @@ void main() {
       }
     });
 
+    test('«أربع إجابات»: ثلاث جولات في كل جولة أربعة أمثلة إجاباتها واحدة', () {
+      expect(fourAnswerGroups.length, 3);
+      for (final (g, group) in fourAnswerGroups.indexed) {
+        expect(group.length, 4);
+        final answers = fourAnswersOf(triliteral(group.first.word));
+        for (final (i, s) in group.indexed) {
+          expect(fourAnswersOf(triliteral(s.word)), answers, reason: s.word);
+          expect(fourAnswerSpare[g][i].word, s.word);
+        }
+      }
+      expect(fourAnswerGroups.first.first.word, 'قرى');
+    });
+
     test('كل جملة فيها كلمتها مرة واحدة، والكلمة تُكتب باللوحة', () {
       for (final s in [
         ...triliteralSentences,

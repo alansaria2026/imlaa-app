@@ -322,32 +322,33 @@ List<QuizRound> _pairQuiz(Random rnd, int attempt) {
   ];
 }
 
-/// ص ٨–٩: أربع إجابات صحيحة لكلمة في جملة؛ ثلاث جولات: مضموم أولها،
-/// ومكسور، ومفتوح. أول مرة «قرى» كما في الكتاب.
+/// ص ٨–٩: أربع إجابات صحيحة؛ ثلاث جولات في كل جولة أربعة أمثلة إجاباتها
+/// واحدة. بعد الخطأ جمل جديدة للكلمات وتتغير الجولات وأماكن الأمثلة.
 List<QuizRound> _fourAnswers(Random rnd, int attempt) {
-  List<AlifSentence> of(FirstVowel v) => [
-    for (final s in fourAnswerSentences)
-      if (triliteral(s.word).vowel == v) s,
+  final groups = [
+    for (final (g, group) in fourAnswerGroups.indexed)
+      [
+        for (final (i, s) in group.indexed)
+          attempt > 0 ? fourAnswerSpare[g][i] : s,
+      ],
   ];
-  final rounds = [
-    attempt == 0
-        ? fourAnswerSentences.first
-        : _pick(of(FirstVowel.damm), 1, rnd).single,
-    _pick(of(FirstVowel.kasr), 1, rnd).single,
-    _pick(of(FirstVowel.fath), 1, rnd).single,
-  ];
-  if (attempt > 0) rounds.shuffle(rnd);
+  if (attempt > 0) {
+    groups.shuffle(rnd);
+    for (final g in groups) {
+      g.shuffle(rnd);
+    }
+  }
   return [
-    for (final s in rounds)
+    for (final g in groups)
       QuizRound(
-        sentence: stripDiacritics(s.spoken),
-        mark: s.word,
-        spoken: s.spoken,
+        sentence: _lines(g),
+        marks: {for (final s in g) s.word},
+        spokenAll: _spoken(g),
         hint: _triliteralHint,
         items: [
           QuizItem(
             options: fourAnswerOptions,
-            answers: fourAnswersOf(triliteral(s.word)),
+            answers: fourAnswersOf(triliteral(g.first.word)),
             multi: true,
           ),
         ],
