@@ -251,6 +251,21 @@ void main() {
       expect(t.getRect(last).bottom, lessThan(t.getRect(nextButton()).top));
     });
 
+    testWidgets('قاعدة «الاسم الثلاثي» داخل الصفحة دون تمرير', (t) async {
+      final pages = buildAlifLessonPages(Random(0));
+      await pumpScreen(
+        t,
+        LessonScreen(
+          lessonId: 'qa',
+          title: alifLessonTitle,
+          pages: pages,
+          initialPage: pages.indexWhere((p) => p.title == 'الاسم الثلاثي'),
+        ),
+      );
+      final last = find.textContaining('فَتَيان').last.hitTestable();
+      expect(t.getRect(last).bottom, lessThan(t.getRect(nextButton()).top));
+    });
+
     testWidgets('«إضاءة» في نافذة القاعدة تعرض الأسماء الشاذة و«يحيى»', (
       t,
     ) async {

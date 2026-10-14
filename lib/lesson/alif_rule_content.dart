@@ -237,68 +237,86 @@ class AlifBasicsRule extends StatelessWidget {
 
 /// ص ٢: قاعدة الاسم الثلاثي المنتهي بالألف؛ الأمثلة بالأحمر.
 class TriliteralRule extends StatelessWidget {
-  const TriliteralRule({super.key});
+  const TriliteralRule({super.key, this.heading = true});
+
+  /// العنوان الأحمر فوق القاعدة (يُخفى في صفحة لها العنوان نفسه).
+  final bool heading;
 
   @override
   Widget build(BuildContext context) {
-    InlineSpan ex(String w, String s) => _example(context, w, s, style: _red);
     return NaskhRule(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _Heading('قاعدة الاسم الثلاثي المنتهي بالألف'),
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: '١- إذا كان '),
-                const TextSpan(text: 'أوله مضمومًا', style: _red),
-                const TextSpan(text: ' يُكتب بالألف المقصورة، مثل ( '),
-                ex('هُدى', 'هُدى'),
-                const TextSpan(text: ' )'),
-              ],
-            ),
+          if (heading)
+            const _CenterHeading('قاعدة الاسم الثلاثي المنتهي بالألف'),
+          _RuleCard(
+            exampleStyle: _red,
+            inline: true,
+            lines: [
+              (
+                TextSpan(
+                  children: [
+                    TextSpan(text: '١- إذا كان '),
+                    TextSpan(text: 'أوله مضمومًا', style: _red),
+                    TextSpan(text: ' يُكتب بالألف المقصورة'),
+                  ],
+                ),
+                [('هُدى', 'هُدى')],
+              ),
+            ],
           ),
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: '٢- إذا كان '),
-                const TextSpan(text: 'أوله مكسورًا', style: _red),
-                const TextSpan(text: ' يُكتب بالألف المقصورة، مثل ( '),
-                ex('رِضى', 'رِضى'),
-                const TextSpan(text: ' )'),
-              ],
-            ),
+          _RuleCard(
+            exampleStyle: _red,
+            inline: true,
+            lines: [
+              (
+                TextSpan(
+                  children: [
+                    TextSpan(text: '٢- إذا كان '),
+                    TextSpan(text: 'أوله مكسورًا', style: _red),
+                    TextSpan(text: ' يُكتب بالألف المقصورة'),
+                  ],
+                ),
+                [('رِضى', 'رِضى')],
+              ),
+            ],
           ),
-          const _Line(
-            TextSpan(
-              children: [
-                TextSpan(text: '٣- إذا كان '),
-                TextSpan(text: 'أوله مفتوحًا', style: _red),
-                TextSpan(text: ' نحوّل الاسم إلى (مفرد أو مثنى أو جمع):'),
-              ],
-            ),
-          ),
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: '   • إذا انقلبت الألف إلى '),
-                const TextSpan(text: 'الواو', style: _red),
-                const TextSpan(text: ' يُكتب بالألف الممدودة، مثل ( '),
-                ex('شَذا ـ شَذَوات', 'شَذا، شَذَوات'),
-                const TextSpan(text: ' )'),
-              ],
-            ),
-          ),
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: '   • إذا انقلبت الألف إلى '),
-                const TextSpan(text: 'الياء', style: _red),
-                const TextSpan(text: ' يُكتب بالألف المقصورة، مثل ( '),
-                ex('فَتى ـ فَتَيان', 'فَتى، فَتَيان'),
-                const TextSpan(text: ' )'),
-              ],
-            ),
+          _RuleCard(
+            exampleStyle: _red,
+            inline: true,
+            lines: [
+              (
+                TextSpan(
+                  children: [
+                    TextSpan(text: '٣- إذا كان '),
+                    TextSpan(text: 'أوله مفتوحًا', style: _red),
+                    TextSpan(text: ' نحوّل الاسم إلى (مفرد أو مثنى أو جمع):'),
+                  ],
+                ),
+                [],
+              ),
+              (
+                TextSpan(
+                  children: [
+                    TextSpan(text: '• إذا انقلبت الألف إلى '),
+                    TextSpan(text: 'الواو', style: _red),
+                    TextSpan(text: ' يُكتب بالألف الممدودة'),
+                  ],
+                ),
+                [('شَذا ـ شَذَوات', 'شَذا، شَذَوات')],
+              ),
+              (
+                TextSpan(
+                  children: [
+                    TextSpan(text: '• إذا انقلبت الألف إلى '),
+                    TextSpan(text: 'الياء', style: _red),
+                    TextSpan(text: ' يُكتب بالألف المقصورة'),
+                  ],
+                ),
+                [('فَتى ـ فَتَيان', 'فَتى، فَتَيان')],
+              ),
+            ],
           ),
         ],
       ),
@@ -399,36 +417,48 @@ class LongNounRule extends StatelessWidget {
           ],
           const _CenterHeading('القاعدة'),
           const _RuleCard(
-            span: TextSpan(
-              children: [
-                TextSpan(text: 'أي '),
-                TextSpan(text: 'اسم عربي', style: _red),
-                TextSpan(text: '، أكثر من ثلاثة حروف، يُكتب بالألف '),
-                TextSpan(text: 'المقصورة\u00A0(ى)', style: _red),
-              ],
-            ),
-            examples: ['مستشفى', 'حلوى'],
+            lines: [
+              (
+                TextSpan(
+                  children: [
+                    TextSpan(text: 'أي '),
+                    TextSpan(text: 'اسم عربي', style: _red),
+                    TextSpan(text: '، أكثر من ثلاثة حروف، يُكتب بالألف '),
+                    TextSpan(text: 'المقصورة\u00A0(ى)', style: _red),
+                  ],
+                ),
+                [('مستشفى', 'مستشفى'), ('حلوى', 'حلوى')],
+              ),
+            ],
           ),
           const _CenterHeading('ما عدا'),
           const _RuleCard(
-            span: TextSpan(
-              children: [
-                TextSpan(text: '١- '),
-                TextSpan(text: 'الاسم الأعجمي', style: _red),
-                TextSpan(text: ' يُكتب بالألف الممدودة\u00A0(ا)'),
-              ],
-            ),
-            examples: ['فرنسا', 'أستراليا'],
+            lines: [
+              (
+                TextSpan(
+                  children: [
+                    TextSpan(text: '١- '),
+                    TextSpan(text: 'الاسم الأعجمي', style: _red),
+                    TextSpan(text: ' يُكتب بالألف الممدودة\u00A0(ا)'),
+                  ],
+                ),
+                [('فرنسا', 'فرنسا'), ('أستراليا', 'أستراليا')],
+              ),
+            ],
           ),
           const _RuleCard(
-            span: TextSpan(
-              children: [
-                TextSpan(text: '٢- إذا كان '),
-                TextSpan(text: 'قبل حرف الألف (ياء)', style: _red),
-                TextSpan(text: ' يُكتب بالألف الممدودة\u00A0(ا)'),
-              ],
-            ),
-            examples: ['دنيا', 'قضايا'],
+            lines: [
+              (
+                TextSpan(
+                  children: [
+                    TextSpan(text: '٢- إذا كان '),
+                    TextSpan(text: 'قبل حرف الألف (ياء)', style: _red),
+                    TextSpan(text: ' يُكتب بالألف الممدودة\u00A0(ا)'),
+                  ],
+                ),
+                [('دنيا', 'دنيا'), ('قضايا', 'قضايا')],
+              ),
+            ],
           ),
         ],
       ),
@@ -452,11 +482,39 @@ class _CenterHeading extends StatelessWidget {
   );
 }
 
-/// قاعدة في مربع: نصها في الوسط، وتحته أمثلتها تُسمع بالضغط عليها.
+/// قاعدة في مربع: كل سطر نصه في الوسط، وتحته أمثلته (الكلمة وما يُنطق)
+/// تُسمع بالضغط عليها.
 class _RuleCard extends StatelessWidget {
-  const _RuleCard({required this.span, required this.examples});
-  final InlineSpan span;
-  final List<String> examples;
+  const _RuleCard({
+    required this.lines,
+    this.exampleStyle = _blue,
+    this.inline = false,
+  });
+  final List<(InlineSpan, List<(String, String)>)> lines;
+  final TextStyle exampleStyle;
+
+  /// الأمثلة في سطر النص نفسه بعد «، مثل» بدل سطر وحدها.
+  final bool inline;
+
+  /// «مثل ( … ـ … )» والأمثلة تُسمع بالضغط عليها.
+  InlineSpan _examplesSpan(
+    BuildContext context,
+    List<(String, String)> examples,
+  ) => TextSpan(
+    children: [
+      const TextSpan(text: 'مثل ( '),
+      for (final (i, (w, spoken)) in examples.indexed) ...[
+        if (i > 0) const TextSpan(text: ' ـ '),
+        _example(
+          context,
+          w,
+          spoken,
+          style: exampleStyle.copyWith(fontSize: 21, height: 1.4),
+        ),
+      ],
+      const TextSpan(text: ' )'),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) => Container(
@@ -470,31 +528,38 @@ class _RuleCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text.rich(
-          span,
-          textAlign: TextAlign.center,
-          style: AppTheme.word(20).copyWith(height: 1.6),
-        ),
-        const SizedBox(height: 2),
-        Text.rich(
-          TextSpan(
-            children: [
-              const TextSpan(text: 'مثل ( '),
-              for (final (i, w) in examples.indexed) ...[
-                if (i > 0) const TextSpan(text: ' ـ '),
-                _example(
-                  context,
-                  w,
-                  w,
-                  style: _blue.copyWith(fontSize: 21, height: 1.4),
-                ),
-              ],
-              const TextSpan(text: ' )'),
+        for (final (k, (span, examples)) in lines.indexed) ...[
+          if (k > 0) const SizedBox(height: 6),
+          if (inline)
+            Text.rich(
+              TextSpan(
+                children: [
+                  span,
+                  if (examples.isNotEmpty) ...[
+                    const TextSpan(text: '، '),
+                    _examplesSpan(context, examples),
+                  ],
+                ],
+              ),
+              textAlign: TextAlign.center,
+              style: AppTheme.word(20).copyWith(height: 1.6),
+            )
+          else ...[
+            Text.rich(
+              span,
+              textAlign: TextAlign.center,
+              style: AppTheme.word(20).copyWith(height: 1.6),
+            ),
+            if (examples.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text.rich(
+                _examplesSpan(context, examples),
+                textAlign: TextAlign.center,
+                style: AppTheme.word(20).copyWith(height: 1.4),
+              ),
             ],
-          ),
-          textAlign: TextAlign.center,
-          style: AppTheme.word(20).copyWith(height: 1.4),
-        ),
+          ],
+        ],
       ],
     ),
   );
