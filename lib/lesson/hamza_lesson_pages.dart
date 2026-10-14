@@ -1,18 +1,13 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
-
-import '../app_state.dart';
 import '../data/hamza_lesson.dart';
 import '../data/lam_lesson.dart';
-import '../services/speaker.dart';
 import '../theme.dart';
-import '../widgets/common.dart';
 import 'hamza_rule_content.dart';
 import 'page_handle.dart';
 import 'pages/equation_page.dart';
+import 'pages/example_page.dart';
 import 'pages/quiz_page.dart';
-import 'rule_content.dart';
 
 const _tenseEmoji = {
   Tense.past: '⏮️',
@@ -26,7 +21,7 @@ const _tenseEmoji = {
 List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
   final rnd = random ?? Random();
   return [
-    _example(
+    examplePage(
       title: 'القاعدة',
       emoji: '📖',
       tappable: true,
@@ -64,7 +59,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
         build: (_, _) => _whereSpoken,
       ),
     ),
-    _example(
+    examplePage(
       title: '(ال) التعريف',
       emoji: '🔤',
       tappable: true,
@@ -75,7 +70,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       speech: alRuleSpeech,
       hint: 'كل اسم تدخل عليه (ال) يبدأ بهمزة وصل.',
     ),
-    _example(
+    examplePage(
       title: 'إضافة (ال)',
       emoji: '➕',
       tappable: true,
@@ -115,7 +110,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
         build: _nounWithAl,
       ),
     ),
-    _example(
+    examplePage(
       title: 'وزن الفعل',
       emoji: '⚖️',
       heading: 'وزن الفعل',
@@ -126,7 +121,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
           'حروفِ الفعلِ الماضي.',
       hint: 'حوّل الفعل إلى الماضي ثم عُدّ حروفه.',
     ),
-    _example(
+    examplePage(
       title: 'أمثلة الوزن',
       emoji: '📋',
       heading: 'أمثلة على وزن الفعل',
@@ -148,7 +143,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
         build: _weights,
       ),
     ),
-    _example(
+    examplePage(
       title: 'القاعدة العامة',
       emoji: '🗂️',
       heading: 'همزة القطع وهمزة الوصل في الأفعال',
@@ -197,7 +192,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
         build: _classify,
       ),
     ),
-    _example(
+    examplePage(
       title: 'المصدر',
       emoji: '📚',
       heading: 'همزة القطع وهمزة الوصل في الأسماء',
@@ -256,7 +251,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
         build: _convert,
       ),
     ),
-    _example(
+    examplePage(
       title: 'همزة الأسماء',
       emoji: '🏷️',
       heading: 'همزة الأسماء',
@@ -275,96 +270,6 @@ String _short(Tense t) => switch (t) {
   Tense.present => 'مضارع',
   Tense.imperative => 'أمر',
 };
-
-LessonPageSpec _example({
-  required String title,
-  required String emoji,
-  required String heading,
-  required Widget rule,
-  required String speech,
-  required String hint,
-  Widget? content,
-  Widget? hintContent,
-  List<String>? speechAll,
-  bool tappable = false,
-}) => LessonPageSpec(
-  tag: 'مثال وقاعدة',
-  title: title,
-  emoji: emoji,
-  needsCompletion: false,
-  rule: rule,
-  builder: (h) => _ExamplePage(
-    handle: h,
-    heading: heading,
-    speech: speech,
-    hint: hint,
-    hintContent: hintContent,
-    speechAll: speechAll,
-    tappable: tappable,
-    child: content ?? rule,
-  ),
-);
-
-class _ExamplePage extends StatefulWidget {
-  const _ExamplePage({
-    required this.handle,
-    required this.heading,
-    required this.speech,
-    required this.hint,
-    required this.child,
-    this.hintContent,
-    this.speechAll,
-    this.tappable = false,
-  });
-
-  final PageHandle handle;
-  final String heading;
-  final String speech;
-  final String hint;
-  final Widget child;
-
-  /// محتوى «مساعدة» في نافذة بدل رسالة [hint] القصيرة.
-  final Widget? hintContent;
-
-  /// نصوص «استمع» تُنطق متتالية بدل [speech].
-  final List<String>? speechAll;
-
-  /// في المحتوى أمثلة تُسمع بالضغط عليها.
-  final bool tappable;
-
-  @override
-  State<_ExamplePage> createState() => _ExamplePageState();
-}
-
-class _ExamplePageState extends State<_ExamplePage> {
-  @override
-  void initState() {
-    super.initState();
-    widget.handle
-      ..onListen = () {
-        final rate = AppScope.read(context).speechRate;
-        if (widget.speechAll case final texts?) {
-          Speaker.instance.speakAll(texts, rate: rate);
-        } else {
-          Speaker.instance.speak(widget.speech, rate: rate);
-        }
-      }
-      ..onHint = () => widget.hintContent == null
-          ? showFeedback(context, widget.hint, tone: FeedbackTone.hint)
-          : showRuleSheet(context, title: 'تلميح', content: widget.hintContent);
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => widget.handle.markComplete(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => PageCard(
-    tag: 'مثال وقاعدة',
-    title: widget.heading,
-    subtitle: widget.tappable ? 'اضغط على المثال لتسمعه' : null,
-    child: widget.child,
-  );
-}
 
 // ——— بناة الأسئلة ———
 

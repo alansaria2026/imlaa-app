@@ -46,6 +46,9 @@ class QuizRound {
     this.answerMark,
     this.spoken,
     this.hint,
+    this.marks = const {},
+    this.markLastLetter = false,
+    this.spokenAll,
   });
 
   final List<QuizItem> items;
@@ -62,6 +65,15 @@ class QuizRound {
   /// ما يُنطق بزر «استمع» وبعد الإجابة الصحيحة.
   final String? spoken;
   final String? hint;
+
+  /// كلمات أخرى بالأحمر في [sentence] (الجمل في أسطر بـ\n).
+  final Set<String> marks;
+
+  /// يُلوَّن الحرف الأخير من الكلمة وحده (الألف في آخر الاسم).
+  final bool markLastLetter;
+
+  /// جمل تُنطق متتالية بزر «استمع» بدل [spoken] (لكل جملة تسجيلها).
+  final List<String>? spokenAll;
 }
 
 /// أسئلة الصفحة كلها؛ [attempt] صفر أول مرة (أسئلة الكتاب) ثم يزيد مع كل
@@ -185,11 +197,13 @@ class QuizPageState extends State<QuizPage> {
   }
 
   void _listen() {
+    final rate = AppScope.read(context).speechRate;
+    if (_started && _current.spokenAll != null) {
+      Speaker.instance.speakAll(_current.spokenAll!, rate: rate);
+      return;
+    }
     final text = _started ? _current.spoken : widget.introSpeech;
-    Speaker.instance.speak(
-      text ?? widget.title,
-      rate: AppScope.read(context).speechRate,
-    );
+    Speaker.instance.speak(text ?? widget.title, rate: rate);
   }
 
   void _hint() {
@@ -393,7 +407,12 @@ class QuizPageState extends State<QuizPage> {
                             round.answerSentence!,
                             mark: round.answerMark,
                           )
-                        : MarkedSentence(s, mark: round.mark),
+                        : MarkedSentence(
+                            s,
+                            mark: round.mark,
+                            marks: round.marks,
+                            lastLetterOnly: round.markLastLetter,
+                          ),
                   ),
                 const SizedBox(height: 8),
                 for (var i = 0; i < round.items.length; i++) ...[
@@ -623,27 +642,54 @@ class _OptionChip extends StatelessWidget {
 }
 
 /// جملة بخط النسخ والكلمة [mark] فيها بالأحمر.
+/// جملة (أو جمل في أسطر) والكلمة [mark] و[marks] فيها بالأحمر، أو حرفها
+/// الأخير وحده إن كان [lastLetterOnly].
 class MarkedSentence extends StatelessWidget {
-  const MarkedSentence(this.text, {super.key, this.mark, this.size = 30});
+  const MarkedSentence(
+    this.text, {
+    super.key,
+    this.mark,
+    this.marks = const {},
+    this.lastLetterOnly = false,
+    this.size = 30,
+  });
 
   final String text;
   final String? mark;
+  final Set<String> marks;
+  final bool lastLetterOnly;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    final words = text.split(' ');
+    const red = TextStyle(color: AppColors.al);
+    InlineSpan word(String w) {
+      final plain = stripDiacritics(w).replaceAll('؟', '');
+      if (plain != mark && !marks.contains(plain)) return TextSpan(text: w);
+      if (!lastLetterOnly) return TextSpan(text: w, style: red);
+      // الحرف الأخير مع تشكيله.
+      var cut = w.length - 1;
+      while (cut > 0 && stripDiacritics(w.substring(cut)).isEmpty) {
+        cut--;
+      }
+      return TextSpan(
+        children: [
+          TextSpan(text: w.substring(0, cut)),
+          TextSpan(text: w.substring(cut), style: red),
+        ],
+      );
+    }
+
+    final lines = text.split('\n');
     return Text.rich(
       TextSpan(
         children: [
-          for (var i = 0; i < words.length; i++) ...[
-            TextSpan(
-              text: words[i],
-              style: stripDiacritics(words[i]).replaceAll('؟', '') == mark
-                  ? const TextStyle(color: AppColors.al)
-                  : null,
-            ),
-            if (i < words.length - 1) const TextSpan(text: ' '),
+          for (var l = 0; l < lines.length; l++) ...[
+            if (l > 0) const TextSpan(text: '\n'),
+            for (final (i, w) in lines[l].split(' ').indexed) ...[
+              if (i > 0) const TextSpan(text: ' '),
+              word(w),
+            ],
           ],
         ],
       ),

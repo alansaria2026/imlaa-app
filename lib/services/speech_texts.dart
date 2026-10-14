@@ -1,3 +1,4 @@
+import '../data/alif_lesson.dart';
 import '../data/bi_lesson.dart';
 import '../data/hamza_lesson.dart';
 import '../data/lam_lesson.dart';
@@ -45,4 +46,22 @@ Set<String> allSpeechTexts() => {
     spokenForm(w.startsWith('ال') ? w : 'ال$w'),
   ],
   for (final w in [...hamzaAlMoonWords, ...hamzaAlSunWords]) spokenForm(w),
+  // درس الألف اللينة.
+  alifRuleSpeech,
+  triliteralRuleSpeech,
+  triliteralRememberSpeech,
+  longRuleSpeech,
+  longRememberSpeech,
+  for (final (_, spoken) in alifRuleExamples) spoken,
+  'هُدى', 'رِضى', 'شَذا، شَذَوات', 'فَتى، فَتَيان', //
+  'مستشفى', 'حلوى', 'فرنسا', 'أستراليا', 'دنيا', 'قضايا',
+  for (final s in [
+    ...triliteralSentences,
+    ...triliteralSpareSentences,
+    ...pairSentences,
+  ])
+    s.spoken,
+  for (final s in fourAnswerSentences) s.spoken,
+  for (final w in [...longMaqsuraWords, ...longYaWords, ...foreignWords]) w,
+  for (final s in [...longListenSentences, ...longListenSpare]) s.spoken,
 };
