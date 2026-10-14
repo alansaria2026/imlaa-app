@@ -234,7 +234,26 @@ void main() {
       }
     });
 
-    testWidgets('زر «إضاءة» يعرض الأسماء الشاذة و«يحيى»', (t) async {
+    testWidgets('قاعدة «غير الثلاثية» داخل الصفحة دون تمرير', (t) async {
+      final pages = buildAlifLessonPages(Random(0));
+      await pumpScreen(
+        t,
+        LessonScreen(
+          lessonId: 'qa',
+          title: alifLessonTitle,
+          pages: pages,
+          initialPage: pages.indexWhere((p) => p.title == 'غير الثلاثية'),
+        ),
+      );
+      // لا «إضاءة» في الصفحة، وآخر أمثلتها فوق أزرار التنقل.
+      expect(find.byKey(const ValueKey('alif-light')), findsNothing);
+      final last = find.textContaining('مثل').last.hitTestable();
+      expect(t.getRect(last).bottom, lessThan(t.getRect(nextButton()).top));
+    });
+
+    testWidgets('«إضاءة» في نافذة القاعدة تعرض الأسماء الشاذة و«يحيى»', (
+      t,
+    ) async {
       final i = buildAlifLessonPages(
         Random(0),
       ).indexWhere((p) => p.title == 'غير الثلاثية');
@@ -247,11 +266,37 @@ void main() {
           initialPage: i,
         ),
       );
+      await t.tap(find.byTooltip('القائمة'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('القاعدة').last);
+      await t.pumpAndSettle();
       await t.ensureVisible(find.byKey(const ValueKey('alif-light')));
       await t.tap(find.byKey(const ValueKey('alif-light')));
       await t.pumpAndSettle();
       expect(find.text('موسى'), findsOneWidget);
       expect(find.textContaining('يحيى'), findsWidgets);
     });
+
+    for (final title in ['احفظ القاعدتين', 'احفظ القاعدة']) {
+      testWidgets('«ابدأ الامتحان» في «$title» ينتقل إلى «أكمل القاعدة»', (
+        t,
+      ) async {
+        final pages = buildAlifLessonPages(Random(0));
+        final i = pages.indexWhere((p) => p.title == title);
+        await pumpScreen(
+          t,
+          LessonScreen(
+            lessonId: 'qa',
+            title: alifLessonTitle,
+            pages: pages,
+            initialPage: i,
+          ),
+        );
+        await t.tap(find.text('ابدأ الامتحان'));
+        await t.pumpAndSettle();
+        expect(pages[i + 1].title, 'أكمل القاعدة');
+        expect(find.text('اختر الإجابة الصحيحة').hitTestable(), findsOneWidget);
+      });
+    }
   });
 }

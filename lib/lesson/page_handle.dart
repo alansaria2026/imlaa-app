@@ -15,6 +15,9 @@ class PageHandle extends ChangeNotifier {
   /// يُستدعى بعد فتح القاعدة من القائمة (لتغيير الكلمات مثلًا).
   VoidCallback? onRuleOpened;
 
+  /// ينتقل إلى الصفحة التالية كزر «التالي»؛ يضبطه هيكل الدرس.
+  VoidCallback? next;
+
   int done = 0;
   int total = 0;
   bool complete = false;

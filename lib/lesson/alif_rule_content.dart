@@ -35,20 +35,6 @@ class _Heading extends StatelessWidget {
   );
 }
 
-/// مربع صغير فيه صورة الألف أو العدد (ص ١).
-WidgetSpan _shape(String s) => WidgetSpan(
-  alignment: PlaceholderAlignment.middle,
-  child: Container(
-    margin: const EdgeInsets.symmetric(horizontal: 4),
-    padding: const EdgeInsets.symmetric(horizontal: 12),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: AppColors.al, width: 1.5),
-    ),
-    child: Text(s, style: AppTheme.word(26, color: AppColors.al)),
-  ),
-);
-
 /// مثال يُسمع بالضغط عليه.
 InlineSpan _example(
   BuildContext context,
@@ -63,7 +49,128 @@ InlineSpan _example(
   ),
 );
 
-/// ص ١: الألف الممدودة والمقصورة، والاسم الثلاثي.
+/// مربع بإطار في مخطط ص ١.
+class _Box extends StatelessWidget {
+  const _Box({required this.child, this.padding});
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColors.ink, width: 1.8),
+    ),
+    child: child,
+  );
+}
+
+/// عنوان المربع بالأحمر، يصغر ليتسع في الشاشات الضيقة.
+class _BoxTitle extends StatelessWidget {
+  const _BoxTitle(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => _Box(
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(text, style: AppTheme.word(22, color: AppColors.al)),
+    ),
+  );
+}
+
+/// سهم نازل يصل المربعات.
+class _DownArrow extends StatelessWidget {
+  const _DownArrow();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(
+    width: 20,
+    height: 34,
+    child: CustomPaint(painter: _ArrowPainter()),
+  );
+}
+
+class _ArrowPainter extends CustomPainter {
+  const _ArrowPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.ink
+      ..strokeWidth = 1.8
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final x = size.width / 2;
+    canvas
+      ..drawLine(Offset(x, 0), Offset(x, size.height - 1), paint)
+      ..drawLine(
+        Offset(x - 6, size.height - 8),
+        Offset(x, size.height - 1),
+        paint,
+      )
+      ..drawLine(
+        Offset(x + 6, size.height - 8),
+        Offset(x, size.height - 1),
+        paint,
+      );
+  }
+
+  @override
+  bool shouldRepaint(_ArrowPainter oldDelegate) => false;
+}
+
+/// فرع الألف: العنوان ← صورة الألف ← المثال.
+class _AlifBranch extends StatelessWidget {
+  const _AlifBranch({
+    required this.title,
+    required this.letter,
+    required this.word,
+    required this.spoken,
+  });
+
+  final String title;
+  final String letter;
+  final String word;
+  final String spoken;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      _BoxTitle(title),
+      const _DownArrow(),
+      _Box(
+        padding: const EdgeInsets.symmetric(horizontal: 26),
+        child: Text(letter, style: AppTheme.word(38, color: AppColors.al)),
+      ),
+      const SizedBox(height: 10),
+      _BoxExample(word, spoken),
+    ],
+  );
+}
+
+/// مثال بين قوسين تحت المربع، يُسمع بالضغط عليه.
+class _BoxExample extends StatelessWidget {
+  const _BoxExample(this.word, this.spoken);
+  final String word;
+  final String spoken;
+
+  @override
+  Widget build(BuildContext context) => Text.rich(
+    TextSpan(
+      children: [
+        const TextSpan(text: '( '),
+        _example(context, word, spoken),
+        const TextSpan(text: ' )'),
+      ],
+    ),
+    style: AppTheme.word(24),
+  );
+}
+
+/// ص ١: الألف الممدودة والمقصورة، والاسم الثلاثي، مرسومة مربعات وأسهمًا.
 class AlifBasicsRule extends StatelessWidget {
   const AlifBasicsRule({super.key});
 
@@ -71,47 +178,58 @@ class AlifBasicsRule extends StatelessWidget {
   Widget build(BuildContext context) {
     final [(mw, ms), (qw, qs), (tw, ts)] = alifRuleExamples;
     return NaskhRule(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _Line(
-            TextSpan(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const TextSpan(text: 'الألف الممدودة', style: _red),
-                const TextSpan(text: ' تُكتب هكذا '),
-                _shape('ا'),
-                const TextSpan(text: ' مثل ( '),
-                _example(context, mw, ms),
-                const TextSpan(text: ' )'),
+                Expanded(
+                  child: _AlifBranch(
+                    title: 'الألف المقصورة',
+                    letter: 'ى',
+                    word: qw,
+                    spoken: qs,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _AlifBranch(
+                    title: 'الألف الممدودة',
+                    letter: 'ا',
+                    word: mw,
+                    spoken: ms,
+                  ),
+                ),
               ],
             ),
-          ),
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: 'الألف المقصورة', style: _red),
-                const TextSpan(text: ' تُكتب هكذا '),
-                _shape('ى'),
-                const TextSpan(text: ' مثل ( '),
-                _example(context, qw, qs),
-                const TextSpan(text: ' )'),
-              ],
+            const SizedBox(height: 36),
+            const FractionallySizedBox(
+              widthFactor: 0.6,
+              child: _BoxTitle('الاسم الثلاثي'),
             ),
-          ),
-          const SizedBox(height: 8),
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: 'الاسم الثلاثي', style: _red),
-                const TextSpan(text: ' هو الذي يتكوّن من '),
-                _shape('٣'),
-                const TextSpan(text: ' حروف أصلية، مثل ( '),
-                _example(context, tw, ts),
-                const TextSpan(text: ' )'),
-              ],
+            const _DownArrow(),
+            _Box(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text.rich(
+                  const TextSpan(
+                    children: [
+                      TextSpan(text: 'يتكوّن من ( '),
+                      TextSpan(text: '٣', style: _red),
+                      TextSpan(text: ' ) حروف أصلية'),
+                    ],
+                  ),
+                  style: AppTheme.word(22),
+                ),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            _BoxExample(tw, ts),
+          ],
+        ),
       ),
     );
   }
@@ -208,6 +326,7 @@ class _RememberBox extends StatelessWidget {
         if (number != null)
           Text(
             'القاعدة $number',
+            textAlign: TextAlign.center,
             style: AppTheme.word(20, color: AppColors.al),
           ),
         Text.rich(span, style: AppTheme.word(22).copyWith(height: 1.7)),
@@ -255,61 +374,16 @@ class TriliteralRemember extends StatelessWidget {
 class LongNounRule extends StatelessWidget {
   const LongNounRule({super.key, this.light = true});
 
-  /// زر «إضاءة» تحت القاعدة.
+  /// زر «إضاءة» فوق القاعدة.
   final bool light;
 
   @override
   Widget build(BuildContext context) {
-    InlineSpan ex(String w) => _example(context, w, w);
     return NaskhRule(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _Heading('القاعدة'),
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: 'أي '),
-                const TextSpan(text: 'اسم عربي', style: _red),
-                const TextSpan(text: '، أكثر من ثلاثة حروف، يُكتب بالألف '),
-                const TextSpan(text: 'المقصورة (ى)', style: _red),
-                const TextSpan(text: '، مثل ( '),
-                ex('مستشفى'),
-                const TextSpan(text: ' ـ '),
-                ex('حلوى'),
-                const TextSpan(text: ' )'),
-              ],
-            ),
-          ),
-          const _Heading('ما عدا:'),
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: '١- '),
-                const TextSpan(text: 'الاسم الأعجمي', style: _red),
-                const TextSpan(text: ' يُكتب بالألف الممدودة (ا)، مثل ( '),
-                ex('فرنسا'),
-                const TextSpan(text: ' ـ '),
-                ex('أستراليا'),
-                const TextSpan(text: ' )'),
-              ],
-            ),
-          ),
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: '٢- إذا كان '),
-                const TextSpan(text: 'قبل حرف الألف (ياء)', style: _red),
-                const TextSpan(text: ' يُكتب بالألف الممدودة، مثل ( '),
-                ex('دنيا'),
-                const TextSpan(text: ' ـ '),
-                ex('قضايا'),
-                const TextSpan(text: ' )'),
-              ],
-            ),
-          ),
           if (light) ...[
-            const SizedBox(height: 16),
             AppButton(
               key: const ValueKey('alif-light'),
               label: '💡 إضاءة',
@@ -321,11 +395,109 @@ class LongNounRule extends StatelessWidget {
                 content: const LongNounLight(),
               ),
             ),
+            const SizedBox(height: 8),
           ],
+          const _CenterHeading('القاعدة'),
+          const _RuleCard(
+            span: TextSpan(
+              children: [
+                TextSpan(text: 'أي '),
+                TextSpan(text: 'اسم عربي', style: _red),
+                TextSpan(text: '، أكثر من ثلاثة حروف، يُكتب بالألف '),
+                TextSpan(text: 'المقصورة\u00A0(ى)', style: _red),
+              ],
+            ),
+            examples: ['مستشفى', 'حلوى'],
+          ),
+          const _CenterHeading('ما عدا'),
+          const _RuleCard(
+            span: TextSpan(
+              children: [
+                TextSpan(text: '١- '),
+                TextSpan(text: 'الاسم الأعجمي', style: _red),
+                TextSpan(text: ' يُكتب بالألف الممدودة\u00A0(ا)'),
+              ],
+            ),
+            examples: ['فرنسا', 'أستراليا'],
+          ),
+          const _RuleCard(
+            span: TextSpan(
+              children: [
+                TextSpan(text: '٢- إذا كان '),
+                TextSpan(text: 'قبل حرف الألف (ياء)', style: _red),
+                TextSpan(text: ' يُكتب بالألف الممدودة\u00A0(ا)'),
+              ],
+            ),
+            examples: ['دنيا', 'قضايا'],
+          ),
         ],
       ),
     );
   }
+}
+
+/// عنوان أحمر في وسط السطر.
+class _CenterHeading extends StatelessWidget {
+  const _CenterHeading(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 4, bottom: 6),
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: AppTheme.word(23, color: AppColors.al).copyWith(height: 1.4),
+    ),
+  );
+}
+
+/// قاعدة في مربع: نصها في الوسط، وتحته أمثلتها تُسمع بالضغط عليها.
+class _RuleCard extends StatelessWidget {
+  const _RuleCard({required this.span, required this.examples});
+  final InlineSpan span;
+  final List<String> examples;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.only(bottom: 10),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+    decoration: BoxDecoration(
+      color: AppColors.background,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: AppColors.lineDark),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text.rich(
+          span,
+          textAlign: TextAlign.center,
+          style: AppTheme.word(20).copyWith(height: 1.6),
+        ),
+        const SizedBox(height: 2),
+        Text.rich(
+          TextSpan(
+            children: [
+              const TextSpan(text: 'مثل ( '),
+              for (final (i, w) in examples.indexed) ...[
+                if (i > 0) const TextSpan(text: ' ـ '),
+                _example(
+                  context,
+                  w,
+                  w,
+                  style: _blue.copyWith(fontSize: 21, height: 1.4),
+                ),
+              ],
+              const TextSpan(text: ' )'),
+            ],
+          ),
+          textAlign: TextAlign.center,
+          style: AppTheme.word(20).copyWith(height: 1.4),
+        ),
+      ],
+    ),
+  );
 }
 
 /// ص ٢: «إضاءة»: الأسماء الشاذة، وكلمة تُكتب على وجهين.
@@ -346,12 +518,13 @@ class LongNounLight extends StatelessWidget {
             ],
           ),
         ),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 16,
-          children: [
-            for (final w in irregularMaqsura)
-              Text(w, style: AppTheme.word(26, color: AppColors.blue)),
+        const SizedBox(height: 6),
+        _LightTable(
+          rows: [
+            [
+              for (final w in irregularMaqsura)
+                _LightCell(w, color: AppColors.blue),
+            ],
           ],
         ),
         const SizedBox(height: 10),
@@ -366,17 +539,61 @@ class LongNounLight extends StatelessWidget {
             ],
           ),
         ),
-        for (final (w, kind) in twoWayWords)
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: '   • ( '),
-                TextSpan(text: w, style: _blue),
-                TextSpan(text: ' ) ـ $kind'),
-              ],
-            ),
+        const SizedBox(height: 6),
+        _LightTable(
+          header: true,
+          rows: [
+            [for (final (_, kind) in twoWayWords) _LightCell(kind)],
+            [
+              for (final (w, _) in twoWayWords)
+                _LightCell(w, color: AppColors.blue),
+            ],
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+/// جدول «إضاءة»؛ الصف الأول عناوين بخلفية إن كان [header].
+class _LightTable extends StatelessWidget {
+  const _LightTable({required this.rows, this.header = false});
+  final List<List<Widget>> rows;
+  final bool header;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(12),
+    child: Table(
+      border: TableBorder.all(
+        color: AppColors.lineDark,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: [
+        for (final (i, row) in rows.indexed)
+          TableRow(
+            decoration: header && i == 0
+                ? const BoxDecoration(color: AppColors.primarySoft)
+                : null,
+            children: row,
           ),
       ],
+    ),
+  );
+}
+
+class _LightCell extends StatelessWidget {
+  const _LightCell(this.text, {this.color = AppColors.ink});
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(text, style: AppTheme.word(24, color: color)),
     ),
   );
 }

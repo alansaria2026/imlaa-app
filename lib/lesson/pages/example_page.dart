@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app_state.dart';
 import '../../services/speaker.dart';
 import '../../widgets/common.dart';
+import '../../widgets/pressable.dart';
 import '../page_handle.dart';
 import '../rule_content.dart';
 
@@ -19,6 +20,8 @@ LessonPageSpec examplePage({
   Widget? hintContent,
   List<String>? speechAll,
   bool tappable = false,
+  Color? titleColor,
+  String? action,
 }) => LessonPageSpec(
   tag: 'مثال وقاعدة',
   title: title,
@@ -33,6 +36,8 @@ LessonPageSpec examplePage({
     hintContent: hintContent,
     speechAll: speechAll,
     tappable: tappable,
+    titleColor: titleColor,
+    action: action,
     child: content ?? rule,
   ),
 );
@@ -47,6 +52,8 @@ class _ExamplePage extends StatefulWidget {
     this.hintContent,
     this.speechAll,
     this.tappable = false,
+    this.titleColor,
+    this.action,
   });
 
   final PageHandle handle;
@@ -63,6 +70,12 @@ class _ExamplePage extends StatefulWidget {
 
   /// في المحتوى أمثلة تُسمع بالضغط عليها.
   final bool tappable;
+
+  /// لون العنوان؛ null للون الأساسي.
+  final Color? titleColor;
+
+  /// زر تحت المحتوى ينتقل إلى الصفحة التالية (مثل «ابدأ الامتحان»).
+  final String? action;
 
   @override
   State<_ExamplePage> createState() => _ExamplePageState();
@@ -93,7 +106,18 @@ class _ExamplePageState extends State<_ExamplePage> {
   Widget build(BuildContext context) => PageCard(
     tag: 'مثال وقاعدة',
     title: widget.heading,
+    titleColor: widget.titleColor,
     subtitle: widget.tappable ? 'اضغط على المثال لتسمعه' : null,
-    child: widget.child,
+    child: switch (widget.action) {
+      null => widget.child,
+      final label => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          widget.child,
+          const SizedBox(height: 20),
+          AppButton(label: label, onTap: widget.handle.next),
+        ],
+      ),
+    },
   );
 }

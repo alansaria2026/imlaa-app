@@ -95,6 +95,7 @@ class QuizPage extends StatefulWidget {
     this.intro,
     this.introSpeech,
     this.autoSpeak = false,
+    this.sentenceColor = AppColors.ink,
   });
 
   final PageHandle handle;
@@ -114,6 +115,9 @@ class QuizPage extends StatefulWidget {
 
   /// تُنطق جملة كل سؤال عند ظهوره (تمارين «اسمع»).
   final bool autoSpeak;
+
+  /// لون جملة السؤال (كلماتها المعلّمة تبقى بالأحمر).
+  final Color sentenceColor;
 
   static const levelStep = 10;
 
@@ -406,12 +410,14 @@ class QuizPageState extends State<QuizPage> {
                         ? MarkedSentence(
                             round.answerSentence!,
                             mark: round.answerMark,
+                            color: widget.sentenceColor,
                           )
                         : MarkedSentence(
                             s,
                             mark: round.mark,
                             marks: round.marks,
                             lastLetterOnly: round.markLastLetter,
+                            color: widget.sentenceColor,
                           ),
                   ),
                 const SizedBox(height: 8),
@@ -652,6 +658,7 @@ class MarkedSentence extends StatelessWidget {
     this.marks = const {},
     this.lastLetterOnly = false,
     this.size = 30,
+    this.color = AppColors.ink,
   });
 
   final String text;
@@ -659,6 +666,7 @@ class MarkedSentence extends StatelessWidget {
   final Set<String> marks;
   final bool lastLetterOnly;
   final double size;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -694,7 +702,7 @@ class MarkedSentence extends StatelessWidget {
         ],
       ),
       textAlign: TextAlign.center,
-      style: AppTheme.word(size).copyWith(height: 1.6),
+      style: AppTheme.word(size, color: color).copyWith(height: 1.6),
     );
   }
 }

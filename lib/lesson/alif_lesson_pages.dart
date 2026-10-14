@@ -2,6 +2,7 @@ import 'dart:math';
 
 import '../data/alif_lesson.dart';
 import '../data/review_lesson.dart';
+import '../theme.dart';
 import '../utils/arabic.dart';
 import 'alif_rule_content.dart';
 import 'page_handle.dart';
@@ -19,7 +20,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       title: 'القاعدة',
       emoji: '📖',
       tappable: true,
-      heading: 'الألف الممدودة والألف المقصورة',
+      heading: 'الألف المقصورة والألف الممدودة',
       rule: const AlifBasicsRule(),
       speech: alifRuleSpeech,
       hint: 'الممدودة (ا) قائمة، والمقصورة (ى) كالياء بلا نقطتين.',
@@ -40,6 +41,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
+        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const TriliteralRule(),
         build: _threeSentences,
@@ -48,7 +50,9 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
     examplePage(
       title: 'احفظ القاعدتين',
       emoji: '🧠',
-      heading: 'احفظ هاتين القاعدتين دائمًا للامتحان',
+      heading: 'احفظ هاتين القاعدتين وابدأ الامتحان',
+      titleColor: AppColors.red,
+      action: 'ابدأ الامتحان',
       rule: const TriliteralRule(),
       content: const TriliteralRemember(),
       speech: triliteralRememberSpeech,
@@ -61,6 +65,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
+        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const TriliteralRule(),
         build: (rnd, attempt) => _inRounds(_triliteralBlanks, 2, rnd, attempt),
@@ -73,6 +78,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
+        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const TriliteralRule(),
         build: _pairQuiz,
@@ -85,6 +91,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
+        sentenceColor: AppColors.blue,
         title: 'اختر الإجابات الصحيحة',
         subtitle: 'أربع إجابات صحيحة',
         rule: const TriliteralRule(),
@@ -98,6 +105,8 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       tappable: true,
       heading: 'الأسماء غير الثلاثية',
       rule: const LongNounRule(),
+      // «إضاءة» في نافذة القاعدة فقط، لا في الصفحة.
+      content: const LongNounRule(light: false),
       speech: longRuleSpeech,
       hint: _longHint,
     ),
@@ -108,6 +117,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
+        sentenceColor: AppColors.blue,
         title: 'اختر الإجابات الصحيحة',
         rule: const LongNounRule(),
         build: _longAnswers,
@@ -116,7 +126,9 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
     examplePage(
       title: 'احفظ القاعدة',
       emoji: '🧠',
-      heading: 'احفظ هذه القاعدة وافهمها دائمًا للامتحان',
+      heading: 'احفظ هذه القاعدة وافهمها وابدأ الامتحان',
+      titleColor: AppColors.red,
+      action: 'ابدأ الامتحان',
       rule: const LongNounRule(),
       content: const LongNounRemember(),
       speech: longRememberSpeech,
@@ -129,6 +141,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
+        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const LongNounRule(),
         build: (rnd, attempt) => _inRounds(_longBlanks, 3, rnd, attempt),
@@ -146,6 +159,8 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
           items: items,
           spare: spare,
           newOnError: true,
+          titleColor: AppColors.red,
+          sentenceColor: AppColors.blue,
         );
       },
     ),
