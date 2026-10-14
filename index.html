@@ -1,15 +1,72 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex, nofollow">
-<title>غير متاح</title>
-<style>
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center;
-         font-family: system-ui, sans-serif; background: #fff; color: #222; }
-  p { font-size: 1.25rem; padding: 16px; text-align: center; }
-</style>
+  <base href="/imlaa-app/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>إملائي</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center;
+           font-family: system-ui, sans-serif; background: #fff; color: #111; }
+    form { width: min(320px, calc(100vw - 32px)); display: grid; gap: 12px;
+           text-align: center; }
+    h1 { font-size: 1.5rem; margin: 0 0 8px; }
+    input, button { font: inherit; font-size: 1.1rem; padding: 12px;
+                    border-radius: 14px; }
+    input { border: 2px solid #ccc; text-align: center; direction: ltr; }
+    button { border: 0; background: #111; color: #fff; font-weight: 700; }
+    #msg { min-height: 1.5em; color: #c62828; }
+  </style>
 </head>
-<body><p>هذه الصفحة غير متاحة حاليًا.</p></body>
+<body>
+  <form id="gate">
+    <h1>إملائي</h1>
+    <label for="pw">اكتب كلمة المرور للتجربة</label>
+    <input id="pw" type="password" autocomplete="current-password" required>
+    <button type="submit">دخول</button>
+    <div id="msg"></div>
+  </form>
+  <script>
+    const KEY = 'imlaa-site-password';
+    const ITER = 250000;
+    const form = document.getElementById('gate');
+    const msg = document.getElementById('msg');
+
+    async function unlock(password) {
+      const data = new Uint8Array(
+        await (await fetch('main.dart.js.enc', {cache: 'no-store'})).arrayBuffer());
+      const salt = data.slice(0, 16), iv = data.slice(16, 28);
+      const base = await crypto.subtle.importKey(
+        'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+      const key = await crypto.subtle.deriveKey(
+        {name: 'PBKDF2', salt, iterations: ITER, hash: 'SHA-256'},
+        base, {name: 'AES-GCM', length: 256}, false, ['decrypt']);
+      const js = await crypto.subtle.decrypt({name: 'AES-GCM', iv}, key, data.slice(28));
+      window.__imlaaMain = URL.createObjectURL(
+        new Blob([js], {type: 'text/javascript'}));
+      try { localStorage.setItem(KEY, password); } catch (_) {}
+      form.remove();
+      const s = document.createElement('script');
+      s.src = 'flutter_bootstrap.js';
+      document.body.appendChild(s);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '…';
+      try {
+        await unlock(document.getElementById('pw').value.trim());
+      } catch (_) {
+        msg.textContent = 'كلمة المرور غير صحيحة';
+      }
+    });
+
+    let saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (_) {}
+    if (saved) unlock(saved).catch(() => {
+      try { localStorage.removeItem(KEY); } catch (_) {}
+    });
+  </script>
+</body>
 </html>
