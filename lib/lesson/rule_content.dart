@@ -190,12 +190,34 @@ Future<void> showRuleSheet(
         controller: controller,
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
         children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          // العنوان في الوسط، وزر الإغلاق في الركن الأيسر.
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 48),
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  key: const ValueKey('rule-close'),
+                  tooltip: 'إغلاق',
+                  icon: const Icon(Icons.close_rounded, size: 28),
+                  color: AppColors.ink,
+                  style: IconButton.styleFrom(
+                    side: const BorderSide(color: AppColors.ink, width: 1.2),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           content ?? const RuleContent(),
