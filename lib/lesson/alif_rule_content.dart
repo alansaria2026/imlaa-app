@@ -379,53 +379,42 @@ class LongNounRule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    InlineSpan ex(String w) => _example(context, w, w);
     return NaskhRule(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _Heading('القاعدة'),
-          _Line(
-            TextSpan(
+          const _CenterHeading('القاعدة'),
+          const _RuleCard(
+            span: TextSpan(
               children: [
-                const TextSpan(text: 'أي '),
-                const TextSpan(text: 'اسم عربي', style: _red),
-                const TextSpan(text: '، أكثر من ثلاثة حروف، يُكتب بالألف '),
-                const TextSpan(text: 'المقصورة (ى)', style: _red),
-                const TextSpan(text: '، مثل ( '),
-                ex('مستشفى'),
-                const TextSpan(text: ' ـ '),
-                ex('حلوى'),
-                const TextSpan(text: ' )'),
+                TextSpan(text: 'أي '),
+                TextSpan(text: 'اسم عربي', style: _red),
+                TextSpan(text: '، أكثر من ثلاثة حروف، يُكتب بالألف '),
+                TextSpan(text: 'المقصورة (ى)', style: _red),
               ],
             ),
+            examples: ['مستشفى', 'حلوى'],
           ),
-          const _Heading('ما عدا:'),
-          _Line(
-            TextSpan(
+          const _CenterHeading('ما عدا'),
+          const _RuleCard(
+            span: TextSpan(
               children: [
-                const TextSpan(text: '١- '),
-                const TextSpan(text: 'الاسم الأعجمي', style: _red),
-                const TextSpan(text: ' يُكتب بالألف الممدودة (ا)، مثل ( '),
-                ex('فرنسا'),
-                const TextSpan(text: ' ـ '),
-                ex('أستراليا'),
-                const TextSpan(text: ' )'),
+                TextSpan(text: '١- '),
+                TextSpan(text: 'الاسم الأعجمي', style: _red),
+                TextSpan(text: ' يُكتب بالألف الممدودة (ا)'),
               ],
             ),
+            examples: ['فرنسا', 'أستراليا'],
           ),
-          _Line(
-            TextSpan(
+          const _RuleCard(
+            span: TextSpan(
               children: [
-                const TextSpan(text: '٢- إذا كان '),
-                const TextSpan(text: 'قبل حرف الألف (ياء)', style: _red),
-                const TextSpan(text: ' يُكتب بالألف الممدودة، مثل ( '),
-                ex('دنيا'),
-                const TextSpan(text: ' ـ '),
-                ex('قضايا'),
-                const TextSpan(text: ' )'),
+                TextSpan(text: '٢- إذا كان '),
+                TextSpan(text: 'قبل حرف الألف (ياء)', style: _red),
+                TextSpan(text: ' يُكتب بالألف الممدودة (ا)'),
               ],
             ),
+            examples: ['دنيا', 'قضايا'],
           ),
           if (light) ...[
             const SizedBox(height: 16),
@@ -445,6 +434,65 @@ class LongNounRule extends StatelessWidget {
       ),
     );
   }
+}
+
+/// عنوان أحمر في وسط السطر.
+class _CenterHeading extends StatelessWidget {
+  const _CenterHeading(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 6, bottom: 8),
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: AppTheme.word(24, color: AppColors.al),
+    ),
+  );
+}
+
+/// قاعدة في مربع: نصها في الوسط، وتحته أمثلتها تُسمع بالضغط عليها.
+class _RuleCard extends StatelessWidget {
+  const _RuleCard({required this.span, required this.examples});
+  final InlineSpan span;
+  final List<String> examples;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+    decoration: BoxDecoration(
+      color: AppColors.background,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: AppColors.lineDark),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text.rich(
+          span,
+          textAlign: TextAlign.center,
+          style: AppTheme.word(22).copyWith(height: 1.7),
+        ),
+        const SizedBox(height: 4),
+        Text.rich(
+          TextSpan(
+            children: [
+              const TextSpan(text: 'مثل ( '),
+              for (final (i, w) in examples.indexed) ...[
+                if (i > 0) const TextSpan(text: ' ـ '),
+                _example(context, w, w),
+              ],
+              const TextSpan(text: ' )'),
+            ],
+          ),
+          textAlign: TextAlign.center,
+          style: AppTheme.word(22),
+        ),
+      ],
+    ),
+  );
 }
 
 /// ص ٢: «إضاءة»: الأسماء الشاذة، وكلمة تُكتب على وجهين.
