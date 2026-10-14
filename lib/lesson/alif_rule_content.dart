@@ -4,6 +4,7 @@ import '../app_state.dart';
 import '../data/alif_lesson.dart';
 import '../services/speaker.dart';
 import '../theme.dart';
+import '../widgets/pressable.dart';
 import 'rule_content.dart';
 
 void _say(BuildContext context, String text) =>
@@ -368,12 +369,12 @@ class TriliteralRemember extends StatelessWidget {
   );
 }
 
-/// ص ١ (الأسماء غير الثلاثية): العناوين بالأحمر والأمثلة بالأزرق، وتحتها في
-/// نافذة «القاعدة» الأسماء الشاذة.
+/// ص ١ (الأسماء غير الثلاثية): العناوين بالأحمر والأمثلة بالأزرق، ومعها
+/// زر «إضاءة» للأسماء الشاذة.
 class LongNounRule extends StatelessWidget {
   const LongNounRule({super.key, this.light = true});
 
-  /// الأسماء الشاذة والكلمة ذات الوجهين تحت القاعدة (في نافذة «القاعدة»).
+  /// زر «إضاءة» فوق القاعدة.
   final bool light;
 
   @override
@@ -382,6 +383,20 @@ class LongNounRule extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (light) ...[
+            AppButton(
+              key: const ValueKey('alif-light'),
+              label: '💡 إضاءة',
+              style: AppButtonStyle.outline,
+              height: 48,
+              onTap: () => showRuleSheet(
+                context,
+                title: '💡 إضاءة',
+                content: const LongNounLight(),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
           const _CenterHeading('القاعدة'),
           const _RuleCard(
             span: TextSpan(
@@ -415,7 +430,6 @@ class LongNounRule extends StatelessWidget {
             ),
             examples: ['دنيا', 'قضايا'],
           ),
-          if (light) ...[const SizedBox(height: 8), const LongNounLight()],
         ],
       ),
     );
@@ -486,7 +500,7 @@ class _RuleCard extends StatelessWidget {
   );
 }
 
-/// ص ٢: الأسماء الشاذة، وكلمة تُكتب على وجهين.
+/// ص ٢: «إضاءة»: الأسماء الشاذة، وكلمة تُكتب على وجهين.
 class LongNounLight extends StatelessWidget {
   const LongNounLight({super.key});
 
@@ -541,7 +555,7 @@ class LongNounLight extends StatelessWidget {
   );
 }
 
-/// جدول الأسماء الشاذة؛ الصف الأول عناوين بخلفية إن كان [header].
+/// جدول «إضاءة»؛ الصف الأول عناوين بخلفية إن كان [header].
 class _LightTable extends StatelessWidget {
   const _LightTable({required this.rows, this.header = false});
   final List<List<Widget>> rows;
