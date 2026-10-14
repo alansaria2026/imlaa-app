@@ -292,6 +292,30 @@ void main() {
       expect(find.textContaining('يحيى'), findsWidgets);
     });
 
+    testWidgets('زر «إغلاق» يغلق نافذة القاعدة', (t) async {
+      final pages = buildAlifLessonPages(Random(0));
+      await pumpScreen(
+        t,
+        LessonScreen(
+          lessonId: 'qa',
+          title: alifLessonTitle,
+          pages: pages,
+          initialPage: pages.indexWhere((p) => p.title == 'اختر الإجابة'),
+        ),
+      );
+      await t.tap(find.byTooltip('القائمة'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('القاعدة').last);
+      await t.pumpAndSettle();
+      final close = find.byKey(const ValueKey('rule-close'));
+      expect(close, findsOneWidget);
+      // في الركن الأيسر من النافذة.
+      expect(t.getCenter(close).dx, lessThan(100));
+      await t.tap(close);
+      await t.pumpAndSettle();
+      expect(close, findsNothing);
+    });
+
     for (final title in ['احفظ القاعدتين', 'احفظ القاعدة']) {
       testWidgets('«ابدأ الامتحان» في «$title» ينتقل إلى «أكمل القاعدة»', (
         t,
