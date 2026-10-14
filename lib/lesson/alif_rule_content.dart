@@ -404,7 +404,7 @@ class LongNounRule extends StatelessWidget {
                 TextSpan(text: 'أي '),
                 TextSpan(text: 'اسم عربي', style: _red),
                 TextSpan(text: '، أكثر من ثلاثة حروف، يُكتب بالألف '),
-                TextSpan(text: 'المقصورة (ى)', style: _red),
+                TextSpan(text: 'المقصورة\u00A0(ى)', style: _red),
               ],
             ),
             examples: ['مستشفى', 'حلوى'],
@@ -415,7 +415,7 @@ class LongNounRule extends StatelessWidget {
               children: [
                 TextSpan(text: '١- '),
                 TextSpan(text: 'الاسم الأعجمي', style: _red),
-                TextSpan(text: ' يُكتب بالألف الممدودة (ا)'),
+                TextSpan(text: ' يُكتب بالألف الممدودة\u00A0(ا)'),
               ],
             ),
             examples: ['فرنسا', 'أستراليا'],
@@ -425,7 +425,7 @@ class LongNounRule extends StatelessWidget {
               children: [
                 TextSpan(text: '٢- إذا كان '),
                 TextSpan(text: 'قبل حرف الألف (ياء)', style: _red),
-                TextSpan(text: ' يُكتب بالألف الممدودة (ا)'),
+                TextSpan(text: ' يُكتب بالألف الممدودة\u00A0(ا)'),
               ],
             ),
             examples: ['دنيا', 'قضايا'],
@@ -443,11 +443,11 @@ class _CenterHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 2, bottom: 4),
+    padding: const EdgeInsets.only(top: 4, bottom: 6),
     child: Text(
       text,
       textAlign: TextAlign.center,
-      style: AppTheme.word(21, color: AppColors.al).copyWith(height: 1.4),
+      style: AppTheme.word(23, color: AppColors.al).copyWith(height: 1.4),
     ),
   );
 }
@@ -460,8 +460,8 @@ class _RuleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 8),
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+    margin: const EdgeInsets.only(bottom: 10),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
     decoration: BoxDecoration(
       color: AppColors.background,
       borderRadius: BorderRadius.circular(14),
@@ -473,8 +473,9 @@ class _RuleCard extends StatelessWidget {
         Text.rich(
           span,
           textAlign: TextAlign.center,
-          style: AppTheme.word(19).copyWith(height: 1.55),
+          style: AppTheme.word(20).copyWith(height: 1.6),
         ),
+        const SizedBox(height: 2),
         Text.rich(
           TextSpan(
             children: [
@@ -485,14 +486,14 @@ class _RuleCard extends StatelessWidget {
                   context,
                   w,
                   w,
-                  style: _blue.copyWith(fontSize: 20, height: 1.4),
+                  style: _blue.copyWith(fontSize: 21, height: 1.4),
                 ),
               ],
               const TextSpan(text: ' )'),
             ],
           ),
           textAlign: TextAlign.center,
-          style: AppTheme.word(19).copyWith(height: 1.4),
+          style: AppTheme.word(20).copyWith(height: 1.4),
         ),
       ],
     ),

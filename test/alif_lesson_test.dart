@@ -234,9 +234,7 @@ void main() {
       }
     });
 
-    testWidgets('قاعدة «غير الثلاثية» و«إضاءة» داخل الصفحة دون تمرير', (
-      t,
-    ) async {
+    testWidgets('قاعدة «غير الثلاثية» داخل الصفحة دون تمرير', (t) async {
       final pages = buildAlifLessonPages(Random(0));
       await pumpScreen(
         t,
@@ -247,15 +245,15 @@ void main() {
           initialPage: pages.indexWhere((p) => p.title == 'غير الثلاثية'),
         ),
       );
-      final light = find.byKey(const ValueKey('alif-light')).hitTestable();
-      expect(light, findsOneWidget);
-      // الزر فوق القاعدة، وآخر أمثلتها فوق أزرار التنقل.
+      // لا «إضاءة» في الصفحة، وآخر أمثلتها فوق أزرار التنقل.
+      expect(find.byKey(const ValueKey('alif-light')), findsNothing);
       final last = find.textContaining('مثل').last.hitTestable();
-      expect(t.getRect(light).bottom, lessThan(t.getRect(last).top));
       expect(t.getRect(last).bottom, lessThan(t.getRect(nextButton()).top));
     });
 
-    testWidgets('زر «إضاءة» يعرض الأسماء الشاذة و«يحيى»', (t) async {
+    testWidgets('«إضاءة» في نافذة القاعدة تعرض الأسماء الشاذة و«يحيى»', (
+      t,
+    ) async {
       final i = buildAlifLessonPages(
         Random(0),
       ).indexWhere((p) => p.title == 'غير الثلاثية');
@@ -268,6 +266,10 @@ void main() {
           initialPage: i,
         ),
       );
+      await t.tap(find.byTooltip('القائمة'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('القاعدة').last);
+      await t.pumpAndSettle();
       await t.ensureVisible(find.byKey(const ValueKey('alif-light')));
       await t.tap(find.byKey(const ValueKey('alif-light')));
       await t.pumpAndSettle();
