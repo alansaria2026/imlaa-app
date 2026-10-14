@@ -147,17 +147,27 @@ class _AlifBranch extends StatelessWidget {
         child: Text(letter, style: AppTheme.word(38, color: AppColors.al)),
       ),
       const SizedBox(height: 10),
-      Text.rich(
-        TextSpan(
-          children: [
-            const TextSpan(text: '( '),
-            _example(context, word, spoken),
-            const TextSpan(text: ' )'),
-          ],
-        ),
-        style: AppTheme.word(24),
-      ),
+      _BoxExample(word, spoken),
     ],
+  );
+}
+
+/// مثال بين قوسين تحت المربع، يُسمع بالضغط عليه.
+class _BoxExample extends StatelessWidget {
+  const _BoxExample(this.word, this.spoken);
+  final String word;
+  final String spoken;
+
+  @override
+  Widget build(BuildContext context) => Text.rich(
+    TextSpan(
+      children: [
+        const TextSpan(text: '( '),
+        _example(context, word, spoken),
+        const TextSpan(text: ' )'),
+      ],
+    ),
+    style: AppTheme.word(24),
   );
 }
 
@@ -167,7 +177,7 @@ class AlifBasicsRule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final [(mw, ms), (qw, qs)] = alifRuleExamples;
+    final [(mw, ms), (qw, qs), (tw, ts)] = alifRuleExamples;
     return NaskhRule(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -217,6 +227,8 @@ class AlifBasicsRule extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 10),
+            _BoxExample(tw, ts),
           ],
         ),
       ),

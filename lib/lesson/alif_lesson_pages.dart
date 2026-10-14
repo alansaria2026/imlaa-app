@@ -19,7 +19,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       title: 'القاعدة',
       emoji: '📖',
       tappable: true,
-      heading: 'الألف الممدودة والألف المقصورة',
+      heading: 'الألف المقصورة والألف الممدودة',
       rule: const AlifBasicsRule(),
       speech: alifRuleSpeech,
       hint: 'الممدودة (ا) قائمة، والمقصورة (ى) كالياء بلا نقطتين.',
