@@ -162,12 +162,9 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
         rule: VerbComboExample(c),
         builder: (h) => QuizPage(
           handle: h,
-          tag: 'مثال ثم تطبيق',
           title: 'حلّل الفعل',
-          intro: VerbComboExample(c),
-          introSpeech: c.example.spoken,
           rule: VerbComboExample(c),
-          build: (rnd, attempt) => [_analysis(c.practice, rnd, attempt)],
+          build: (rnd, attempt) => _analysis(c, rnd, attempt),
         ),
       ),
     LessonPageSpec(
@@ -525,10 +522,20 @@ List<QuizRound> _weights(Random rnd, int attempt) {
 }
 
 /// ص ١٤–٣٧: الزمن والوزن ونوع الهمزة لفعل الجملة.
-QuizRound _analysis(List<VerbSentence> practice, Random rnd, int attempt) {
-  final s = attempt == 0
-      ? practice.first
-      : _pick(practice, 1, rnd, avoid: {practice.first}).first;
+/// عدد جمل «حلّل الفعل» في الصفحة، وفي كل جملة ثلاثة أسئلة.
+const _analysisRounds = 3;
+
+/// «حلّل الفعل»: ثلاث جولات بلا مثال محلول. أول مرة جملة المثال ثم جملتا
+/// التطبيق الأوليان، وبعد الخطأ ثلاث جمل أخرى من جمل القاعدة نفسها.
+List<QuizRound> _analysis(VerbCombo c, Random rnd, int attempt) {
+  final all = [c.example, ...c.practice];
+  final sentences = attempt == 0
+      ? all.take(_analysisRounds).toList()
+      : _pick(all, _analysisRounds, rnd);
+  return [for (final s in sentences) _analysisRound(s)];
+}
+
+QuizRound _analysisRound(VerbSentence s) {
   return QuizRound(
     sentence: '( ${s.text} )',
     mark: s.verb,
