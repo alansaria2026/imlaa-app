@@ -57,8 +57,7 @@ class _Box extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding:
-        padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    padding: padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     decoration: BoxDecoration(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(12),

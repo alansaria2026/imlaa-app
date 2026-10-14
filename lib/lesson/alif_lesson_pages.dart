@@ -50,7 +50,9 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
     examplePage(
       title: 'احفظ القاعدتين',
       emoji: '🧠',
-      heading: 'احفظ هاتين القاعدتين دائمًا للامتحان',
+      heading: 'احفظ هاتين القاعدتين وابدأ الامتحان',
+      titleColor: AppColors.red,
+      action: 'ابدأ الامتحان',
       rule: const TriliteralRule(),
       content: const TriliteralRemember(),
       speech: triliteralRememberSpeech,
