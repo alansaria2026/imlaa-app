@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:imlaa/data/hamza_lesson.dart';
 import 'package:imlaa/lesson/hamza_lesson_pages.dart';
+import 'package:imlaa/lesson/hamza_rule_content.dart';
 import 'package:imlaa/lesson/lesson_screen.dart';
 import 'package:imlaa/lesson/lessons.dart';
 import 'package:imlaa/lesson/page_handle.dart';
@@ -408,6 +409,20 @@ void main() {
       await open(t, 7);
       expect(find.byType(Table), findsNothing);
       expect(find.text('أمثلة'), findsNothing);
+    });
+
+    testWidgets('همزة الأسماء: القواعد، والأمثلة في جدول من زر «إضاءة»', (
+      t,
+    ) async {
+      final i = buildHamzaLessonPages(
+        Random(0),
+      ).indexWhere((p) => p.title == 'همزة الأسماء');
+      await open(t, i);
+      expect(find.byType(Table), findsNothing);
+      await t.tap(find.byKey(const ValueKey('noun-hamza-light')));
+      await t.pumpAndSettle();
+      expect(find.byType(NounHamzaTable), findsOneWidget);
+      expect(find.text('💡 إضاءة'), findsNWidgets(2)); // الزر وعنوان النافذة
     });
 
     testWidgets('أمثلة الوزن في جدول', (t) async {
