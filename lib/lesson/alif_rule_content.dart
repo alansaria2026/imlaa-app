@@ -465,12 +465,13 @@ class LongNounLight extends StatelessWidget {
             ],
           ),
         ),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 16,
-          children: [
-            for (final w in irregularMaqsura)
-              Text(w, style: AppTheme.word(26, color: AppColors.blue)),
+        const SizedBox(height: 6),
+        _LightTable(
+          rows: [
+            [
+              for (final w in irregularMaqsura)
+                _LightCell(w, color: AppColors.blue),
+            ],
           ],
         ),
         const SizedBox(height: 10),
@@ -485,17 +486,61 @@ class LongNounLight extends StatelessWidget {
             ],
           ),
         ),
-        for (final (w, kind) in twoWayWords)
-          _Line(
-            TextSpan(
-              children: [
-                const TextSpan(text: '   • ( '),
-                TextSpan(text: w, style: _blue),
-                TextSpan(text: ' ) ـ $kind'),
-              ],
-            ),
+        const SizedBox(height: 6),
+        _LightTable(
+          header: true,
+          rows: [
+            [for (final (_, kind) in twoWayWords) _LightCell(kind)],
+            [
+              for (final (w, _) in twoWayWords)
+                _LightCell(w, color: AppColors.blue),
+            ],
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+/// جدول «إضاءة»؛ الصف الأول عناوين بخلفية إن كان [header].
+class _LightTable extends StatelessWidget {
+  const _LightTable({required this.rows, this.header = false});
+  final List<List<Widget>> rows;
+  final bool header;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(12),
+    child: Table(
+      border: TableBorder.all(
+        color: AppColors.lineDark,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: [
+        for (final (i, row) in rows.indexed)
+          TableRow(
+            decoration: header && i == 0
+                ? const BoxDecoration(color: AppColors.primarySoft)
+                : null,
+            children: row,
           ),
       ],
+    ),
+  );
+}
+
+class _LightCell extends StatelessWidget {
+  const _LightCell(this.text, {this.color = AppColors.ink});
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(text, style: AppTheme.word(24, color: color)),
     ),
   );
 }
