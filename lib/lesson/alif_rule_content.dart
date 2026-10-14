@@ -326,6 +326,7 @@ class _RememberBox extends StatelessWidget {
         if (number != null)
           Text(
             'القاعدة $number',
+            textAlign: TextAlign.center,
             style: AppTheme.word(20, color: AppColors.al),
           ),
         Text.rich(span, style: AppTheme.word(22).copyWith(height: 1.7)),
