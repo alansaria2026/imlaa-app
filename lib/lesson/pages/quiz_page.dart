@@ -421,7 +421,8 @@ class _QuizPageState extends State<QuizPage> {
         ? null
         : Text(
             prompt,
-            // السؤال بالأزرق، والعنوان بالأحمر.
+            // السؤال بالأزرق في وسط السطر، والعنوان بالأحمر.
+            textAlign: TextAlign.center,
             style: AppTheme.word(
               22,
               color: AppColors.blue,
