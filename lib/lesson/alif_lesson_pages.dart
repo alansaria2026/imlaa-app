@@ -2,6 +2,7 @@ import 'dart:math';
 
 import '../data/alif_lesson.dart';
 import '../data/review_lesson.dart';
+import '../theme.dart';
 import '../utils/arabic.dart';
 import 'alif_rule_content.dart';
 import 'page_handle.dart';
@@ -40,6 +41,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
+        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const TriliteralRule(),
         build: _threeSentences,
@@ -61,6 +63,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
+        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const TriliteralRule(),
         build: (rnd, attempt) => _inRounds(_triliteralBlanks, 2, rnd, attempt),
@@ -73,6 +76,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
+        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const TriliteralRule(),
         build: _pairQuiz,
@@ -85,6 +89,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
+        sentenceColor: AppColors.blue,
         title: 'اختر الإجابات الصحيحة',
         subtitle: 'أربع إجابات صحيحة',
         rule: const TriliteralRule(),
@@ -108,6 +113,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
+        sentenceColor: AppColors.blue,
         title: 'اختر الإجابات الصحيحة',
         rule: const LongNounRule(),
         build: _longAnswers,
@@ -129,6 +135,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
+        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const LongNounRule(),
         build: (rnd, attempt) => _inRounds(_longBlanks, 3, rnd, attempt),
@@ -146,6 +153,8 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
           items: items,
           spare: spare,
           newOnError: true,
+          titleColor: AppColors.red,
+          sentenceColor: AppColors.blue,
         );
       },
     ),

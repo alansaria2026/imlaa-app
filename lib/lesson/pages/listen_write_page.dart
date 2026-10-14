@@ -21,6 +21,8 @@ class ListenWritePage extends StatefulWidget {
     this.spare = const [],
     this.newOnError = false,
     this.explainMistake,
+    this.titleColor,
+    this.sentenceColor = AppColors.ink,
   });
 
   final PageHandle handle;
@@ -35,6 +37,12 @@ class ListenWritePage extends StatefulWidget {
 
   /// شرح للخطأ من الإجابة المكتوبة والصحيحة؛ null إن لم يوجد شرح.
   final String? Function(String typed, String answer)? explainMistake;
+
+  /// لون العنوان (السؤال)؛ null للون الأساسي.
+  final Color? titleColor;
+
+  /// لون الجملة.
+  final Color sentenceColor;
 
   @override
   State<ListenWritePage> createState() => _ListenWritePageState();
@@ -207,6 +215,7 @@ class _ListenWritePageState extends State<ListenWritePage> {
     final item = _item;
     return PageCard(
       title: widget.title,
+      titleColor: widget.titleColor,
       child: item == null
           ? const PageDoneMessage()
           : Column(
@@ -224,7 +233,11 @@ class _ListenWritePageState extends State<ListenWritePage> {
                 ),
                 if (item.sentence != null) ...[
                   const SizedBox(height: 10),
-                  _SentenceWithBlank(item: item, filled: _showWord),
+                  _SentenceWithBlank(
+                    item: item,
+                    filled: _showWord,
+                    color: widget.sentenceColor,
+                  ),
                 ],
                 const SizedBox(height: 12),
                 SizedBox(
@@ -269,14 +282,19 @@ class _ListenWritePageState extends State<ListenWritePage> {
 
 /// الجملة مع فراغ مكان الكلمة الناقصة، وتظهر الكلمة بعد الإجابة الصحيحة.
 class _SentenceWithBlank extends StatelessWidget {
-  const _SentenceWithBlank({required this.item, required this.filled});
+  const _SentenceWithBlank({
+    required this.item,
+    required this.filled,
+    required this.color,
+  });
   final ListenItem item;
   final bool filled;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     final parts = item.sentence!.split('…');
-    final base = AppTheme.word(26);
+    final base = AppTheme.word(26, color: color);
     return Text.rich(
       TextSpan(
         children: [
