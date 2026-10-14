@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../app_state.dart';
@@ -182,13 +184,23 @@ class _LessonScreenState extends State<LessonScreen> {
                 controller: _pager,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  for (final p in _built)
+                  for (var i = 0; i < _built.length; i++)
                     _KeepAlive(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        child: p,
+                      child: LayoutBuilder(
+                        builder: (context, box) => SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          child: widget.pages[i].centered
+                              // في الوسط إن اتسعت الشاشة، وإلا يُمرَّر من أعلى.
+                              ? ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minHeight: max(0, box.maxHeight - 32),
+                                  ),
+                                  child: Center(child: _built[i]),
+                                )
+                              : _built[i],
+                        ),
                       ),
                     ),
                 ],

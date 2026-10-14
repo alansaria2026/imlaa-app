@@ -43,6 +43,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'قطع أم وصل؟',
       emoji: '🔍',
       rule: const HamzaBasicsRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
@@ -55,6 +56,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'أين تُنطق؟',
       emoji: '🗣️',
       rule: const HamzaBasicsRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
@@ -105,6 +107,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'اسم أم فعل؟',
       emoji: '🔪',
       rule: const AlHamzaRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
@@ -136,6 +139,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'ما وزنه؟',
       emoji: '🔢',
       rule: const WeightRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر وزن الفعل',
@@ -160,6 +164,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
         title: '${_short(c.tense)} ${c.weight.label}',
         emoji: _tenseEmoji[c.tense]!,
         rule: VerbComboExample(c),
+        centered: true,
         builder: (h) => QuizPage(
           handle: h,
           title: 'حلّل الفعل',
@@ -171,6 +176,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'اختر الإجابات',
       emoji: '☑️',
       rule: const VerbChartRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابات الصحيحة',
@@ -182,6 +188,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'صنّف الفعل',
       emoji: '🧩',
       rule: const VerbChartRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
@@ -205,6 +212,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'اختبر نفسك',
       emoji: '📝',
       rule: const MasdarRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
@@ -216,6 +224,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'الاسم والفعل',
       emoji: '👆',
       rule: const MasdarRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'ميّز الاسم من الفعل',
@@ -227,6 +236,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'ميّز الكلمات',
       emoji: '🎯',
       rule: const MasdarRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'ميّز الأسماء والأفعال',
@@ -238,6 +248,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       title: 'حوّل',
       emoji: '🔄',
       rule: const MasdarRule(),
+      centered: true,
       builder: (h) => QuizPage(
         handle: h,
         title: 'حوّل الكلمة واكتبها',
