@@ -26,7 +26,10 @@ python3 tool/generate_audio.py --voice Orus
 
 ```bash
 flutter build web --release --base-href /imlaa-app/ --no-web-resources-cdn --pwa-strategy=none
+# الموقع محمي بكلمة مرور (عند صاحب التطبيق، ولا تُكتب في المستودع):
+SITE_PASSWORD='...' python3 tool/protect_web.py
 # ثم انسخ محتوى build/web إلى فرع gh-pages (مع ملف .nojekyll ودون ملفات .symbols) وارفعه.
+# لا تنشر نسخة غير محمية.
 ```
 
 ## الحالة الحالية (لمن يكمل العمل)
