@@ -179,9 +179,11 @@ def split_pcm(pcm, count):
 
 def plausible(pieces, texts):
     """طول كل مقطع يتناسب مع طول نصه، وإلا فالقطع خاطئ."""
-    per_char = [len(p) / 2 / RATE_HZ / max(1, len(t)) for p, t in zip(pieces, texts)]
+    # الحروف بلا تشكيل، وزيادة ثابتة لأن الكلمة القصيرة تأخذ وقتًا مهما قصرت.
+    letters = [len(re.sub(r"[\u064B-\u0652\s]", "", t)) + 4 for t in texts]
+    per_char = [len(p) / 2 / RATE_HZ / n for p, n in zip(pieces, letters)]
     mid = sorted(per_char)[len(per_char) // 2]
-    return all(mid / 2.2 < x < mid * 2.2 for x in per_char)
+    return all(mid / 2.5 < x < mid * 2.5 for x in per_char)
 
 
 def multi_sentence(text):
@@ -262,7 +264,8 @@ def main():
     size = args.batch if say is synthesize_gemini else 1
     # النصوص ذات الجمل المتعددة فيها وقفات طويلة تُفسد القطع، فتُولَّد وحدها.
     solo = [t for t in todo if size > 1 and multi_sentence(t)]
-    rest = [t for t in todo if t not in solo]
+    # الأقرب طولًا معًا: وقفات متقاربة بين النصوص فيسهل القطع.
+    rest = sorted((t for t in todo if t not in solo), key=len)
     groups = [rest[i:i + size] for i in range(0, len(rest), size)] + [
         [t] for t in solo
     ]
