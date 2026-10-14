@@ -3,7 +3,8 @@
 
 يشفّر build/web/main.dart.js (AES-GCM بمفتاح من PBKDF2) إلى main.dart.js.enc
 ويحذف الأصل، ويستبدل index.html بصفحة تطلب كلمة المرور وتفك التشفير في
-المتصفح ثم تشغّل التطبيق. كلمة المرور لا تُحفظ في الملفات المنشورة.
+المتصفح ثم تشغّل التطبيق. كلمة المرور لا تُحفظ في الملفات المنشورة ولا في
+المتصفح، فتُطلب في كل دخول.
 
     flutter build web --release --base-href /imlaa-app/ --no-web-resources-cdn --pwa-strategy=none
     SITE_PASSWORD='...' python3 tool/protect_web.py
@@ -71,7 +72,6 @@ GATE = """<!DOCTYPE html>
       const js = await crypto.subtle.decrypt({name: 'AES-GCM', iv}, key, data.slice(28));
       window.__imlaaMain = URL.createObjectURL(
         new Blob([js], {type: 'text/javascript'}));
-      try { localStorage.setItem(KEY, password); } catch (_) {}
       form.remove();
       const s = document.createElement('script');
       s.src = 'flutter_bootstrap.js';
@@ -88,11 +88,8 @@ GATE = """<!DOCTYPE html>
       }
     });
 
-    let saved = null;
-    try { saved = localStorage.getItem(KEY); } catch (_) {}
-    if (saved) unlock(saved).catch(() => {
-      try { localStorage.removeItem(KEY); } catch (_) {}
-    });
+    // تُطلب كلمة المرور في كل دخول؛ ويُمسح ما حفظته النسخ السابقة.
+    try { localStorage.removeItem(KEY); } catch (_) {}
   </script>
 </body>
 </html>
