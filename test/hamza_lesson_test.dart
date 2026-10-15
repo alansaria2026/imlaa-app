@@ -170,43 +170,14 @@ void main() {
       }
     });
 
-    test('صنّف الفعل: اثنتا عشرة جملة بثلاث جولات، أولها جمل الكتاب', () {
+    test('صنّف الفعل: اثنا عشر سؤالًا، أولها جمل الكتاب', () {
       final page = pages['صنّف الفعل']!;
       final first = page.build(Random(0), 0);
       expect(
         [for (final r in first) r.mark],
-        [
-          for (final s in verbReviewSentences) ...[s.verb, s.verb, s.verb],
-        ],
+        [for (final s in verbReviewSentences) s.verb],
       );
-      expect(
-        [for (final r in first.take(3)) r.items.single.prompt],
-        ['زمن الفعل:', 'الفعل في الماضي:', 'وزن الفعل:'],
-      );
-      // «هل أعتمد على نفسي؟»: مضارع، ماضيه «اعتمد»، خماسي.
-      expect(
-        [for (final r in first.skip(3).take(3)) r.items.single.answers.single],
-        ['فعل مضارع', 'اعتمد', 'خماسي'],
-      );
-      expect(page.build(Random(1), 1).length, 36);
-    });
-
-    test('الماضي من كل فعل بعدد حروف وزنه', () {
-      const letters = {
-        Weight.three: 3,
-        Weight.four: 4,
-        Weight.five: 5,
-        Weight.six: 6,
-      };
-      for (final s in allVerbSentences) {
-        expect(s.past.length, letters[s.weight], reason: s.verb);
-        if (s.tense == Tense.past) expect(s.past, s.verb);
-      }
-      final past = {for (final s in allVerbSentences) s.verb: s.past};
-      expect(past['أستضيف'], 'استضاف');
-      expect(past['اكتب'], 'كتب');
-      expect(past['أكرم'], 'أكرم');
-      expect(past['أشاهد'], 'شاهد');
+      expect(page.build(Random(1), 1).length, 12);
     });
 
     test('حوّل: عشر كلمات مختلفة، وأولها كلمات الكتاب', () {

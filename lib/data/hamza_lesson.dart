@@ -64,17 +64,6 @@ class VerbSentence {
   String get text => stripDiacritics(spoken);
   Hamza get hamza => hamzaOf(tense, weight);
 
-  /// الفعل محوَّلًا إلى الماضي (أعتمد ← اعتمد)، وبه يُعرف وزنه.
-  String get past {
-    if (tense == Tense.past) return verb;
-    if (_irregularPast[verb] case final p?) return p;
-    return switch (weight) {
-      Weight.three => verb.substring(1),
-      Weight.four => verb,
-      Weight.five || Weight.six => 'ا${verb.substring(1)}',
-    };
-  }
-
   /// الفعل بلا صورة الهمزة (أكتب ← اكتب) ليعتمد الطالب على القاعدة الذهبية.
   String get hiddenVerb => hideHamza(verb);
 
@@ -82,13 +71,6 @@ class VerbSentence {
   String get hiddenText =>
       [for (final w in text.split(' ')) w == verb ? hiddenVerb : w].join(' ');
 }
-
-/// أفعال يتغيّر ماضيها عن القاعدة (أستعين ← استعان).
-const _irregularPast = {
-  'أشاهد': 'شاهد',
-  'أستعين': 'استعان',
-  'أستضيف': 'استضاف',
-};
 
 /// يكتب الهمزة في أول الكلمة ألفًا (أ، إ ← ا).
 String hideHamza(String word) => word.replaceFirst(RegExp('^[أإ]'), 'ا');
