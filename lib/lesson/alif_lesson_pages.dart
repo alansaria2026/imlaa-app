@@ -93,7 +93,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       builder: (h) => QuizPage(
         handle: h,
         sentenceColor: AppColors.blue,
-        title: 'اختر الإجابات الصحيحة',
+        title: 'اختر الصفات المشتركة بين الكلمات التي باللون الأحمر',
         subtitle: 'أربع إجابات صحيحة',
         rule: const TriliteralRule(),
         build: _fourAnswers,
