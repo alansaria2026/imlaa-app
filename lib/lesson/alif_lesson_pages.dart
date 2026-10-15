@@ -90,6 +90,10 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الصفات المشتركة بين الكلمات التي باللون الأحمر',
+        // العنوان طويل يأخذ سطرين؛ خط أصغر للعنوان والجمل حتى يبقى «إدخال»
+        // ظاهرًا فوق أزرار التنقل.
+        titleSize: 21,
+        sentenceSize: 26,
         subtitle: 'أربع إجابات صحيحة',
         rule: const TriliteralRule(),
         build: _fourAnswers,

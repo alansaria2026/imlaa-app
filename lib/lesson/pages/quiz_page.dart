@@ -97,6 +97,8 @@ class QuizPage extends StatefulWidget {
     this.autoSpeak = false,
     this.sentenceColor = AppColors.ink,
     this.promptColor = AppColors.blue,
+    this.titleSize = 26,
+    this.sentenceSize = 30,
   });
 
   final PageHandle handle;
@@ -122,6 +124,12 @@ class QuizPage extends StatefulWidget {
 
   /// لون نص السؤال فوق الخيارات.
   final Color promptColor;
+
+  /// حجم خط العنوان (يُصغَّر للعناوين الطويلة).
+  final double titleSize;
+
+  /// حجم خط جملة السؤال.
+  final double sentenceSize;
 
   static const levelStep = 10;
 
@@ -391,6 +399,7 @@ class QuizPageState extends State<QuizPage> {
       tag: widget.tag,
       title: widget.title,
       titleColor: AppColors.red,
+      titleSize: widget.titleSize,
       subtitle: widget.subtitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -414,6 +423,7 @@ class QuizPageState extends State<QuizPage> {
                         ? MarkedSentence(
                             round.answerSentence!,
                             mark: round.answerMark,
+                            size: widget.sentenceSize,
                             color: widget.sentenceColor,
                           )
                         : MarkedSentence(
@@ -421,6 +431,7 @@ class QuizPageState extends State<QuizPage> {
                             mark: round.mark,
                             marks: round.marks,
                             lastLetterOnly: round.markLastLetter,
+                            size: widget.sentenceSize,
                             color: widget.sentenceColor,
                           ),
                   ),
