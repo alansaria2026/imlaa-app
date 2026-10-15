@@ -96,6 +96,7 @@ class QuizPage extends StatefulWidget {
     this.introSpeech,
     this.autoSpeak = false,
     this.sentenceColor = AppColors.ink,
+    this.promptColor = AppColors.blue,
   });
 
   final PageHandle handle;
@@ -118,6 +119,9 @@ class QuizPage extends StatefulWidget {
 
   /// لون جملة السؤال (كلماتها المعلّمة تبقى بالأحمر).
   final Color sentenceColor;
+
+  /// لون نص السؤال فوق الخيارات.
+  final Color promptColor;
 
   static const levelStep = 10;
 
@@ -450,11 +454,11 @@ class QuizPageState extends State<QuizPage> {
         ? null
         : Text(
             prompt,
-            // السؤال بالأزرق في وسط السطر، والعنوان بالأحمر.
+            // السؤال في وسط السطر (بالأزرق افتراضيًا)، والعنوان بالأحمر.
             textAlign: TextAlign.center,
             style: AppTheme.word(
               22,
-              color: AppColors.blue,
+              color: widget.promptColor,
             ).copyWith(height: 1.5),
           );
     final state = _states[i];

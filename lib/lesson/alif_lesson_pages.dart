@@ -44,6 +44,7 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
         handle: h,
         sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
+        promptColor: AppColors.ink,
         rule: const TriliteralRule(),
         build: _threeSentences,
       ),
