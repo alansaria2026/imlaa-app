@@ -66,7 +66,8 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
-        rule: const TriliteralRule(),
+        // بعد الخطأ تظهر القاعدة التي طُلب حفظها، لا قاعدة أول الدرس.
+        rule: const TriliteralRemember(),
         build: (rnd, attempt) => _inRounds(_triliteralBlanks, 2, rnd, attempt),
       ),
     ),
@@ -142,7 +143,8 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
-        rule: const LongNounRule(),
+        // بعد الخطأ تظهر القاعدة التي طُلب حفظها، لا قاعدة أول الدرس.
+        rule: const LongNounRemember(),
         build: (rnd, attempt) => _inRounds(_longBlanks, 3, rnd, attempt),
       ),
     ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:imlaa/data/alif_lesson.dart';
 import 'package:imlaa/lesson/alif_lesson_pages.dart';
+import 'package:imlaa/lesson/alif_rule_content.dart';
 import 'package:imlaa/lesson/lesson_complete_screen.dart';
 import 'package:imlaa/lesson/lesson_screen.dart';
 import 'package:imlaa/lesson/lessons.dart';
@@ -315,6 +316,44 @@ void main() {
       await t.pumpAndSettle();
       expect(close, findsNothing);
     });
+
+    for (final (i, remember) in [
+      (0, TriliteralRemember),
+      (1, LongNounRemember),
+    ]) {
+      testWidgets('الخطأ في «أكمل القاعدة» يعرض القاعدة المحفوظة $remember', (
+        t,
+      ) async {
+        final pages = buildAlifLessonPages(Random(0));
+        final page = [
+          for (final (k, p) in pages.indexed)
+            if (p.title == 'أكمل القاعدة') k,
+        ][i];
+        await pumpScreen(
+          t,
+          LessonScreen(
+            lessonId: 'qa',
+            title: alifLessonTitle,
+            pages: pages,
+            initialPage: page,
+          ),
+        );
+        final round = t
+            .state<QuizPageState>(find.byType(QuizPage))
+            .currentRound;
+        for (final (k, item) in round.items.indexed) {
+          final a = item.options.firstWhere((o) => !item.answers.contains(o));
+          await t.tap(find.byKey(ValueKey('q$k-$a')).last);
+          await t.pump();
+        }
+        await t.tap(find.text('إدخال'));
+        await t.pump(const Duration(milliseconds: 3600));
+        await t.pumpAndSettle();
+        expect(find.byType(remember), findsOneWidget);
+        expect(find.byType(TriliteralRule), findsNothing);
+        expect(find.byType(LongNounRule), findsNothing);
+      });
+    }
 
     for (final title in ['احفظ القاعدتين', 'احفظ القاعدة']) {
       testWidgets('«ابدأ الامتحان» في «$title» ينتقل إلى «أكمل القاعدة»', (
