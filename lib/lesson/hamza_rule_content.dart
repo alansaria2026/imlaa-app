@@ -407,13 +407,6 @@ class AlRememberRule extends StatelessWidget {
   );
 }
 
-const _letterCounts = {
-  Weight.three: 'ثلاثة حروف',
-  Weight.four: 'أربعة حروف',
-  Weight.five: 'خمسة حروف',
-  Weight.six: 'ستة حروف',
-};
-
 /// ص ١١–١٢: وزن الفعل = عدد حروف الفعل الماضي (نافذة «القاعدة» كاملة).
 class WeightRule extends StatelessWidget {
   const WeightRule({super.key});
@@ -439,7 +432,11 @@ class WeightLettersRule extends StatelessWidget {
     child: Builder(
       builder: (context) {
         final t = Theme.of(context).textTheme;
-        final bold = t.titleMedium?.copyWith(fontWeight: FontWeight.w800);
+        // سطرا القاعدة أكبر من عناوين الأفعال.
+        final bold = t.titleMedium?.copyWith(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+        );
         Widget letters(String word) => Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -471,7 +468,7 @@ class WeightLettersRule extends StatelessWidget {
               FittedBox(fit: BoxFit.scaleDown, child: letters(word)),
               const SizedBox(height: 2),
               Text(
-                'فعل ${weight.label} (${_letterCounts[weight]})',
+                'فعل ${weight.label}',
                 textAlign: TextAlign.center,
                 style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
