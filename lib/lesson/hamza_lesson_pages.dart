@@ -187,7 +187,7 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
-        subtitle: 'اثنا عشر سؤالًا متتاليًا بلا خطأ',
+        subtitle: 'اثنتا عشرة جملة متتالية بلا خطأ',
         rule: const VerbChartRule(),
         build: _classify,
       ),
@@ -509,28 +509,54 @@ List<QuizRound> _threeAnswers(Random rnd, int attempt) {
 }
 
 /// ص ٣٩–٤٠: زمن الفعل ووزنه من اثني عشر خيارًا.
+/// لكل جملة ثلاث جولات: زمن الفعل، ثم الماضي منه، ثم وزنه.
 List<QuizRound> _classify(Random rnd, int attempt) {
   final sentences = attempt == 0
       ? verbReviewSentences
       : _pick(allVerbSentences, 12, rnd);
-  String label(Tense t, Weight w) => '${t.label} ${w.label}';
-  final options = [
-    for (final t in [Tense.present, Tense.past, Tense.imperative])
-      for (final w in Weight.values) label(t, w),
-  ];
+  QuizRound round(VerbSentence s, QuizItem item) => QuizRound(
+    sentence: s.text,
+    mark: s.verb,
+    spoken: s.spoken,
+    hint: _verbHint,
+    items: [item],
+  );
   return [
-    for (final s in sentences)
-      QuizRound(
-        sentence: s.text,
-        mark: s.verb,
-        spoken: s.spoken,
-        hint: _verbHint,
-        items: [
-          QuizItem(options: options, answers: {label(s.tense, s.weight)}),
-        ],
+    for (final s in sentences) ...[
+      round(
+        s,
+        QuizItem(
+          prompt: 'زمن الفعل:',
+          options: _tenseOptions,
+          answers: {s.tense.label},
+        ),
       ),
+      round(
+        s,
+        QuizItem(
+          prompt: 'الفعل في الماضي:',
+          options: [s.past, _swapHamza(s.past)]..shuffle(rnd),
+          answers: {s.past},
+        ),
+      ),
+      round(
+        s,
+        QuizItem(
+          prompt: 'وزن الفعل:',
+          options: _weightOptions,
+          answers: {s.weight.label},
+        ),
+      ),
+    ],
   ];
 }
+
+/// خيار خاطئ للماضي بتبديل أوله: اعتمد ← أعتمد، أكرم ← اكرم، كتب ← أكتب.
+String _swapHamza(String past) => switch (past[0]) {
+  'ا' => 'أ${past.substring(1)}',
+  'أ' => 'ا${past.substring(1)}',
+  _ => 'أ$past',
+};
 
 /// أفعال يصلح منها اسم مشابه خاطئ (استشعر ← مستشعر).
 final _distractable = [
