@@ -24,7 +24,8 @@ class RuleContent extends StatelessWidget {
       children: [
         Text(
           'القاعدة',
-          style: t.titleSmall?.copyWith(
+          textAlign: TextAlign.center,
+          style: t.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
             color: AppColors.primary,
           ),
@@ -36,7 +37,8 @@ class RuleContent extends StatelessWidget {
         const SizedBox(height: 20),
         Text(
           'أمثلة',
-          style: t.titleSmall?.copyWith(
+          textAlign: TextAlign.center,
+          style: t.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
             color: AppColors.primary,
           ),
@@ -71,34 +73,41 @@ class _RuleLine extends StatelessWidget {
         color: AppColors.background,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Wrap(
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 8,
-        runSpacing: 6,
-        children: [
-          Text(
-            moon ? 'اللام القمرية' : 'اللام الشمسية',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const AlBox(size: 18),
-          Text('=', style: Theme.of(context).textTheme.titleMedium),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.line),
-            ),
-            child: Text(
-              type.rule,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: moon ? AppColors.moon : AppColors.sun,
+      // سطر واحد في الوسط بأكبر خط ممكن؛ يصغر على الشاشات الضيقة.
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              moon ? 'اللام القمرية' : 'اللام الشمسية',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 8),
+            const AlBox(size: 24),
+            const SizedBox(width: 8),
+            Text('=', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.line),
+              ),
+              child: Text(
+                type.rule,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: moon ? AppColors.moon : AppColors.sun,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -127,21 +136,27 @@ class _ExampleTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           child: Row(
             children: [
+              // أيقونة بالعرض نفسه في الطرف الآخر حتى يتوسط المثال.
+              const SizedBox(width: 28),
               Expanded(
-                child: Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 10,
-                  children: [
-                    AlText(word, size: 32),
-                    Text('=', style: Theme.of(context).textTheme.titleMedium),
-                    LamChip(type),
-                  ],
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AlText(word, size: 42),
+                      const SizedBox(width: 10),
+                      Text('=', style: Theme.of(context).textTheme.titleLarge),
+                      const SizedBox(width: 10),
+                      LamChip(type, fontSize: 18),
+                    ],
+                  ),
                 ),
               ),
               const Icon(
                 Icons.volume_up_rounded,
                 color: AppColors.primary,
-                size: 22,
+                size: 28,
               ),
             ],
           ),

@@ -48,17 +48,21 @@ class _Heading extends StatelessWidget {
 }
 
 class _Line extends StatelessWidget {
-  const _Line(this.span);
+  const _Line(this.span, {this.size});
   final InlineSpan span;
+
+  /// حجم الخط؛ الافتراضي حجم titleMedium.
+  final double? size;
 
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 3),
     child: Text.rich(
       span,
-      style: Theme.of(
-        context,
-      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        fontSize: size,
+        fontWeight: FontWeight.w600,
+      ),
     ),
   );
 }
@@ -407,13 +411,6 @@ class AlRememberRule extends StatelessWidget {
   );
 }
 
-const _letterCounts = {
-  Weight.three: 'ثلاثة حروف',
-  Weight.four: 'أربعة حروف',
-  Weight.five: 'خمسة حروف',
-  Weight.six: 'ستة حروف',
-};
-
 /// ص ١١–١٢: وزن الفعل = عدد حروف الفعل الماضي (نافذة «القاعدة» كاملة).
 class WeightRule extends StatelessWidget {
   const WeightRule({super.key});
@@ -439,7 +436,11 @@ class WeightLettersRule extends StatelessWidget {
     child: Builder(
       builder: (context) {
         final t = Theme.of(context).textTheme;
-        final bold = t.titleMedium?.copyWith(fontWeight: FontWeight.w800);
+        // سطرا القاعدة أكبر من عناوين الأفعال.
+        final bold = t.titleMedium?.copyWith(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+        );
         Widget letters(String word) => Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -471,7 +472,7 @@ class WeightLettersRule extends StatelessWidget {
               FittedBox(fit: BoxFit.scaleDown, child: letters(word)),
               const SizedBox(height: 2),
               Text(
-                'فعل ${weight.label} (${_letterCounts[weight]})',
+                'فعل ${weight.label}',
                 textAlign: TextAlign.center,
                 style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
@@ -847,6 +848,9 @@ class MasdarRule extends StatelessWidget {
   );
 }
 
+/// خط قواعد همزة الأسماء أكبر من بقية القواعد (الصفحة فيها ثلاثة أسطر فقط).
+const _nounLineSize = 21.0;
+
 /// ص ٥١: همزة الأسماء: القواعد الثلاث، والأمثلة في جدول يفتحه زر «إضاءة».
 class NounHamzaRule extends StatelessWidget {
   const NounHamzaRule({super.key});
@@ -866,6 +870,7 @@ class NounHamzaRule extends StatelessWidget {
                 _colored('قطع', hamzaColor(Hamza.qat)),
               ],
             ),
+            size: _nounLineSize,
           ),
           _Line(
             TextSpan(
@@ -875,6 +880,7 @@ class NounHamzaRule extends StatelessWidget {
                 const TextSpan(text: ' دائمًا'),
               ],
             ),
+            size: _nounLineSize,
           ),
           _Line(
             TextSpan(
@@ -884,6 +890,7 @@ class NounHamzaRule extends StatelessWidget {
                 const TextSpan(text: ' دائمًا'),
               ],
             ),
+            size: _nounLineSize,
           ),
           const SizedBox(height: 16),
           AppButton(
@@ -936,7 +943,7 @@ class NounHamzaTable extends StatelessWidget {
       (
         TextSpan(
           children: [
-            const TextSpan(text: 'الأعلام\n'),
+            const TextSpan(text: 'أسماء الأعلام\n'),
             _colored('قطع', hamzaColor(Hamza.qat)),
           ],
         ),

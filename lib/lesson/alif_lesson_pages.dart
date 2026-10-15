@@ -42,7 +42,6 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
-        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const TriliteralRule(),
         build: _threeSentences,
@@ -66,9 +65,9 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
-        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
-        rule: const TriliteralRule(),
+        // بعد الخطأ تظهر القاعدة التي طُلب حفظها، لا قاعدة أول الدرس.
+        rule: const TriliteralRemember(),
         build: (rnd, attempt) => _inRounds(_triliteralBlanks, 2, rnd, attempt),
       ),
     ),
@@ -79,7 +78,6 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
-        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const TriliteralRule(),
         build: _pairQuiz,
@@ -92,8 +90,11 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
-        sentenceColor: AppColors.blue,
-        title: 'اختر الإجابات الصحيحة',
+        title: 'اختر الصفات المشتركة بين الكلمات التي باللون الأحمر',
+        // العنوان طويل يأخذ سطرين؛ خط أصغر للعنوان والجمل حتى يبقى «إدخال»
+        // ظاهرًا فوق أزرار التنقل.
+        titleSize: 21,
+        sentenceSize: 26,
         subtitle: 'أربع إجابات صحيحة',
         rule: const TriliteralRule(),
         build: _fourAnswers,
@@ -118,7 +119,6 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
-        sentenceColor: AppColors.blue,
         title: 'اختر الإجابات الصحيحة',
         rule: const LongNounRule(),
         build: _longAnswers,
@@ -142,9 +142,9 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
-        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
-        rule: const LongNounRule(),
+        // بعد الخطأ تظهر القاعدة التي طُلب حفظها، لا قاعدة أول الدرس.
+        rule: const LongNounRemember(),
         build: (rnd, attempt) => _inRounds(_longBlanks, 3, rnd, attempt),
       ),
     ),
@@ -161,7 +161,6 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
           spare: spare,
           newOnError: true,
           titleColor: AppColors.red,
-          sentenceColor: AppColors.blue,
         );
       },
     ),

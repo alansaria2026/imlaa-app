@@ -70,6 +70,7 @@ class PageCard extends StatelessWidget {
     required this.child,
     this.subtitle,
     this.titleColor,
+    this.titleSize = 26,
   });
 
   final String? tag;
@@ -79,6 +80,9 @@ class PageCard extends StatelessWidget {
 
   /// لون العنوان؛ الافتراضي لون النص.
   final Color? titleColor;
+
+  /// حجم خط العنوان؛ يُصغَّر للعناوين الطويلة حتى يبقى التمرين ظاهرًا.
+  final double titleSize;
 
   @override
   Widget build(BuildContext context) {
@@ -107,9 +111,9 @@ class PageCard extends StatelessWidget {
             context,
           ).clamp(maxScaleFactor: 1.5),
           style: AppTheme.word(
-            26,
+            titleSize,
             color: titleColor ?? AppColors.ink,
-          ).copyWith(height: 1.5),
+          ).copyWith(height: titleSize < 26 ? 1.3 : 1.5),
         ),
         if (subtitle != null) ...[
           const SizedBox(height: 2),
@@ -131,10 +135,13 @@ class PageCard extends StatelessWidget {
 
 /// شارة نوع اللام.
 class LamChip extends StatelessWidget {
-  const LamChip(this.type, {super.key, this.dense = false});
+  const LamChip(this.type, {super.key, this.dense = false, this.fontSize});
 
   final LamType type;
   final bool dense;
+
+  /// حجم الخط؛ الافتراضي حجم labelMedium.
+  final double? fontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -154,6 +161,7 @@ class LamChip extends StatelessWidget {
         child: Text(
           type.label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            fontSize: fontSize,
             fontWeight: FontWeight.w800,
             color: moon ? AppColors.moon : AppColors.sun,
           ),
