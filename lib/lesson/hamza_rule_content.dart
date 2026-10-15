@@ -48,17 +48,21 @@ class _Heading extends StatelessWidget {
 }
 
 class _Line extends StatelessWidget {
-  const _Line(this.span);
+  const _Line(this.span, {this.size});
   final InlineSpan span;
+
+  /// حجم الخط؛ الافتراضي حجم titleMedium.
+  final double? size;
 
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 3),
     child: Text.rich(
       span,
-      style: Theme.of(
-        context,
-      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        fontSize: size,
+        fontWeight: FontWeight.w600,
+      ),
     ),
   );
 }
@@ -844,6 +848,9 @@ class MasdarRule extends StatelessWidget {
   );
 }
 
+/// خط قواعد همزة الأسماء أكبر من بقية القواعد (الصفحة فيها ثلاثة أسطر فقط).
+const _nounLineSize = 21.0;
+
 /// ص ٥١: همزة الأسماء: القواعد الثلاث، والأمثلة في جدول يفتحه زر «إضاءة».
 class NounHamzaRule extends StatelessWidget {
   const NounHamzaRule({super.key});
@@ -863,6 +870,7 @@ class NounHamzaRule extends StatelessWidget {
                 _colored('قطع', hamzaColor(Hamza.qat)),
               ],
             ),
+            size: _nounLineSize,
           ),
           _Line(
             TextSpan(
@@ -872,6 +880,7 @@ class NounHamzaRule extends StatelessWidget {
                 const TextSpan(text: ' دائمًا'),
               ],
             ),
+            size: _nounLineSize,
           ),
           _Line(
             TextSpan(
@@ -881,6 +890,7 @@ class NounHamzaRule extends StatelessWidget {
                 const TextSpan(text: ' دائمًا'),
               ],
             ),
+            size: _nounLineSize,
           ),
           const SizedBox(height: 16),
           AppButton(
