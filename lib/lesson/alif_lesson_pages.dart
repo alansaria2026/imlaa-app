@@ -65,7 +65,6 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
-        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const TriliteralRule(),
         build: (rnd, attempt) => _inRounds(_triliteralBlanks, 2, rnd, attempt),
@@ -78,7 +77,6 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
-        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const TriliteralRule(),
         build: _pairQuiz,
@@ -91,7 +89,6 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
-        sentenceColor: AppColors.blue,
         title: 'اختر الصفات المشتركة بين الكلمات التي باللون الأحمر',
         subtitle: 'أربع إجابات صحيحة',
         rule: const TriliteralRule(),
@@ -117,7 +114,6 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
-        sentenceColor: AppColors.blue,
         title: 'اختر الإجابات الصحيحة',
         rule: const LongNounRule(),
         build: _longAnswers,
@@ -141,7 +137,6 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
-        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
         rule: const LongNounRule(),
         build: (rnd, attempt) => _inRounds(_longBlanks, 3, rnd, attempt),
@@ -160,7 +155,6 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
           spare: spare,
           newOnError: true,
           titleColor: AppColors.red,
-          sentenceColor: AppColors.blue,
         );
       },
     ),
