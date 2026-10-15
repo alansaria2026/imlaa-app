@@ -42,9 +42,8 @@ List<LessonPageSpec> buildAlifLessonPages([Random? random]) {
       centered: true,
       builder: (h) => QuizPage(
         handle: h,
-        sentenceColor: AppColors.blue,
         title: 'اختر الإجابة الصحيحة',
-        promptColor: AppColors.ink,
+        promptColor: AppColors.red,
         rule: const TriliteralRule(),
         build: _threeSentences,
       ),
