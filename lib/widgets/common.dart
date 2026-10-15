@@ -135,10 +135,13 @@ class PageCard extends StatelessWidget {
 
 /// شارة نوع اللام.
 class LamChip extends StatelessWidget {
-  const LamChip(this.type, {super.key, this.dense = false});
+  const LamChip(this.type, {super.key, this.dense = false, this.fontSize});
 
   final LamType type;
   final bool dense;
+
+  /// حجم الخط؛ الافتراضي حجم labelMedium.
+  final double? fontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -158,6 +161,7 @@ class LamChip extends StatelessWidget {
         child: Text(
           type.label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            fontSize: fontSize,
             fontWeight: FontWeight.w800,
             color: moon ? AppColors.moon : AppColors.sun,
           ),
