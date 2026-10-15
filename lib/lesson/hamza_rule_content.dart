@@ -943,7 +943,7 @@ class NounHamzaTable extends StatelessWidget {
       (
         TextSpan(
           children: [
-            const TextSpan(text: 'الأعلام\n'),
+            const TextSpan(text: 'أسماء الأعلام\n'),
             _colored('قطع', hamzaColor(Hamza.qat)),
           ],
         ),
