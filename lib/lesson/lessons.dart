@@ -1,11 +1,13 @@
 import 'package:flutter/widgets.dart';
 
 import '../data/alif_lesson.dart';
+import '../data/alif_verb_lesson.dart';
 import '../data/hamza_lesson.dart';
 import '../data/lam_lesson.dart';
 import '../data/taa_lesson.dart';
 import 'alif_lesson_pages.dart';
 import 'alif_rule_content.dart';
+import 'alif_verb_lesson_pages.dart';
 import 'hamza_lesson_pages.dart';
 import 'hamza_rule_content.dart';
 import 'lam_lesson_pages.dart';
@@ -58,6 +60,13 @@ final lessons = [
     rule: AlifRuleContent(),
   ),
   const LessonDef(
+    id: alifVerbLessonId,
+    title: alifVerbLessonTitle,
+    unit: 5,
+    build: buildAlifVerbLessonPages,
+    rule: AlifVerbRuleContent(),
+  ),
+  const LessonDef(
     id: hamzaLessonId,
     title: hamzaLessonTitle,
     unit: 6,
@@ -69,7 +78,6 @@ final lessons = [
 /// دروس المسار التي لم تُبنَ بعد: (رقمها في المسار، عنوانها)، وتظهر «قريبًا».
 const upcomingLessons = [
   (3, 'التاء المربوطة والهاء'),
-  (5, 'الألف اللّينة في الأفعال'),
   (7, 'الهمزة المتوسطة'),
   (8, 'الهمزة المتطرفة'),
   (9, 'واو الجماعة'),
