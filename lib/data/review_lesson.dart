@@ -57,7 +57,7 @@ const prepSentences = [
   PrepSentence(Prep.li, 'ذهبْنا للمطارِ', 'المطار'),
   PrepSentence(Prep.li, 'نظرتُ للسماءِ', 'السماء'),
   PrepSentence(Prep.li, 'استمعتُ للحنِ', 'اللحن'),
-  PrepSentence(Prep.li, 'ترحيبُ الكُتّابِ للغةِ العربيةِ', 'اللغة'),
+  PrepSentence(Prep.li, 'أنا محبٌّ للغةِ العربيةِ', 'اللغة'),
   PrepSentence(Prep.li, 'أعطى المدربُ الكرةَ للاعبِ', 'اللاعب'),
   PrepSentence(Prep.li, 'اشتريتُ هديةً للمعلمِ', 'المعلم'),
   PrepSentence(Prep.li, 'قدّمتُ الماءَ للضيفِ', 'الضيف'),

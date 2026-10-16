@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
@@ -211,14 +212,26 @@ class QuizPageState extends State<QuizPage> {
     super.dispose();
   }
 
+  /// آخر ترتيب ظهرت به خيارات كل سؤال، لتتبدل أماكنها حين يعود السؤال.
+  final _shownOrders = <String, List<String>>{};
+
   void _setupRound() {
     final items = _current.items;
-    _orders = [
-      for (final it in items) [...it.options]..shuffle(_rnd),
-    ];
+    _orders = [for (final it in items) _newOrder(it)];
     _picked = [for (final _ in items) <String>{}];
     _states = [for (final _ in items) _State.open];
     _ctrls = [for (final _ in items) TextEditingController()];
+  }
+
+  /// خيارات [item] بترتيب عشوائي يختلف عن آخر ترتيب ظهرت به.
+  List<String> _newOrder(QuizItem item) {
+    final order = [...item.options]..shuffle(_rnd);
+    final key = '${item.prompt}|${item.options.join('|')}';
+    final last = _shownOrders[key];
+    if (last != null && order.length > 1 && listEquals(order, last)) {
+      order.add(order.removeAt(0));
+    }
+    return _shownOrders[key] = order;
   }
 
   void _listen() {
@@ -273,7 +286,7 @@ class QuizPageState extends State<QuizPage> {
         _states[i] = _State.open;
         _picked[i].clear();
         _ctrls[i].clear();
-        _orders[i].shuffle(_rnd);
+        _orders[i] = _newOrder(_current.items[i]);
       }
       if (widget.reorderOnError) _reorderRound();
       _busy = false;

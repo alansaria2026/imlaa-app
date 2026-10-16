@@ -324,6 +324,44 @@ void main() {
       expect(find.byType(PageDoneMessage), findsOneWidget);
     });
 
+    testWidgets('أين تُنطق؟ بعد الخطأ: الأسئلة نفسها وتتبدل أماكن الخيارات', (
+      t,
+    ) async {
+      await open(t, 2);
+      await t.pumpAndSettle();
+      // الصفحات المجاورة مبنية أيضًا؛ المطلوبة سؤالها الأول عن همزة القطع.
+      final quiz = t
+          .stateList<QuizPageState>(find.byType(QuizPage))
+          .firstWhere(
+            (q) => q.currentRound.items.first.prompt == 'همزة القطع تُنطق في:',
+          );
+      final round = quiz.currentRound;
+      List<String> order(int i) {
+        final item = quiz.currentRound.items[i];
+        final chips = [
+          for (final o in item.options)
+            (o, t.getCenter(find.byKey(ValueKey('q$i-$o'))).dx),
+        ]..sort((a, b) => b.$2.compareTo(a.$2)); // من اليمين
+        return [for (final (o, _) in chips) o];
+      }
+
+      final before = [order(0), order(1)];
+      // خطأ في الأول: «أول الكلام» وحده، والثاني صحيح.
+      await t.tap(find.byKey(const ValueKey('q0-أول الكلام')));
+      await t.tap(find.byKey(const ValueKey('q1-أول الكلام')));
+      await t.tap(find.text('إدخال').hitTestable());
+      await t.pump(const Duration(milliseconds: 3600));
+      await t.pumpAndSettle();
+      await t.tapAt(const Offset(20, 20));
+      await t.pumpAndSettle();
+      expect(
+        quiz.currentRound.items.map((i) => i.prompt),
+        round.items.map((i) => i.prompt),
+      );
+      expect(order(0), isNot(before[0]));
+      expect(order(1), isNot(before[1]));
+    });
+
     testWidgets('الكتابة تراعي الهمزة: «أسكين» خطأ', (t) async {
       await open(t, 6);
       await t.tap(inPage(find.text('اسم')));
