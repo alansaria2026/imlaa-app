@@ -8,6 +8,7 @@ import 'package:imlaa/lesson/lesson_complete_screen.dart';
 import 'package:imlaa/lesson/lesson_screen.dart';
 import 'package:imlaa/lesson/lessons.dart';
 import 'package:imlaa/lesson/page_handle.dart';
+import 'package:imlaa/lesson/pages/listen_write_page.dart';
 import 'package:imlaa/lesson/pages/quiz_page.dart';
 import 'package:imlaa/services/speech_texts.dart';
 import 'package:imlaa/utils/arabic.dart';
@@ -59,24 +60,49 @@ void main() {
       }
     });
 
+    test('الأفعال غير الثلاثية: الإجابات والجمل', () {
+      expect(longVerbAnswersOf('استدعى'), {'فعل', 'غير ثلاثي', 'ألف مقصورة'});
+      expect(longVerbAnswersOf('أحيا'), {
+        'فعل',
+        'غير ثلاثي',
+        'ألف ممدودة',
+        '(ياء) قبل الألف',
+      });
+      for (final v in [...longVerbsMaqsura, ...longVerbsYa]) {
+        expect(v.characters.length, greaterThan(3), reason: v);
+        expect(longVerbOptions, containsAll(longVerbAnswersOf(v)));
+      }
+      for (final s in [...longVerbListenSentences, ...longVerbListenSpare]) {
+        final words = stripDiacritics(s.spoken).split(' ');
+        expect(words.where((w) => w == s.verb).length, 1, reason: s.spoken);
+        expect(ArabicKeyboard.canType(s.verb), isTrue, reason: s.verb);
+      }
+    });
+
     test('كل نصوص الدرس المنطوقة في قائمة التسجيلات', () {
       final texts = allSpeechTexts();
       for (final s in [
         verbRuleSpeech,
         verbExampleSpeech,
         for (final v in alifVerbs) ...[v.spoken, v.spokenTa],
-        for (final s in [...verbTableSentences, ...verbChoiceSentences])
+        longVerbRuleSpeech,
+        for (final s in [
+          ...verbTableSentences,
+          ...verbChoiceSentences,
+          ...longVerbListenSentences,
+          ...longVerbListenSpare,
+        ])
           s.spoken,
       ]) {
         expect(texts, contains(s));
       }
     });
 
-    test('الدرس الخامس في المسار بتسع محطات، يبدأ بالقاعدة', () {
+    test('الدرس الخامس في المسار بثلاث عشرة محطة، يبدأ بالقاعدة', () {
       expect(lessons.map((l) => l.id).elementAt(3), alifVerbLessonId);
       expect(lessonById(alifVerbLessonId).unit, 5);
       final pages = buildAlifVerbLessonPages();
-      expect(pages.length, 9);
+      expect(pages.length, 13);
       expect(pages.first.title, 'القاعدة');
     });
   });
@@ -91,7 +117,7 @@ void main() {
             for (final item in r.items) {
               if (item.writes) continue;
               expect(item.options, containsAll(item.answers), reason: name);
-              expect(item.answers.length, 1, reason: name);
+              if (!item.multi) expect(item.answers.length, 1, reason: name);
             }
           }
         }
@@ -170,6 +196,10 @@ void main() {
       }
 
       var mistakes = 0;
+      final answerOf = {
+        for (final s in [...longVerbListenSentences, ...longVerbListenSpare])
+          s.spoken: s.verb,
+      };
       for (var i = 0; i < pages.length; i++) {
         await t.pumpAndSettle();
         if (inPage(find.byType(QuizPage)).evaluate().isNotEmpty) {
@@ -201,6 +231,17 @@ void main() {
               await t.tapAt(const Offset(20, 20));
               await t.pumpAndSettle();
             }
+          }
+        } else if (inPage(find.byType(ListenWritePage)).evaluate().isNotEmpty) {
+          var guard = 0;
+          while (!done(i)) {
+            expect(++guard, lessThan(20));
+            for (final l in answerOf[lastSpoken]!.split('')) {
+              await tapIn(inPage(find.text(l)).last);
+            }
+            await tapIn(inPage(find.text('إدخال')));
+            await t.pump(const Duration(milliseconds: 3600));
+            await t.pumpAndSettle();
           }
         }
         expect(
@@ -256,6 +297,47 @@ void main() {
       await t.pumpAndSettle();
       expect(quiz().currentRound, isNot(same(round)));
       expect(quiz().currentRound.items.first.prompt, contains('(الواو)'));
+    });
+
+    testWidgets('أكمل القاعدتين: الخطأ يبدّل أماكن الفقرات ولا يعيد التمرين', (
+      t,
+    ) async {
+      final pages = buildAlifVerbLessonPages(Random(0));
+      final i = pages.indexWhere((p) => p.title == 'أكمل القاعدتين');
+      await pumpScreen(
+        t,
+        LessonScreen(
+          lessonId: 'qa',
+          title: alifVerbLessonTitle,
+          pages: pages,
+          initialPage: i,
+        ),
+      );
+      await t.pumpAndSettle();
+      QuizPageState quiz() => t.state<QuizPageState>(find.byType(QuizPage));
+      final items = quiz().currentRound.items;
+      expect(items.length, 2);
+      // الأولى صحيحة والثانية خطأ.
+      for (final (k, item) in items.indexed) {
+        final pick = k == 0
+            ? item.answers.single
+            : item.options.firstWhere((o) => !item.answers.contains(o));
+        await t.tap(find.byKey(ValueKey('q$k-$pick')));
+      }
+      await t.tap(find.text('إدخال'));
+      await t.pump(const Duration(milliseconds: 3600));
+      await t.pumpAndSettle();
+      await t.tapAt(const Offset(20, 20));
+      await t.pumpAndSettle();
+      final now = quiz().currentRound.items;
+      expect(now.toSet(), items.toSet());
+      // يكفي الآن السؤال الخاطئ وحده في مكانه الجديد.
+      final k = now.indexOf(items.last);
+      await t.tap(find.byKey(ValueKey('q$k-${items.last.answers.single}')));
+      await t.tap(find.text('إدخال'));
+      await t.pump(const Duration(milliseconds: 1500));
+      await t.pumpAndSettle();
+      expect(quiz().currentRound.items, isNot(contains(items.last)));
     });
   });
 }

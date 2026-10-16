@@ -96,6 +96,7 @@ class QuizPage extends StatefulWidget {
     this.introSpeech,
     this.autoSpeak = false,
     this.restartOnError = true,
+    this.reorderOnError = false,
     this.sentenceColor = AppColors.ink,
     this.promptColor = AppColors.blue,
     this.titleSize = 26,
@@ -123,6 +124,9 @@ class QuizPage extends StatefulWidget {
   /// الخطأ يعيد التمرين من أوله بأسئلة جديدة؛ وإلا («لا رجوع بالخطأ») يعيد
   /// الطالب السؤال الخاطئ نفسه، ولا يعيد فتح القاعدة من القائمة الأسئلة.
   final bool restartOnError;
+
+  /// مع [restartOnError] = false: تتبدل أماكن أسئلة الجولة بعد الخطأ.
+  final bool reorderOnError;
 
   /// لون جملة السؤال (كلماتها المعلّمة تبقى بالأحمر).
   final Color sentenceColor;
@@ -271,9 +275,35 @@ class QuizPageState extends State<QuizPage> {
         _ctrls[i].clear();
         _orders[i].shuffle(_rnd);
       }
+      if (widget.reorderOnError) _reorderRound();
       _busy = false;
     });
     if (widget.autoSpeak) _listen();
+  }
+
+  /// أسئلة الجولة الحالية بترتيب جديد، ومعها إجاباتها وحالاتها.
+  void _reorderRound() {
+    final r = _current;
+    final perm = [for (var i = 0; i < r.items.length; i++) i]..shuffle(_rnd);
+    List<T> apply<T>(List<T> list) => [for (final i in perm) list[i]];
+    _rounds = [..._rounds]
+      ..[_round] = QuizRound(
+        items: apply(r.items),
+        instruction: r.instruction,
+        sentence: r.sentence,
+        mark: r.mark,
+        answerSentence: r.answerSentence,
+        answerMark: r.answerMark,
+        spoken: r.spoken,
+        hint: r.hint,
+        marks: r.marks,
+        markLastLetter: r.markLastLetter,
+        spokenAll: r.spokenAll,
+      );
+    _orders = apply(_orders);
+    _picked = apply(_picked);
+    _states = apply(_states);
+    _ctrls = apply(_ctrls);
   }
 
   void _pick(int i, String option) {

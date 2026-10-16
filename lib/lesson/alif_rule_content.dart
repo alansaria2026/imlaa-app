@@ -1096,6 +1096,96 @@ class VerbAlifRemember extends StatelessWidget {
   );
 }
 
+/// ص ١ (الأفعال غير الثلاثية): القاعدتان، ومعهما زر «إضاءة» (يحيى ويحيا).
+class LongVerbRule extends StatelessWidget {
+  const LongVerbRule({super.key, this.light = true});
+
+  /// زر «إضاءة» فوق القاعدة.
+  final bool light;
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (light) ...[
+          AppButton(
+            key: const ValueKey('verb-light'),
+            label: '💡 إضاءة',
+            style: AppButtonStyle.outline,
+            height: 48,
+            onTap: () => showRuleSheet(
+              context,
+              title: '💡 إضاءة',
+              content: const LongVerbLight(),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        const _CenterHeading('القاعدة ١'),
+        const _RuleCard(
+          lines: [
+            (
+              TextSpan(
+                children: [
+                  TextSpan(text: 'كل '),
+                  TextSpan(text: 'فعل غير ثلاثي', style: _red),
+                  TextSpan(text: ' وينتهي بالألف يُكتب بالألف '),
+                  TextSpan(text: 'المقصورة (ى)', style: _red),
+                ],
+              ),
+              longVerbMaqsuraExamples,
+            ),
+          ],
+        ),
+        const _CenterHeading('القاعدة ٢'),
+        const _RuleCard(
+          lines: [
+            (
+              TextSpan(
+                children: [
+                  TextSpan(text: 'كل '),
+                  TextSpan(text: 'فعل غير ثلاثي', style: _red),
+                  TextSpan(text: ' وينتهي بالألف '),
+                  TextSpan(text: 'وقبلها (ياء)', style: _red),
+                  TextSpan(text: ' يُكتب بالألف '),
+                  TextSpan(text: 'الممدودة (ا)', style: _red),
+                ],
+              ),
+              longVerbYaExamples,
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+/// ص ٢: «إضاءة»: يحيى اسم بالمقصورة، ويحيا فعل بالممدودة.
+class LongVerbLight extends StatelessWidget {
+  const LongVerbLight({super.key});
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: _LightTable(
+      header: true,
+      rows: [
+        const [
+          _LightCell('الكلمة'),
+          _LightCell('نوعها'),
+          _LightCell('تُكتب بـ'),
+        ],
+        for (final (w, kind, alif) in longVerbLight)
+          [
+            _LightCell(w, color: AppColors.blue),
+            _LightCell(kind, color: AppColors.al),
+            _LightCell(alif),
+          ],
+      ],
+    ),
+  );
+}
+
 /// نافذة «القاعدة» لدرس الألف اللّينة في الأفعال.
 class AlifVerbRuleContent extends StatelessWidget {
   const AlifVerbRuleContent({super.key});
@@ -1107,6 +1197,8 @@ class AlifVerbRuleContent extends StatelessWidget {
       NaskhRule(child: _Heading('الألف اللّينة في الفعل الثلاثي')),
       VerbAlifBasicsRule(),
       VerbAlifRule(),
+      NaskhRule(child: _Heading('الألف اللّينة في الأفعال غير الثلاثية')),
+      LongVerbRule(),
     ],
   );
 }

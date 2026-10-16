@@ -1,124 +1,189 @@
 import 'dart:math';
 
 import '../data/alif_verb_lesson.dart';
+import '../data/review_lesson.dart';
 import '../theme.dart';
 import '../utils/arabic.dart';
 import 'alif_rule_content.dart';
 import 'page_handle.dart';
 import 'pages/example_page.dart';
+import 'pages/listen_write_page.dart';
 import 'pages/quiz_page.dart';
 
-/// صفحات درس «الألف اللّينة في الأفعال» بترتيب كتاب الدرس: الفعل الثلاثي.
-List<LessonPageSpec> buildAlifVerbLessonPages([Random? random]) => [
-  // ——— الفعل الثلاثي ———
-  examplePage(
-    title: 'القاعدة',
-    emoji: '📖',
-    tappable: true,
-    heading: 'الألف اللّينة في الفعل الثلاثي',
-    rule: const VerbAlifRule(),
-    speech: verbRuleSpeech,
-    hint: _hint,
-  ),
-  examplePage(
-    title: 'نوعا الألف',
-    emoji: '📏',
-    tappable: true,
-    heading: 'الفرق بين الألف المقصورة والألف الممدودة',
-    rule: const VerbAlifRule(),
-    content: const VerbAlifBasicsRule(),
-    speech: verbBasicsSpeech,
-    hint: 'الممدودة (ا) قائمة، والمقصورة (ى) كالياء بلا نقطتين.',
-  ),
-  examplePage(
-    title: 'انقلاب الألف',
-    emoji: '🔄',
-    tappable: true,
-    heading: 'كيف تنقلب الألف؟',
-    rule: const VerbAlifRule(),
-    content: const VerbAlifTurnRule(),
-    speech: verbTurnSpeech,
-    hint: _hint,
-  ),
-  LessonPageSpec(
-    title: 'أضف التاء',
-    emoji: '✍️',
-    rule: const VerbAlifRule(),
-    centered: true,
-    builder: (h) => QuizPage(
-      handle: h,
-      title: 'اكتب الفعل بعد إضافة (تاء الفاعل) أو حذفها',
-      titleSize: 22,
-      autoSpeak: true,
+/// صفحات درس «الألف اللّينة في الأفعال» بترتيب كتاب الدرس: الفعل الثلاثي،
+/// ثم الأفعال غير الثلاثية.
+List<LessonPageSpec> buildAlifVerbLessonPages([Random? random]) {
+  final rnd = random ?? Random();
+  return [
+    // ——— الفعل الثلاثي ———
+    examplePage(
+      title: 'القاعدة',
+      emoji: '📖',
+      tappable: true,
+      heading: 'الألف اللّينة في الفعل الثلاثي',
       rule: const VerbAlifRule(),
-      build: _addTa,
+      speech: verbRuleSpeech,
+      hint: _hint,
     ),
-  ),
-  examplePage(
-    title: 'مثال',
-    emoji: '💡',
-    tappable: true,
-    heading: 'افهم طريقة الحل وابدأ الاختبار',
-    titleColor: AppColors.red,
-    action: 'ابدأ الاختبار',
-    rule: const VerbAlifRule(),
-    content: const VerbExampleTable(),
-    speech: verbExampleSpeech,
-    hint: _hint,
-  ),
-  LessonPageSpec(
-    title: 'أكمل الجدول',
-    emoji: '🔬',
-    rule: const VerbAlifRule(),
-    centered: true,
-    builder: (h) => QuizPage(
-      handle: h,
-      title: 'اسمع الجملة وأكمل',
-      autoSpeak: true,
+    examplePage(
+      title: 'نوعا الألف',
+      emoji: '📏',
+      tappable: true,
+      heading: 'الفرق بين الألف المقصورة والألف الممدودة',
       rule: const VerbAlifRule(),
-      build: _table,
+      content: const VerbAlifBasicsRule(),
+      speech: verbBasicsSpeech,
+      hint: 'الممدودة (ا) قائمة، والمقصورة (ى) كالياء بلا نقطتين.',
     ),
-  ),
-  LessonPageSpec(
-    title: 'أكمل القاعدة',
-    emoji: '✏️',
-    rule: const VerbAlifRule(),
-    centered: true,
-    builder: (h) => QuizPage(
-      handle: h,
-      title: 'اختر الإجابة الصحيحة',
-      // «لا رجوع بالخطأ» (ص ٩): يعيد الطالب السؤال الخاطئ وحده.
-      restartOnError: false,
+    examplePage(
+      title: 'انقلاب الألف',
+      emoji: '🔄',
+      tappable: true,
+      heading: 'كيف تنقلب الألف؟',
       rule: const VerbAlifRule(),
-      build: _blanks,
+      content: const VerbAlifTurnRule(),
+      speech: verbTurnSpeech,
+      hint: _hint,
     ),
-  ),
-  examplePage(
-    title: 'احفظ القاعدتين',
-    emoji: '🧠',
-    heading: 'احفظ هاتين القاعدتين جيدًا للاختبار',
-    titleColor: AppColors.red,
-    action: 'ابدأ الاختبار',
-    rule: const VerbAlifRule(),
-    content: const VerbAlifRemember(),
-    speech: verbRememberSpeech,
-    hint: _hint,
-  ),
-  LessonPageSpec(
-    title: 'اختر الكلمة',
-    emoji: '🎯',
-    rule: const VerbAlifRule(),
-    centered: true,
-    builder: (h) => QuizPage(
-      handle: h,
-      title: 'اختر الكلمة الصحيحة',
-      autoSpeak: true,
-      // بعد الخطأ تظهر القاعدة التي طُلب حفظها.
-      rule: const VerbAlifRemember(),
-      build: _choose,
+    LessonPageSpec(
+      title: 'أضف التاء',
+      emoji: '✍️',
+      rule: const VerbAlifRule(),
+      centered: true,
+      builder: (h) => QuizPage(
+        handle: h,
+        title: 'اكتب الفعل بعد إضافة (تاء الفاعل) أو حذفها',
+        titleSize: 22,
+        autoSpeak: true,
+        rule: const VerbAlifRule(),
+        build: _addTa,
+      ),
     ),
-  ),
-];
+    examplePage(
+      title: 'مثال',
+      emoji: '💡',
+      tappable: true,
+      heading: 'افهم طريقة الحل وابدأ الاختبار',
+      titleColor: AppColors.red,
+      action: 'ابدأ الاختبار',
+      rule: const VerbAlifRule(),
+      content: const VerbExampleTable(),
+      speech: verbExampleSpeech,
+      hint: _hint,
+    ),
+    LessonPageSpec(
+      title: 'أكمل الجدول',
+      emoji: '🔬',
+      rule: const VerbAlifRule(),
+      centered: true,
+      builder: (h) => QuizPage(
+        handle: h,
+        title: 'اسمع الجملة وأكمل',
+        autoSpeak: true,
+        rule: const VerbAlifRule(),
+        build: _table,
+      ),
+    ),
+    LessonPageSpec(
+      title: 'أكمل القاعدة',
+      emoji: '✏️',
+      rule: const VerbAlifRule(),
+      centered: true,
+      builder: (h) => QuizPage(
+        handle: h,
+        title: 'اختر الإجابة الصحيحة',
+        // «لا رجوع بالخطأ» (ص ٩): يعيد الطالب السؤال الخاطئ وحده.
+        restartOnError: false,
+        rule: const VerbAlifRule(),
+        build: _blanks,
+      ),
+    ),
+    examplePage(
+      title: 'احفظ القاعدتين',
+      emoji: '🧠',
+      heading: 'احفظ هاتين القاعدتين جيدًا للاختبار',
+      titleColor: AppColors.red,
+      action: 'ابدأ الاختبار',
+      rule: const VerbAlifRule(),
+      content: const VerbAlifRemember(),
+      speech: verbRememberSpeech,
+      hint: _hint,
+    ),
+    LessonPageSpec(
+      title: 'اختر الكلمة',
+      emoji: '🎯',
+      rule: const VerbAlifRule(),
+      centered: true,
+      builder: (h) => QuizPage(
+        handle: h,
+        title: 'اختر الكلمة الصحيحة',
+        autoSpeak: true,
+        // بعد الخطأ تظهر القاعدة التي طُلب حفظها.
+        rule: const VerbAlifRemember(),
+        build: _choose,
+      ),
+    ),
+    // ——— الأفعال غير الثلاثية ———
+    examplePage(
+      title: 'غير الثلاثية',
+      emoji: '📚',
+      tappable: true,
+      heading: 'الألف اللّينة في الأفعال غير الثلاثية',
+      rule: const LongVerbRule(),
+      speech: longVerbRuleSpeech,
+      hint: _longHint,
+    ),
+    LessonPageSpec(
+      title: 'أكمل القاعدتين',
+      emoji: '✏️',
+      rule: const LongVerbRule(),
+      centered: true,
+      builder: (h) => QuizPage(
+        handle: h,
+        title: 'اختر الإجابة الصحيحة',
+        // «لا رجوع بالخطأ» (ص ٣)، وتتبدل أماكن الفقرات بعد الخطأ.
+        restartOnError: false,
+        reorderOnError: true,
+        rule: const LongVerbRule(light: false),
+        build: (_, _) => [
+          for (var i = 0; i < _longBlanks.length; i += 2)
+            QuizRound(hint: _longHint, items: _longBlanks.sublist(i, i + 2)),
+        ],
+      ),
+    ),
+    LessonPageSpec(
+      title: 'اختر الإجابات',
+      emoji: '🧩',
+      rule: const LongVerbRule(),
+      centered: true,
+      builder: (h) => QuizPage(
+        handle: h,
+        title: 'اختر الإجابات الصحيحة',
+        rule: const LongVerbRule(light: false),
+        build: _longAnswers,
+      ),
+    ),
+    LessonPageSpec(
+      title: 'اسمع واكتب',
+      emoji: '👂',
+      rule: const LongVerbRule(),
+      builder: (h) => ListenWritePage(
+        handle: h,
+        title: 'اسمع الجملة واكتب الكلمة الناقصة',
+        items: [
+          for (final s in [...longVerbListenSentences]..shuffle(rnd))
+            _listenItem(s),
+        ],
+        spare: [
+          for (final s in [...longVerbListenSpare]..shuffle(rnd))
+            _listenItem(s),
+        ],
+        newOnError: true,
+        titleColor: AppColors.red,
+      ),
+    ),
+  ];
+}
 
 const _hint =
     'أسند الفعل إلى تاء الفاعل: إن نطقت الياء (بكيتُ) فالألف مقصورة، وإن '
@@ -248,3 +313,79 @@ List<QuizRound> _choose(Random rnd, int attempt) {
       ),
   ];
 }
+
+const _longHint =
+    'الفعل غير الثلاثي بالألف المقصورة، إلا إذا كان قبل ألفه ياء فبالممدودة '
+    '(أحيا، استحيا).';
+
+/// ص ٣: أكمل القاعدتين، الفقرات الأربع في جولتين.
+const _longBlanks = [
+  QuizItem(
+    prompt: 'كل فعل غير ثلاثي وينتهي بالألف يُكتب بالألف ……',
+    options: ['المقصورة', 'الممدودة'],
+    answers: {'المقصورة'},
+  ),
+  QuizItem(
+    prompt: 'كل فعل غير ثلاثي وينتهي بالألف وقبلها …… يُكتب بالألف الممدودة',
+    options: ['واو', 'ياء'],
+    answers: {'ياء'},
+  ),
+  QuizItem(
+    prompt: 'كل فعل …… وينتهي بالألف يُكتب بالألف المقصورة',
+    options: ['غير ثلاثي', 'ثلاثي'],
+    answers: {'غير ثلاثي'},
+  ),
+  QuizItem(
+    prompt: 'كل فعل غير ثلاثي وينتهي بالألف وقبلها (ياء) يُكتب بالألف ……',
+    options: ['المقصورة', 'الممدودة'],
+    answers: {'الممدودة'},
+  ),
+];
+
+List<T> _pick<T>(List<T> pool, int n, Random rnd, {Set<T> avoid = const {}}) {
+  final list = [
+    for (final x in pool)
+      if (!avoid.contains(x)) x,
+  ]..shuffle(rnd);
+  return list.take(n).toList();
+}
+
+/// ص ٤: كل الإجابات الصحيحة لفعل غير ثلاثي، والفعل بالأحمر. ثلاث جولات:
+/// «استدعى» أول مرة، وفعل آخر بالمقصورة، وفعل قبل ألفه ياء. بعد الخطأ
+/// تتغير الأفعال.
+List<QuizRound> _longAnswers(Random rnd, int attempt) {
+  final first = attempt == 0
+      ? longVerbsMaqsura.first
+      : _pick(longVerbsMaqsura, 1, rnd).single;
+  final verbs = [
+    first,
+    _pick(longVerbsMaqsura, 1, rnd, avoid: {first}).single,
+    _pick(longVerbsYa, 1, rnd).single,
+  ];
+  if (attempt > 0) verbs.shuffle(rnd);
+  return [
+    for (final v in verbs)
+      QuizRound(
+        sentence: v,
+        mark: v,
+        spoken: v,
+        hint: _longHint,
+        items: [
+          QuizItem(
+            options: longVerbOptions,
+            answers: longVerbAnswersOf(v),
+            multi: true,
+          ),
+        ],
+      ),
+  ];
+}
+
+ListenItem _listenItem(AlifVerbSentence s) => ListenItem(
+  spoken: s.spoken,
+  answer: s.verb,
+  redPrefix: 0,
+  sentence: [
+    for (final w in s.spoken.split(' ')) stripDiacritics(w) == s.verb ? '…' : w,
+  ].join(' '),
+);

@@ -76,6 +76,12 @@ Set<String> allSpeechTexts() => {
     verbExampleSentence,
     ...verbTableSentences,
     ...verbChoiceSentences,
+    ...longVerbListenSentences,
+    ...longVerbListenSpare,
   ])
     s.spoken,
+  longVerbRuleSpeech,
+  for (final (_, spoken) in [...longVerbMaqsuraExamples, ...longVerbYaExamples])
+    spoken,
+  for (final v in [...longVerbsMaqsura, ...longVerbsYa]) v,
 };
