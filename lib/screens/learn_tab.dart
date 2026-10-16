@@ -7,7 +7,6 @@ import '../lesson/page_handle.dart';
 import '../lesson/rule_content.dart';
 import '../theme.dart';
 import '../utils/arabic.dart';
-import '../widgets/common.dart';
 import '../widgets/mascot.dart';
 import '../widgets/pressable.dart';
 
@@ -146,18 +145,9 @@ class _LessonSection extends StatelessWidget {
                         ? _NodeState.done
                         : i == current
                         ? _NodeState.current
-                        : _NodeState.locked,
-                    onTap: () {
-                      if (done[i] || i == current) {
-                        onOpen(i);
-                      } else {
-                        showFeedback(
-                          context,
-                          'أكمل المحطات السابقة أولًا لفتح «${stations[i].title}»',
-                          tone: FeedbackTone.hint,
-                        );
-                      }
-                    },
+                        : _NodeState.pending,
+                    // كل محطة مفتوحة: لا يلزم حل المحطات السابقة.
+                    onTap: () => onOpen(i),
                   ),
             reached: (i) => i < n && (done[i] || i == current),
           ),
@@ -598,7 +588,8 @@ class _UnitBanner extends StatelessWidget {
   }
 }
 
-enum _NodeState { done, current, locked }
+/// المحطة: منجزة، أو الحالية (أول محطة لم تُحل)، أو لم تُحل بعد.
+enum _NodeState { done, current, pending }
 
 class _StationNode extends StatefulWidget {
   const _StationNode({
@@ -656,7 +647,7 @@ class _StationNodeState extends State<_StationNode>
     final (color, edge) = switch (state) {
       _NodeState.done => (AppColors.sand, AppColors.sandDark),
       _NodeState.current => (AppColors.primary, AppColors.primaryDark),
-      _NodeState.locked => (AppColors.locked, AppColors.lineDark),
+      _NodeState.pending => (AppColors.locked, AppColors.lineDark),
     };
     const size = 68.0;
 
@@ -676,12 +667,9 @@ class _StationNodeState extends State<_StationNode>
               color: Colors.white,
               size: 38,
             ),
-            _NodeState.locked => Opacity(
-              opacity: 0.45,
-              child: Text(
-                widget.spec.emoji,
-                style: const TextStyle(fontSize: 30),
-              ),
+            _NodeState.pending => Text(
+              widget.spec.emoji,
+              style: const TextStyle(fontSize: 30),
             ),
             _NodeState.current => Text(
               widget.spec.emoji,
@@ -697,7 +685,7 @@ class _StationNodeState extends State<_StationNode>
           '${widget.spec.title} — ${switch (state) {
             _NodeState.done => 'منجزة',
             _NodeState.current => 'المحطة الحالية',
-            _NodeState.locked => 'مقفلة',
+            _NodeState.pending => 'لم تُحل بعد',
           }}',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -764,9 +752,7 @@ class _StationNodeState extends State<_StationNode>
               widget.spec.title,
               style: t.labelLarge?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: state == _NodeState.locked
-                    ? AppColors.muted
-                    : AppColors.ink,
+                color: AppColors.ink,
               ),
             ),
           ],
