@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:imlaa/app_state.dart';
+import 'package:imlaa/lesson/lesson_screen.dart';
 import 'package:imlaa/screens/home_screen.dart';
 import 'package:imlaa/widgets/letter_boxes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,11 +23,14 @@ void main() {
     expect(find.text('المحطة التالية'), findsNothing);
     expect(find.text('ابدأ الآن'), findsOneWidget);
 
-    // محطة مقفلة تُظهر تلميحًا ولا تُفتح.
+    // كل محطة تُفتح مباشرة دون حل المحطات السابقة.
     await t.tap(find.text('مثال الحذف'));
-    await t.pump();
-    expect(find.textContaining('أكمل المحطات السابقة'), findsOneWidget);
-    await t.pumpAndSettle(const Duration(seconds: 5));
+    await t.pumpAndSettle();
+    expect(find.byType(LessonScreen), findsOneWidget);
+    expect(find.text('احذف (الـ) من الكلمة'), findsOneWidget);
+    Navigator.of(t.element(find.byType(LessonScreen))).pop();
+    await t.pumpAndSettle();
+    expect(find.byType(LessonScreen), findsNothing);
 
     // الوحدة الثانية بطاقة مفتوحة (بلا «قريبًا») تعرض محطاتها بالضغط.
     final taaCard = find.byKey(const ValueKey('unit-taa'));
