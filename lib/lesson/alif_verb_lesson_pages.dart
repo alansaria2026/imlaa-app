@@ -87,6 +87,8 @@ List<LessonPageSpec> buildAlifVerbLessonPages([Random? random]) => [
     builder: (h) => QuizPage(
       handle: h,
       title: 'اختر الإجابة الصحيحة',
+      // «لا رجوع بالخطأ» (ص ٩): يعيد الطالب السؤال الخاطئ وحده.
+      restartOnError: false,
       rule: const VerbAlifRule(),
       build: _blanks,
     ),
@@ -191,7 +193,7 @@ List<QuizRound> _table(Random rnd, int attempt) {
   ];
 }
 
-/// ص ٨–٩: أكمل القاعدة، الفقرات الأربع في جولتين.
+/// ص ٨–٩: أكمل القاعدة، الفقرات الأربع في جولتين بترتيب الكتاب.
 List<QuizRound> _blanks(Random rnd, int attempt) {
   final items = [..._ruleBlanks];
   if (attempt > 0) items.shuffle(rnd);

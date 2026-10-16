@@ -218,5 +218,44 @@ void main() {
       await t.pumpAndSettle();
       expect(find.byType(LessonCompleteScreen), findsOneWidget);
     });
+
+    testWidgets('أكمل القاعدة: لا رجوع بالخطأ، يُعاد السؤال الخاطئ وحده', (
+      t,
+    ) async {
+      final pages = buildAlifVerbLessonPages(Random(0));
+      final i = pages.indexWhere((p) => p.title == 'أكمل القاعدة');
+      await pumpScreen(
+        t,
+        LessonScreen(
+          lessonId: 'qa',
+          title: alifVerbLessonTitle,
+          pages: pages,
+          initialPage: i,
+        ),
+      );
+      await t.pumpAndSettle();
+      QuizPageState quiz() => t.state<QuizPageState>(find.byType(QuizPage));
+      final round = quiz().currentRound;
+      final [first, second] = round.items;
+      // الأول صحيح والثاني خطأ.
+      await t.tap(find.byKey(ValueKey('q0-${first.answers.single}')));
+      final wrong = second.options.firstWhere(
+        (o) => !second.answers.contains(o),
+      );
+      await t.tap(find.byKey(ValueKey('q1-$wrong')));
+      await t.tap(find.text('إدخال'));
+      await t.pump(const Duration(milliseconds: 3600));
+      await t.pumpAndSettle();
+      // نافذة القاعدة ثم السؤال نفسه، لا أسئلة من البداية.
+      await t.tapAt(const Offset(20, 20));
+      await t.pumpAndSettle();
+      expect(identical(quiz().currentRound, round), isTrue);
+      await t.tap(find.byKey(ValueKey('q1-${second.answers.single}')));
+      await t.tap(find.text('إدخال'));
+      await t.pump(const Duration(milliseconds: 1500));
+      await t.pumpAndSettle();
+      expect(quiz().currentRound, isNot(same(round)));
+      expect(quiz().currentRound.items.first.prompt, contains('(الواو)'));
+    });
   });
 }

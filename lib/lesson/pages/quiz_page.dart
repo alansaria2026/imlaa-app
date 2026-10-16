@@ -95,6 +95,7 @@ class QuizPage extends StatefulWidget {
     this.intro,
     this.introSpeech,
     this.autoSpeak = false,
+    this.restartOnError = true,
     this.sentenceColor = AppColors.ink,
     this.promptColor = AppColors.blue,
     this.titleSize = 26,
@@ -118,6 +119,10 @@ class QuizPage extends StatefulWidget {
 
   /// تُنطق جملة كل سؤال عند ظهوره (تمارين «اسمع»).
   final bool autoSpeak;
+
+  /// الخطأ يعيد التمرين من أوله بأسئلة جديدة؛ وإلا («لا رجوع بالخطأ») يعيد
+  /// الطالب السؤال الخاطئ نفسه، ولا يعيد فتح القاعدة من القائمة الأسئلة.
+  final bool restartOnError;
 
   /// لون جملة السؤال (كلماتها المعلّمة تبقى بالأحمر).
   final Color sentenceColor;
@@ -175,7 +180,7 @@ class QuizPageState extends State<QuizPage> {
     widget.handle
       ..onHint = _hint
       ..onListen = _listen
-      ..onRuleOpened = _restart
+      ..onRuleOpened = widget.restartOnError ? _restart : null
       ..onEnter = widget.autoSpeak ? _listen : null;
     // عدد الأسئلة يظهر من البداية، وبه تتحدث القائمة (استمع، مساعدة).
     WidgetsBinding.instance.addPostFrameCallback(
@@ -256,6 +261,21 @@ class QuizPageState extends State<QuizPage> {
     if (widget.autoSpeak) _listen();
   }
 
+  /// «لا رجوع بالخطأ»: تبقى الإجابات الصحيحة، وتُفتح الخاطئة من جديد.
+  void _retryWrong() {
+    setState(() {
+      for (var i = 0; i < _states.length; i++) {
+        if (_states[i] != _State.wrong) continue;
+        _states[i] = _State.open;
+        _picked[i].clear();
+        _ctrls[i].clear();
+        _orders[i].shuffle(_rnd);
+      }
+      _busy = false;
+    });
+    if (widget.autoSpeak) _listen();
+  }
+
   void _pick(int i, String option) {
     if (_busy || _states[i] == _State.right) return;
     setState(() {
@@ -324,7 +344,9 @@ class QuizPageState extends State<QuizPage> {
       widget.handle.setLevel(_level);
       showFeedback(
         context,
-        'إجابة غير صحيحة! راجع القاعدة، ثم تبدأ من جديد بأسئلة أخرى',
+        widget.restartOnError
+            ? 'إجابة غير صحيحة! راجع القاعدة، ثم تبدأ من جديد بأسئلة أخرى'
+            : 'إجابة غير صحيحة! راجع القاعدة، ثم أعد المحاولة',
         tone: FeedbackTone.error,
       );
       // وقت لرؤية الإجابات الصحيحة قبل انبثاق القاعدة.
@@ -333,7 +355,8 @@ class QuizPageState extends State<QuizPage> {
         if (widget.rule != null) {
           await showRuleSheet(context, content: widget.rule);
         }
-        if (mounted && _generation == generation) _restart();
+        if (!mounted || _generation != generation) return;
+        widget.restartOnError ? _restart() : _retryWrong();
       });
       return;
     }

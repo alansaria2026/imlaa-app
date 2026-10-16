@@ -149,7 +149,7 @@ const verbChoiceSentences = [
   AlifVerbSentence('غَزا الجيشُ المدينةَ', 'غزا'),
   AlifVerbSentence('رَعى صالحٌ الأغنامَ', 'رعى'),
   AlifVerbSentence('مَحا طارقٌ السبورةَ', 'محا'),
-  AlifVerbSentence('دَنا من النارِ', 'دنا'),
+  AlifVerbSentence('دَنا الطفلُ من النارِ', 'دنا'),
   AlifVerbSentence('شَكا المريضُ من الألمِ', 'شكا'),
   AlifVerbSentence('نَوى عمرُ أن يصلّيَ', 'نوى'),
   AlifVerbSentence('أَتى محمودٌ من المطارِ', 'أتى'),

@@ -301,7 +301,6 @@ const Map<String, String> audioCatalog = {
   "دَفْتَر": 'audio/97452407d341.mp3',
   "دَم": 'audio/387250d93033.mp3',
   "دَنا": 'audio/a44d528f2a26.mp3',
-  "دَنا من النارِ": 'audio/52d82c43a02c.mp3',
   "دَنَوْتُ": 'audio/7635f6c6f843.mp3',
   "ذكرى": 'audio/28a481b1ce93.mp3',
   "ذهبتُ إلى قُرى بعيدةٍ": 'audio/c2009f8e1bcf.mp3',
