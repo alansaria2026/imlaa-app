@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
@@ -95,6 +96,8 @@ class QuizPage extends StatefulWidget {
     this.intro,
     this.introSpeech,
     this.autoSpeak = false,
+    this.restartOnError = true,
+    this.reorderOnError = false,
     this.sentenceColor = AppColors.ink,
     this.promptColor = AppColors.blue,
     this.titleSize = 26,
@@ -118,6 +121,13 @@ class QuizPage extends StatefulWidget {
 
   /// تُنطق جملة كل سؤال عند ظهوره (تمارين «اسمع»).
   final bool autoSpeak;
+
+  /// الخطأ يعيد التمرين من أوله بأسئلة جديدة؛ وإلا («لا رجوع بالخطأ») يعيد
+  /// الطالب السؤال الخاطئ نفسه، ولا يعيد فتح القاعدة من القائمة الأسئلة.
+  final bool restartOnError;
+
+  /// مع [restartOnError] = false: تتبدل أماكن أسئلة الجولة بعد الخطأ.
+  final bool reorderOnError;
 
   /// لون جملة السؤال (كلماتها المعلّمة تبقى بالأحمر).
   final Color sentenceColor;
@@ -175,7 +185,7 @@ class QuizPageState extends State<QuizPage> {
     widget.handle
       ..onHint = _hint
       ..onListen = _listen
-      ..onRuleOpened = _restart
+      ..onRuleOpened = widget.restartOnError ? _restart : null
       ..onEnter = widget.autoSpeak ? _listen : null;
     // عدد الأسئلة يظهر من البداية، وبه تتحدث القائمة (استمع، مساعدة).
     WidgetsBinding.instance.addPostFrameCallback(
@@ -202,14 +212,26 @@ class QuizPageState extends State<QuizPage> {
     super.dispose();
   }
 
+  /// آخر ترتيب ظهرت به خيارات كل سؤال، لتتبدل أماكنها حين يعود السؤال.
+  final _shownOrders = <String, List<String>>{};
+
   void _setupRound() {
     final items = _current.items;
-    _orders = [
-      for (final it in items) [...it.options]..shuffle(_rnd),
-    ];
+    _orders = [for (final it in items) _newOrder(it)];
     _picked = [for (final _ in items) <String>{}];
     _states = [for (final _ in items) _State.open];
     _ctrls = [for (final _ in items) TextEditingController()];
+  }
+
+  /// خيارات [item] بترتيب عشوائي يختلف عن آخر ترتيب ظهرت به.
+  List<String> _newOrder(QuizItem item) {
+    final order = [...item.options]..shuffle(_rnd);
+    final key = '${item.prompt}|${item.options.join('|')}';
+    final last = _shownOrders[key];
+    if (last != null && order.length > 1 && listEquals(order, last)) {
+      order.add(order.removeAt(0));
+    }
+    return _shownOrders[key] = order;
   }
 
   void _listen() {
@@ -254,6 +276,47 @@ class QuizPageState extends State<QuizPage> {
     });
     widget.handle.setProgress(0, _total);
     if (widget.autoSpeak) _listen();
+  }
+
+  /// «لا رجوع بالخطأ»: تبقى الإجابات الصحيحة، وتُفتح الخاطئة من جديد.
+  void _retryWrong() {
+    setState(() {
+      for (var i = 0; i < _states.length; i++) {
+        if (_states[i] != _State.wrong) continue;
+        _states[i] = _State.open;
+        _picked[i].clear();
+        _ctrls[i].clear();
+        _orders[i] = _newOrder(_current.items[i]);
+      }
+      if (widget.reorderOnError) _reorderRound();
+      _busy = false;
+    });
+    if (widget.autoSpeak) _listen();
+  }
+
+  /// أسئلة الجولة الحالية بترتيب جديد، ومعها إجاباتها وحالاتها.
+  void _reorderRound() {
+    final r = _current;
+    final perm = [for (var i = 0; i < r.items.length; i++) i]..shuffle(_rnd);
+    List<T> apply<T>(List<T> list) => [for (final i in perm) list[i]];
+    _rounds = [..._rounds]
+      ..[_round] = QuizRound(
+        items: apply(r.items),
+        instruction: r.instruction,
+        sentence: r.sentence,
+        mark: r.mark,
+        answerSentence: r.answerSentence,
+        answerMark: r.answerMark,
+        spoken: r.spoken,
+        hint: r.hint,
+        marks: r.marks,
+        markLastLetter: r.markLastLetter,
+        spokenAll: r.spokenAll,
+      );
+    _orders = apply(_orders);
+    _picked = apply(_picked);
+    _states = apply(_states);
+    _ctrls = apply(_ctrls);
   }
 
   void _pick(int i, String option) {
@@ -324,7 +387,9 @@ class QuizPageState extends State<QuizPage> {
       widget.handle.setLevel(_level);
       showFeedback(
         context,
-        'إجابة غير صحيحة! راجع القاعدة، ثم تبدأ من جديد بأسئلة أخرى',
+        widget.restartOnError
+            ? 'إجابة غير صحيحة! راجع القاعدة، ثم تبدأ من جديد بأسئلة أخرى'
+            : 'إجابة غير صحيحة! راجع القاعدة، ثم أعد المحاولة',
         tone: FeedbackTone.error,
       );
       // وقت لرؤية الإجابات الصحيحة قبل انبثاق القاعدة.
@@ -333,7 +398,8 @@ class QuizPageState extends State<QuizPage> {
         if (widget.rule != null) {
           await showRuleSheet(context, content: widget.rule);
         }
-        if (mounted && _generation == generation) _restart();
+        if (!mounted || _generation != generation) return;
+        widget.restartOnError ? _restart() : _retryWrong();
       });
       return;
     }

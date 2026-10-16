@@ -9,15 +9,9 @@ import 'pages/equation_page.dart';
 import 'pages/example_page.dart';
 import 'pages/quiz_page.dart';
 
-const _tenseEmoji = {
-  Tense.past: '⏮️',
-  Tense.present: '⏯️',
-  Tense.imperative: '📣',
-};
-
 /// صفحات درس الهمزة بترتيب كتاب الدرس: في الأفعال (ص ١–٤٠)، ثم في الأسماء
-/// (ص ٤١–٥١). صفحات «مثال» المتتالية في موضوع واحد صفحة واحدة، ومثال كل
-/// قاعدة من قواعد الأفعال وتطبيقها محطة واحدة.
+/// (ص ٤١–٥١). صفحات «مثال» المتتالية في موضوع واحد صفحة واحدة، وقواعد
+/// الأفعال الاثنتا عشرة في محطة واحدة بجملة لكل قاعدة.
 List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
   final rnd = random ?? Random();
   return [
@@ -154,19 +148,19 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
           'في الرباعيِّ، ووصلٌ في الثلاثيِّ والخماسيِّ والسداسيِّ.',
       hint: 'المضارع قطع دائمًا، والرباعي قطع دائمًا.',
     ),
-    for (final c in verbCombos)
-      LessonPageSpec(
-        title: '${_short(c.tense)} ${c.weight.label}',
-        emoji: _tenseEmoji[c.tense]!,
-        rule: VerbComboExample(c),
-        centered: true,
-        builder: (h) => QuizPage(
-          handle: h,
-          title: 'حلّل الفعل',
-          rule: VerbComboExample(c),
-          build: (rnd, attempt) => _analysis(c, rnd, attempt),
-        ),
+    LessonPageSpec(
+      title: 'حلّل الفعل',
+      emoji: '🔬',
+      rule: const VerbChartRule(),
+      centered: true,
+      builder: (h) => QuizPage(
+        handle: h,
+        title: 'حلّل الفعل',
+        subtitle: 'اثنتا عشرة جملة، جملة لكل قاعدة',
+        rule: const VerbChartRule(),
+        build: _analysis,
       ),
+    ),
     LessonPageSpec(
       title: 'اختر الإجابات',
       emoji: '☑️',
@@ -264,12 +258,6 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
     ),
   ];
 }
-
-String _short(Tense t) => switch (t) {
-  Tense.past => 'ماضٍ',
-  Tense.present => 'مضارع',
-  Tense.imperative => 'أمر',
-};
 
 // ——— بناة الأسئلة ———
 
@@ -436,19 +424,17 @@ List<QuizRound> _weights(Random rnd, int attempt) {
   return rounds;
 }
 
-/// ص ١٤–٣٧: الزمن والوزن ونوع الهمزة لفعل الجملة.
-/// عدد جمل «حلّل الفعل» في الصفحة، وفي كل جملة ثلاثة أسئلة.
-const _analysisRounds = 3;
-
-/// «حلّل الفعل»: ثلاث جولات بلا مثال محلول. أول مرة جملة المثال ثم جملتا
-/// التطبيق الأوليان، وبعد الخطأ ثلاث جمل أخرى من جمل القاعدة نفسها.
-List<QuizRound> _analysis(VerbCombo c, Random rnd, int attempt) {
-  final all = [c.example, ...c.practice];
-  final sentences = attempt == 0
-      ? all.take(_analysisRounds).toList()
-      : _pick(all, _analysisRounds, rnd);
-  return [for (final s in sentences) _analysisRound(s)];
-}
+/// ص ١٤–٣٧: الزمن والوزن ونوع الهمزة لفعل الجملة؛ جملة واحدة لكل قاعدة من
+/// القواعد الاثنتي عشرة بترتيب الكتاب، وفي كل جملة ثلاثة أسئلة. أول مرة جملة
+/// مثال كل قاعدة، وبعد الخطأ جملة أخرى من جمل القاعدة نفسها.
+List<QuizRound> _analysis(Random rnd, int attempt) => [
+  for (final c in verbCombos)
+    _analysisRound(
+      attempt == 0
+          ? c.example
+          : _pick([c.example, ...c.practice], 1, rnd).first,
+    ),
+];
 
 QuizRound _analysisRound(VerbSentence s) {
   return QuizRound(

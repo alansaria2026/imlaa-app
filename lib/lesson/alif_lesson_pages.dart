@@ -288,7 +288,7 @@ const _triliteralBlanks = [
   ),
 ];
 
-/// ص ٧: جملتان ثابتتان، وتتغير الأسئلة تحتهما اختيارين في كل مرة.
+/// ص ٧: جملتان ثابتتان، وتحتهما سؤالان في كل جولة: عن «عصا» وعن «هدى».
 List<QuizRound> _pairQuiz(Random rnd, int attempt) {
   const asaa = 'عصا', huda = 'هدى';
   const vowels = ['مفتوح أوله', 'مكسور أوله', 'مضموم أوله'];
@@ -324,15 +324,25 @@ List<QuizRound> _pairQuiz(Random rnd, int attempt) {
       answers: {'مضموم أوله'},
     ),
   ];
-  if (attempt > 0) items.shuffle(rnd);
+  // كل جولة سؤال عن «عصا» وسؤال عن «هدى»؛ بعد الخطأ تتبدل الجولات
+  // وأماكن السؤالين فيها.
+  final pairs = [
+    for (var i = 0; i < items.length; i += 2) items.sublist(i, i + 2),
+  ];
+  if (attempt > 0) {
+    pairs.shuffle(rnd);
+    for (final p in pairs) {
+      p.shuffle(rnd);
+    }
+  }
   return [
-    for (var i = 0; i < items.length; i += 2)
+    for (final pair in pairs)
       QuizRound(
         sentence: _lines(pairSentences),
         marks: const {asaa, huda},
         spokenAll: _spoken(pairSentences),
         hint: _triliteralHint,
-        items: items.sublist(i, i + 2),
+        items: pair,
       ),
   ];
 }

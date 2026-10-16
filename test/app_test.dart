@@ -17,7 +17,7 @@ void main() {
     expect(find.text('إملائي'), findsOneWidget);
     expect(find.byKey(const ValueKey('lam')), findsOneWidget);
     // أُلغيت عبارات «الوحدة» و«٠ من ١٢ محطة» و«اسحب لرؤية المزيد».
-    expect(find.text('الدرس ١'), findsOneWidget);
+    expect(find.text('الوحدة ١'), findsOneWidget);
     expect(find.textContaining('من ١٢'), findsNothing);
     expect(find.text('اسحب لرؤية المزيد'), findsNothing);
     expect(find.text('المحطة التالية'), findsNothing);

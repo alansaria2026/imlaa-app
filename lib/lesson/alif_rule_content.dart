@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../app_state.dart';
 import '../data/alif_lesson.dart';
+import '../data/alif_verb_lesson.dart';
 import '../services/speaker.dart';
 import '../theme.dart';
+import '../utils/arabic.dart';
 import '../widgets/pressable.dart';
 import 'rule_content.dart';
 
@@ -129,12 +131,14 @@ class _AlifBranch extends StatelessWidget {
     required this.letter,
     required this.word,
     required this.spoken,
+    this.lastRed = false,
   });
 
   final String title;
   final String letter;
   final String word;
   final String spoken;
+  final bool lastRed;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -146,29 +150,58 @@ class _AlifBranch extends StatelessWidget {
         child: Text(letter, style: AppTheme.word(38, color: AppColors.al)),
       ),
       const SizedBox(height: 10),
-      _BoxExample(word, spoken),
+      _BoxExample(word, spoken, lastRed: lastRed),
     ],
   );
 }
 
 /// مثال بين قوسين تحت المربع، يُسمع بالضغط عليه.
 class _BoxExample extends StatelessWidget {
-  const _BoxExample(this.word, this.spoken);
+  const _BoxExample(this.word, this.spoken, {this.lastRed = false});
   final String word;
   final String spoken;
+
+  /// الحرف الأخير بالأحمر (صورة الألف) وبقية الكلمة بالأسود.
+  final bool lastRed;
 
   @override
   Widget build(BuildContext context) => Text.rich(
     TextSpan(
       children: [
         const TextSpan(text: '( '),
-        _example(context, word, spoken),
+        if (lastRed)
+          _tapWord(context, spoken, _lastRedSpan(word, size: 24))
+        else
+          _example(context, word, spoken),
         const TextSpan(text: ' )'),
       ],
     ),
     style: AppTheme.word(24),
   );
 }
+
+/// الكلمة وحرفها الأخير بالأحمر.
+TextSpan _lastRedSpan(String word, {double size = 24, int red = 1}) => TextSpan(
+  style: AppTheme.word(size),
+  children: [
+    TextSpan(text: word.substring(0, word.length - red)),
+    TextSpan(
+      text: word.substring(word.length - red, word.length - red + 1),
+      style: _red,
+    ),
+    if (red > 1) TextSpan(text: word.substring(word.length - red + 1)),
+  ],
+);
+
+/// [span] يُسمع بالضغط عليه.
+InlineSpan _tapWord(BuildContext context, String spoken, InlineSpan span) =>
+    WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: GestureDetector(
+        onTap: () => _say(context, spoken),
+        child: Text.rich(span),
+      ),
+    );
 
 /// ص ١: الألف الممدودة والمقصورة، والاسم الثلاثي، مرسومة مربعات وأسهمًا.
 class AlifBasicsRule extends StatelessWidget {
@@ -707,6 +740,465 @@ class AlifRuleContent extends StatelessWidget {
       TriliteralRule(),
       NaskhRule(child: _Heading('الأسماء غير الثلاثية')),
       LongNounRule(),
+    ],
+  );
+}
+
+// ——— الألف اللّينة في الأفعال ———
+
+/// ص ١: الفرق بين الألف المقصورة (بكى) والممدودة (دعا).
+class VerbAlifBasicsRule extends StatelessWidget {
+  const VerbAlifBasicsRule({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final [q, m] = [for (final w in verbRuleExamples) alifVerb(w)];
+    return NaskhRule(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _AlifBranch(
+                title: 'الألف المقصورة',
+                letter: 'ى',
+                word: q.word,
+                spoken: q.spoken,
+                lastRed: true,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _AlifBranch(
+                title: 'الألف الممدودة',
+                letter: 'ا',
+                word: m.word,
+                spoken: m.spoken,
+                lastRed: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// الفعل ← الفعل مع تاء الفاعل، والألف وما انقلبت إليه بالأحمر.
+class _TaPair extends StatelessWidget {
+  const _TaPair(this.verb);
+  final AlifVerb verb;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Text.rich(
+      TextSpan(
+        children: [
+          _tapWord(context, verb.spoken, _lastRedSpan(verb.word, size: 26)),
+          // سهم من الفعل إلى ما بعده (يتجه يسارًا في الكتابة من اليمين).
+          const WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 14),
+              child: Icon(Icons.arrow_forward_rounded, color: AppColors.ink),
+            ),
+          ),
+          _tapWord(
+            context,
+            verb.spokenTa,
+            _lastRedSpan(verb.withTa, size: 26, red: 2),
+          ),
+        ],
+      ),
+      textAlign: TextAlign.center,
+      style: AppTheme.word(26),
+    ),
+  );
+}
+
+/// ص ٢: القاعدة؛ أسند الفعل إلى تاء الفاعل.
+class VerbAlifRule extends StatelessWidget {
+  const VerbAlifRule({super.key, this.heading = true});
+
+  /// العنوان الأحمر «القاعدة» فوقها.
+  final bool heading;
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (heading) const _CenterHeading('القاعدة'),
+        Text.rich(
+          const TextSpan(
+            children: [
+              TextSpan(text: 'عندما تحتار في كتابة الألف في '),
+              TextSpan(text: 'الفعل الثلاثي', style: _red),
+              TextSpan(text: '، أسند الفعل إلى نفسك بـ'),
+              TextSpan(text: '(تاء الفاعل)', style: _red),
+              TextSpan(text: '، مثل:'),
+            ],
+          ),
+          textAlign: TextAlign.center,
+          style: AppTheme.word(21).copyWith(height: 1.7),
+        ),
+        const SizedBox(height: 4),
+        for (final w in verbRuleExamples) _TaPair(alifVerb(w)),
+        const SizedBox(height: 10),
+        const _RuleCard(
+          lines: [
+            (
+              TextSpan(
+                children: [
+                  TextSpan(text: '١- إذا نطقت '),
+                  TextSpan(text: '(الياء)', style: _red),
+                  TextSpan(text: ' فاكتب الألف '),
+                  TextSpan(text: 'مقصورة', style: _red),
+                ],
+              ),
+              [],
+            ),
+            (
+              TextSpan(
+                children: [
+                  TextSpan(text: '٢- إذا نطقت '),
+                  TextSpan(text: '(الواو)', style: _red),
+                  TextSpan(text: ' فاكتب الألف '),
+                  TextSpan(text: 'ممدودة', style: _red),
+                ],
+              ),
+              [],
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+/// حروف الكلمة في مربعات، والمربع [mark] بالأحمر.
+class _LetterRow extends StatelessWidget {
+  const _LetterRow(this.word, this.mark);
+  final String word;
+  final int mark;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (final (i, l) in word.split('').indexed)
+          Container(
+            width: 48,
+            height: 48,
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: i == mark ? AppColors.errorSoft : AppColors.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: i == mark ? AppColors.al : AppColors.ink,
+                width: 1.6,
+              ),
+            ),
+            child: Text(
+              l,
+              style: AppTheme.word(
+                24,
+                color: i == mark ? AppColors.al : AppColors.ink,
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+/// ص ٣: لاحظ كيف تنقلب الألف إلى الياء (طوى) وإلى الواو (عفا).
+class VerbAlifTurnRule extends StatelessWidget {
+  const VerbAlifTurnRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, w) in verbTurnExamples.indexed) ...[
+          if (i > 0) const SizedBox(height: 18),
+          Builder(
+            builder: (context) {
+              final v = alifVerb(w);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        const TextSpan(text: 'لاحظ كيف تنقلب '),
+                        const TextSpan(text: '(الألف)', style: _red),
+                        const TextSpan(text: ' إلى '),
+                        TextSpan(text: '(${v.turnsTo})', style: _red),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                    style: AppTheme.word(21).copyWith(height: 1.6),
+                  ),
+                  _TaPair(v),
+                  _LetterRow(v.word, v.word.length - 1),
+                  _LetterRow(v.withTa, v.withTa.length - 2),
+                ],
+              );
+            },
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+/// ص ٦: المثال المحلول؛ الإجابات الصحيحة بالأحمر.
+class VerbExampleTable extends StatelessWidget {
+  const VerbExampleTable({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = verbExampleSentence;
+    final v = alifVerb(s.verb);
+    Widget cell(String text, {bool right = false, bool label = false}) =>
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              text,
+              style: AppTheme.word(
+                label ? 19 : 22,
+                color: right ? AppColors.al : AppColors.ink,
+              ),
+            ),
+          ),
+        );
+    Widget choices(String a, String b, String answer) => Row(
+      children: [
+        for (final o in [a, b]) Expanded(child: cell(o, right: o == answer)),
+      ],
+    );
+    return NaskhRule(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text.rich(
+            TextSpan(
+              children: [
+                const TextSpan(text: '( '),
+                _tapWord(
+                  context,
+                  s.spoken,
+                  TextSpan(
+                    children: [
+                      TextSpan(text: v.word, style: _red),
+                      TextSpan(
+                        text: stripDiacritics(
+                          s.spoken.substring(v.spoken.length),
+                        ),
+                      ),
+                    ],
+                    style: AppTheme.word(26),
+                  ),
+                ),
+                const TextSpan(text: ' )'),
+              ],
+            ),
+            textAlign: TextAlign.center,
+            style: AppTheme.word(26),
+          ),
+          const SizedBox(height: 12),
+          Table(
+            border: TableBorder.all(
+              color: AppColors.lineDark,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            columnWidths: const {0: FlexColumnWidth(5), 1: FlexColumnWidth(6)},
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            children: [
+              TableRow(
+                children: [
+                  cell('الفعل', label: true),
+                  cell(v.word, right: true),
+                ],
+              ),
+              TableRow(
+                children: [
+                  cell('+ تاء الفاعل', label: true),
+                  cell(v.withTa, right: true),
+                ],
+              ),
+              TableRow(
+                children: [
+                  cell('انقلبت الألف إلى', label: true),
+                  choices('الياء', 'الواو', v.turnsTo),
+                ],
+              ),
+              TableRow(
+                children: [
+                  cell('تُكتب بالألف', label: true),
+                  choices('المقصورة', 'الممدودة', v.alifKind),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// ص ١٠: «احفظ هاتين القاعدتين جيدًا للاختبار».
+class VerbAlifRemember extends StatelessWidget {
+  const VerbAlifRemember({super.key});
+
+  @override
+  Widget build(BuildContext context) => const NaskhRule(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _RememberBox(
+          '١',
+          TextSpan(
+            children: [
+              TextSpan(text: 'إذا انقلبت '),
+              TextSpan(text: '(الألف)', style: _red),
+              TextSpan(text: ' في الفعل الثلاثي إلى '),
+              TextSpan(text: '(الواو)', style: _red),
+              TextSpan(text: ' تُكتب '),
+              TextSpan(text: 'ممدودة', style: _blue),
+            ],
+          ),
+        ),
+        _RememberBox(
+          '٢',
+          TextSpan(
+            children: [
+              TextSpan(text: 'إذا انقلبت '),
+              TextSpan(text: '(الألف)', style: _red),
+              TextSpan(text: ' في الفعل الثلاثي إلى '),
+              TextSpan(text: '(الياء)', style: _red),
+              TextSpan(text: ' تُكتب '),
+              TextSpan(text: 'مقصورة', style: _blue),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// ص ١ (الأفعال غير الثلاثية): القاعدتان، ومعهما زر «إضاءة» (يحيى ويحيا).
+class LongVerbRule extends StatelessWidget {
+  const LongVerbRule({super.key, this.light = true});
+
+  /// زر «إضاءة» فوق القاعدة.
+  final bool light;
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (light) ...[
+          AppButton(
+            key: const ValueKey('verb-light'),
+            label: '💡 إضاءة',
+            style: AppButtonStyle.outline,
+            height: 48,
+            onTap: () => showRuleSheet(
+              context,
+              title: '💡 إضاءة',
+              content: const LongVerbLight(),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        const _CenterHeading('القاعدة ١'),
+        const _RuleCard(
+          lines: [
+            (
+              TextSpan(
+                children: [
+                  TextSpan(text: 'كل '),
+                  TextSpan(text: 'فعل غير ثلاثي', style: _red),
+                  TextSpan(text: ' وينتهي بالألف يُكتب بالألف '),
+                  TextSpan(text: 'المقصورة (ى)', style: _red),
+                ],
+              ),
+              longVerbMaqsuraExamples,
+            ),
+          ],
+        ),
+        const _CenterHeading('القاعدة ٢'),
+        const _RuleCard(
+          lines: [
+            (
+              TextSpan(
+                children: [
+                  TextSpan(text: 'كل '),
+                  TextSpan(text: 'فعل غير ثلاثي', style: _red),
+                  TextSpan(text: ' وينتهي بالألف '),
+                  TextSpan(text: 'وقبلها (ياء)', style: _red),
+                  TextSpan(text: ' يُكتب بالألف '),
+                  TextSpan(text: 'الممدودة (ا)', style: _red),
+                ],
+              ),
+              longVerbYaExamples,
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+/// ص ٢: «إضاءة»: يحيى اسم بالمقصورة، ويحيا فعل بالممدودة.
+class LongVerbLight extends StatelessWidget {
+  const LongVerbLight({super.key});
+
+  @override
+  Widget build(BuildContext context) => NaskhRule(
+    child: _LightTable(
+      header: true,
+      rows: [
+        const [
+          _LightCell('الكلمة'),
+          _LightCell('نوعها'),
+          _LightCell('تُكتب بـ'),
+        ],
+        for (final (w, kind, alif) in longVerbLight)
+          [
+            _LightCell(w, color: AppColors.blue),
+            _LightCell(kind, color: AppColors.al),
+            _LightCell(alif),
+          ],
+      ],
+    ),
+  );
+}
+
+/// نافذة «القاعدة» لدرس الألف اللّينة في الأفعال.
+class AlifVerbRuleContent extends StatelessWidget {
+  const AlifVerbRuleContent({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      NaskhRule(child: _Heading('الألف اللّينة في الفعل الثلاثي')),
+      VerbAlifBasicsRule(),
+      VerbAlifRule(),
+      NaskhRule(child: _Heading('الألف اللّينة في الأفعال غير الثلاثية')),
+      LongVerbRule(),
     ],
   );
 }

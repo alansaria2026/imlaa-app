@@ -43,12 +43,17 @@ class _LearnTabState extends State<LearnTab> {
     // الدرس المعروض بمحطاته (آخر وحدة اختارها الطالب)؛ بقية الدروس بطاقات
     // مختصرة تُفتح بالضغط.
     final selected = lessonById(app.selectedLesson ?? lessons.first.id).id;
+    // الدروس الجاهزة والقادمة معًا بترتيب المسار.
+    final path = <(int, LessonDef?, String)>[
+      for (final l in lessons) (l.unit, l, l.title),
+      for (final (unit, title) in upcomingLessons) (unit, null, title),
+    ]..sort((a, b) => a.$1.compareTo(b.$1));
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: _TopBar(app: app)),
-        for (final lesson in lessons)
+        for (final (unit, lesson, title) in path)
           SliverToBoxAdapter(
-            child: lesson.id == selected
+            child: lesson != null && lesson.id == selected
                 ? _LessonSection(
                     key: ValueKey(lesson.id),
                     lesson: lesson,
@@ -58,21 +63,18 @@ class _LearnTabState extends State<LearnTab> {
                 : Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                     child: _UnitCard(
-                      key: ValueKey('unit-${lesson.id}'),
-                      number: lesson.unit,
-                      title: lesson.title,
-                      onTap: () => app.selectLesson(lesson.id),
+                      key: lesson == null
+                          ? null
+                          : ValueKey('unit-${lesson.id}'),
+                      number: unit,
+                      title: title,
+                      onTap: lesson == null
+                          ? null
+                          : () => app.selectLesson(lesson.id),
                     ),
                   ),
           ),
-        const SliverPadding(
-          padding: EdgeInsets.fromLTRB(16, 12, 16, 32),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate.fixed([
-              _UnitCard(number: 5, title: 'الهمزة المتوسطة والمتطرفة'),
-            ]),
-          ),
-        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 32)),
       ],
     );
   }
@@ -106,6 +108,7 @@ class _LessonSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: _UnitBanner(
+            number: lesson.unit,
             title: lesson.title,
             done: doneCount,
             total: n,
@@ -497,12 +500,14 @@ class _StatChip extends StatelessWidget {
 
 class _UnitBanner extends StatelessWidget {
   const _UnitBanner({
+    required this.number,
     required this.title,
     required this.done,
     required this.total,
     required this.onGuide,
   });
 
+  final int number;
   final String title;
   final int done;
   final int total;
@@ -530,7 +535,7 @@ class _UnitBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'الدرس ١',
+                    'الوحدة ${arDigits(number)}',
                     style: t.labelLarge?.copyWith(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w800,

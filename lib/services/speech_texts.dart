@@ -1,4 +1,5 @@
 import '../data/alif_lesson.dart';
+import '../data/alif_verb_lesson.dart';
 import '../data/bi_lesson.dart';
 import '../data/hamza_lesson.dart';
 import '../data/lam_lesson.dart';
@@ -64,4 +65,23 @@ Set<String> allSpeechTexts() => {
   for (final s in fourAnswerSentences) s.spoken,
   for (final w in [...longMaqsuraWords, ...longYaWords, ...foreignWords]) w,
   for (final s in [...longListenSentences, ...longListenSpare]) s.spoken,
+  // درس الألف اللّينة في الأفعال.
+  verbBasicsSpeech,
+  verbRuleSpeech,
+  verbTurnSpeech,
+  verbRememberSpeech,
+  verbExampleSpeech,
+  for (final v in alifVerbs) ...[v.spoken, v.spokenTa],
+  for (final s in [
+    verbExampleSentence,
+    ...verbTableSentences,
+    ...verbChoiceSentences,
+    ...longVerbListenSentences,
+    ...longVerbListenSpare,
+  ])
+    s.spoken,
+  longVerbRuleSpeech,
+  for (final (_, spoken) in [...longVerbMaqsuraExamples, ...longVerbYaExamples])
+    spoken,
+  for (final v in [...longVerbsMaqsura, ...longVerbsYa]) v,
 };

@@ -99,10 +99,10 @@ void main() {
       expect(texts, containsAll([hamzaRuleSpeech, alRuleSpeech]));
     });
 
-    test('الدرس الثالث في المسار بإحدى وثلاثين محطة', () {
-      expect(lessons.map((l) => l.id).elementAt(2), hamzaLessonId);
-      expect(lessonById(hamzaLessonId).unit, 3);
-      expect(buildHamzaLessonPages().length, 31);
+    test('الدرس السادس في المسار بعشرين محطة', () {
+      expect(lessons.map((l) => l.id).last, hamzaLessonId);
+      expect(lessonById(hamzaLessonId).unit, 6);
+      expect(buildHamzaLessonPages().length, 20);
     });
   });
 
@@ -198,29 +198,21 @@ void main() {
       );
     });
 
-    test('حلّل الفعل: ثلاث جولات بلا مثال محلول، ثم جمل القاعدة نفسها', () {
-      for (final c in verbCombos) {
-        final page =
-            pages['${switch (c.tense) {
-              Tense.past => 'ماضٍ',
-              Tense.present => 'مضارع',
-              Tense.imperative => 'أمر',
-            }} ${c.weight.label}']!;
-        final first = page.build(Random(0), 0);
-        expect(first.map((r) => r.mark), [
-          c.example.verb,
-          c.practice[0].verb,
-          c.practice[1].verb,
-        ]);
-        expect(first.every((r) => r.items.length == 3), isTrue);
-        final all = {
-          for (final s in [c.example, ...c.practice]) s.verb,
-        };
-        for (var a = 1; a < 6; a++) {
-          final again = page.build(Random(a), a);
-          expect(again.length, 3);
-          expect(all.containsAll(again.map((r) => r.mark)), isTrue);
-          expect(again.map((r) => r.mark).toSet().length, 3);
+    test('حلّل الفعل: جملة لكل قاعدة، ثم جملة أخرى من القاعدة نفسها', () {
+      final page = pages['حلّل الفعل']!;
+      final first = page.build(Random(0), 0);
+      expect(first.map((r) => r.mark), [
+        for (final c in verbCombos) c.example.verb,
+      ]);
+      expect(first.every((r) => r.items.length == 3), isTrue);
+      for (var a = 1; a < 6; a++) {
+        final again = page.build(Random(a), a);
+        expect(again.length, verbCombos.length);
+        for (final (i, c) in verbCombos.indexed) {
+          final all = {
+            for (final s in [c.example, ...c.practice]) s.verb,
+          };
+          expect(all, contains(again[i].mark), reason: c.rule);
         }
       }
     });
@@ -252,10 +244,21 @@ void main() {
       );
     }
 
-    testWidgets('الوحدة الثالثة مفتوحة في مسار التعلّم', (t) async {
+    testWidgets('الوحدة السادسة مفتوحة في مسار التعلّم', (t) async {
       final state = await pumpScreen(t, const HomeScreen());
       final card = find.byKey(const ValueKey('unit-$hamzaLessonId'));
+      await t.scrollUntilVisible(
+        card,
+        300,
+        scrollable: find
+            .descendant(
+              of: find.byType(CustomScrollView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
       await t.ensureVisible(card);
+      await t.pumpAndSettle();
       expect(
         find.descendant(of: card, matching: find.text('قريبًا')),
         findsNothing,
@@ -306,12 +309,11 @@ void main() {
       expect(find.byType(PageDoneMessage), findsOneWidget);
     });
 
-    testWidgets('حلّل الفعل: ثلاث جولات مباشرة بلا مثال محلول', (t) async {
-      final c = verbCombos.first;
+    testWidgets('حلّل الفعل: اثنتا عشرة جملة مباشرة بلا مثال محلول', (t) async {
       await open(t, 11);
       expect(find.text('طبّق الآن'), findsNothing);
-      for (final s in [c.example, c.practice[0], c.practice[1]]) {
-        expect(shown(t).verb, s.verb);
+      for (final c in verbCombos) {
+        expect(shown(t).verb, c.example.verb);
         for (final label in [c.tense.label, c.weight.label, c.hamza.label]) {
           await t.tap(inPage(find.text(label)));
           await t.pump();
@@ -320,6 +322,44 @@ void main() {
         await t.pumpAndSettle(const Duration(seconds: 2));
       }
       expect(find.byType(PageDoneMessage), findsOneWidget);
+    });
+
+    testWidgets('أين تُنطق؟ بعد الخطأ: الأسئلة نفسها وتتبدل أماكن الخيارات', (
+      t,
+    ) async {
+      await open(t, 2);
+      await t.pumpAndSettle();
+      // الصفحات المجاورة مبنية أيضًا؛ المطلوبة سؤالها الأول عن همزة القطع.
+      final quiz = t
+          .stateList<QuizPageState>(find.byType(QuizPage))
+          .firstWhere(
+            (q) => q.currentRound.items.first.prompt == 'همزة القطع تُنطق في:',
+          );
+      final round = quiz.currentRound;
+      List<String> order(int i) {
+        final item = quiz.currentRound.items[i];
+        final chips = [
+          for (final o in item.options)
+            (o, t.getCenter(find.byKey(ValueKey('q$i-$o'))).dx),
+        ]..sort((a, b) => b.$2.compareTo(a.$2)); // من اليمين
+        return [for (final (o, _) in chips) o];
+      }
+
+      final before = [order(0), order(1)];
+      // خطأ في الأول: «أول الكلام» وحده، والثاني صحيح.
+      await t.tap(find.byKey(const ValueKey('q0-أول الكلام')));
+      await t.tap(find.byKey(const ValueKey('q1-أول الكلام')));
+      await t.tap(find.text('إدخال').hitTestable());
+      await t.pump(const Duration(milliseconds: 3600));
+      await t.pumpAndSettle();
+      await t.tapAt(const Offset(20, 20));
+      await t.pumpAndSettle();
+      expect(
+        quiz.currentRound.items.map((i) => i.prompt),
+        round.items.map((i) => i.prompt),
+      );
+      expect(order(0), isNot(before[0]));
+      expect(order(1), isNot(before[1]));
     });
 
     testWidgets('الكتابة تراعي الهمزة: «أسكين» خطأ', (t) async {
@@ -442,7 +482,7 @@ void main() {
     });
 
     testWidgets('اختيار متعدد: تُختار الإجابات الثلاث معًا', (t) async {
-      await open(t, 23);
+      await open(t, 12);
       for (var i = 0; i < 5; i++) {
         final s = shown(t);
         for (final label in [
