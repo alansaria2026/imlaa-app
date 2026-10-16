@@ -99,10 +99,10 @@ void main() {
       expect(texts, containsAll([hamzaRuleSpeech, alRuleSpeech]));
     });
 
-    test('الدرس الثالث في المسار بإحدى وثلاثين محطة', () {
+    test('الدرس الثالث في المسار بعشرين محطة', () {
       expect(lessons.map((l) => l.id).elementAt(2), hamzaLessonId);
       expect(lessonById(hamzaLessonId).unit, 3);
-      expect(buildHamzaLessonPages().length, 31);
+      expect(buildHamzaLessonPages().length, 20);
     });
   });
 
@@ -198,29 +198,21 @@ void main() {
       );
     });
 
-    test('حلّل الفعل: ثلاث جولات بلا مثال محلول، ثم جمل القاعدة نفسها', () {
-      for (final c in verbCombos) {
-        final page =
-            pages['${switch (c.tense) {
-              Tense.past => 'ماضٍ',
-              Tense.present => 'مضارع',
-              Tense.imperative => 'أمر',
-            }} ${c.weight.label}']!;
-        final first = page.build(Random(0), 0);
-        expect(first.map((r) => r.mark), [
-          c.example.verb,
-          c.practice[0].verb,
-          c.practice[1].verb,
-        ]);
-        expect(first.every((r) => r.items.length == 3), isTrue);
-        final all = {
-          for (final s in [c.example, ...c.practice]) s.verb,
-        };
-        for (var a = 1; a < 6; a++) {
-          final again = page.build(Random(a), a);
-          expect(again.length, 3);
-          expect(all.containsAll(again.map((r) => r.mark)), isTrue);
-          expect(again.map((r) => r.mark).toSet().length, 3);
+    test('حلّل الفعل: جملة لكل قاعدة، ثم جملة أخرى من القاعدة نفسها', () {
+      final page = pages['حلّل الفعل']!;
+      final first = page.build(Random(0), 0);
+      expect(first.map((r) => r.mark), [
+        for (final c in verbCombos) c.example.verb,
+      ]);
+      expect(first.every((r) => r.items.length == 3), isTrue);
+      for (var a = 1; a < 6; a++) {
+        final again = page.build(Random(a), a);
+        expect(again.length, verbCombos.length);
+        for (final (i, c) in verbCombos.indexed) {
+          final all = {
+            for (final s in [c.example, ...c.practice]) s.verb,
+          };
+          expect(all, contains(again[i].mark), reason: c.rule);
         }
       }
     });
@@ -306,12 +298,11 @@ void main() {
       expect(find.byType(PageDoneMessage), findsOneWidget);
     });
 
-    testWidgets('حلّل الفعل: ثلاث جولات مباشرة بلا مثال محلول', (t) async {
-      final c = verbCombos.first;
+    testWidgets('حلّل الفعل: اثنتا عشرة جملة مباشرة بلا مثال محلول', (t) async {
       await open(t, 11);
       expect(find.text('طبّق الآن'), findsNothing);
-      for (final s in [c.example, c.practice[0], c.practice[1]]) {
-        expect(shown(t).verb, s.verb);
+      for (final c in verbCombos) {
+        expect(shown(t).verb, c.example.verb);
         for (final label in [c.tense.label, c.weight.label, c.hamza.label]) {
           await t.tap(inPage(find.text(label)));
           await t.pump();
@@ -442,7 +433,7 @@ void main() {
     });
 
     testWidgets('اختيار متعدد: تُختار الإجابات الثلاث معًا', (t) async {
-      await open(t, 23);
+      await open(t, 12);
       for (var i = 0; i < 5; i++) {
         final s = shown(t);
         for (final label in [
