@@ -108,6 +108,7 @@ class _LessonSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: _UnitBanner(
+            number: lesson.unit,
             title: lesson.title,
             done: doneCount,
             total: n,
@@ -499,12 +500,14 @@ class _StatChip extends StatelessWidget {
 
 class _UnitBanner extends StatelessWidget {
   const _UnitBanner({
+    required this.number,
     required this.title,
     required this.done,
     required this.total,
     required this.onGuide,
   });
 
+  final int number;
   final String title;
   final int done;
   final int total;
@@ -532,7 +535,7 @@ class _UnitBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'الدرس ١',
+                    'الوحدة ${arDigits(number)}',
                     style: t.labelLarge?.copyWith(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w800,

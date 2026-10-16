@@ -8,6 +8,7 @@ import 'package:imlaa/lesson/alif_rule_content.dart';
 import 'package:imlaa/lesson/lesson_complete_screen.dart';
 import 'package:imlaa/lesson/lesson_screen.dart';
 import 'package:imlaa/lesson/lessons.dart';
+import 'package:imlaa/lesson/page_handle.dart';
 import 'package:imlaa/lesson/pages/listen_write_page.dart';
 import 'package:imlaa/lesson/pages/quiz_page.dart';
 import 'package:imlaa/services/speech_texts.dart';
@@ -106,6 +107,22 @@ void main() {
       expect(lessonById(alifLessonId).unit, 4);
       expect(buildAlifLessonPages().length, 12);
     });
+  });
+
+  test('عصا وهدى: كل جولة سؤال عن كل كلمة، قبل الخطأ وبعده', () {
+    final page =
+        [
+              for (final spec in buildAlifLessonPages(Random(1)))
+                if (spec.title == 'عصا وهدى') spec.builder(PageHandle()),
+            ].single
+            as QuizPage;
+    for (var a = 0; a < 8; a++) {
+      final rounds = page.build(Random(a), a);
+      expect(rounds.length, 3);
+      for (final r in rounds) {
+        expect(r.items.map((i) => i.prompt).toSet(), {'«عصا»:', '«هدى»:'});
+      }
+    }
   });
 
   group('درس الألف اللينة في التطبيق', () {
