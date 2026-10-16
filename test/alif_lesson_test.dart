@@ -102,7 +102,7 @@ void main() {
     });
 
     test('الدرس الرابع في المسار باثنتي عشرة محطة', () {
-      expect(lessons.map((l) => l.id).last, alifLessonId);
+      expect(lessons.map((l) => l.id).elementAt(2), alifLessonId);
       expect(lessonById(alifLessonId).unit, 4);
       expect(buildAlifLessonPages().length, 12);
     });

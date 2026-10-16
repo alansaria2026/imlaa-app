@@ -3,7 +3,7 @@
 library;
 
 const alifLessonId = 'alif';
-const alifLessonTitle = 'الألف اللينة';
+const alifLessonTitle = 'الألف اللينة في الأسماء';
 
 /// حركة أول الاسم الثلاثي.
 enum FirstVowel {

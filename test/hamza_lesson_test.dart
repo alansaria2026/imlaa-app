@@ -99,9 +99,9 @@ void main() {
       expect(texts, containsAll([hamzaRuleSpeech, alRuleSpeech]));
     });
 
-    test('الدرس الثالث في المسار بعشرين محطة', () {
-      expect(lessons.map((l) => l.id).elementAt(2), hamzaLessonId);
-      expect(lessonById(hamzaLessonId).unit, 3);
+    test('الدرس السادس في المسار بعشرين محطة', () {
+      expect(lessons.map((l) => l.id).last, hamzaLessonId);
+      expect(lessonById(hamzaLessonId).unit, 6);
       expect(buildHamzaLessonPages().length, 20);
     });
   });
@@ -244,10 +244,21 @@ void main() {
       );
     }
 
-    testWidgets('الوحدة الثالثة مفتوحة في مسار التعلّم', (t) async {
+    testWidgets('الوحدة السادسة مفتوحة في مسار التعلّم', (t) async {
       final state = await pumpScreen(t, const HomeScreen());
       final card = find.byKey(const ValueKey('unit-$hamzaLessonId'));
+      await t.scrollUntilVisible(
+        card,
+        300,
+        scrollable: find
+            .descendant(
+              of: find.byType(CustomScrollView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
       await t.ensureVisible(card);
+      await t.pumpAndSettle();
       expect(
         find.descendant(of: card, matching: find.text('قريبًا')),
         findsNothing,

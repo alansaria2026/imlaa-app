@@ -34,6 +34,8 @@ class LessonDef {
   final Widget? rule;
 }
 
+/// الدروس الجاهزة بترتيب المسار؛ [LessonDef.unit] رقم الدرس في المسار كله
+/// مع الدروس القادمة ([upcomingLessons]).
 final lessons = [
   const LessonDef(
     id: lamLessonId,
@@ -49,19 +51,34 @@ final lessons = [
     rule: TaaRuleContent(),
   ),
   const LessonDef(
-    id: hamzaLessonId,
-    title: hamzaLessonTitle,
-    unit: 3,
-    build: buildHamzaLessonPages,
-    rule: HamzaRuleContent(),
-  ),
-  const LessonDef(
     id: alifLessonId,
     title: alifLessonTitle,
     unit: 4,
     build: buildAlifLessonPages,
     rule: AlifRuleContent(),
   ),
+  const LessonDef(
+    id: hamzaLessonId,
+    title: hamzaLessonTitle,
+    unit: 6,
+    build: buildHamzaLessonPages,
+    rule: HamzaRuleContent(),
+  ),
+];
+
+/// دروس المسار التي لم تُبنَ بعد: (رقمها في المسار، عنوانها)، وتظهر «قريبًا».
+const upcomingLessons = [
+  (3, 'التاء المربوطة والهاء'),
+  (5, 'الألف اللينة في الأفعال'),
+  (7, 'الهمزة المتوسطة'),
+  (8, 'الهمزة المتطرفة'),
+  (9, 'واو الجماعة'),
+  (10, 'الواو الأصلية في الفعل'),
+  (11, 'واو الجمع'),
+  (12, 'اتصال (ما) بـ(كل)'),
+  (13, 'اتصال (ما) بحروف الجر'),
+  (14, 'اتصال (مِن) بـ(مَن)'),
+  (15, 'اتصال (عن) بـ(مَن)'),
 ];
 
 /// الدرس بمعرّفه، أو درس اللام إن لم يوجد.
