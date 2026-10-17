@@ -362,6 +362,57 @@ void main() {
       expect(order(1), isNot(before[1]));
     });
 
+    testWidgets('صنّف الفعل: الخطأ يعيد الطالب إلى أول مجموعته فقط', (t) async {
+      final index = buildHamzaLessonPages(
+        Random(0),
+      ).indexWhere((p) => p.title == 'صنّف الفعل');
+      await open(t, index);
+      await t.pumpAndSettle();
+      QuizPageState quiz() => t
+          .stateList<QuizPageState>(find.byType(QuizPage))
+          .firstWhere(
+            (q) =>
+                q.widget.title == 'اختر الإجابة الصحيحة' &&
+                q.currentRound.items.single.options.length == 12,
+          );
+      Future<void> answer({bool wrong = false}) async {
+        final item = quiz().currentRound.items.single;
+        final pick = wrong
+            ? item.options.firstWhere((o) => !item.answers.contains(o))
+            : item.answers.single;
+        await t.tap(find.byKey(ValueKey('q0-$pick')).hitTestable());
+        await t.tap(find.text('إدخال').hitTestable());
+        await t.pump(const Duration(milliseconds: 3600));
+        await t.pumpAndSettle();
+      }
+
+      final sentences = <String?>[];
+      for (var i = 0; i < 5; i++) {
+        sentences.add(quiz().currentRound.sentence);
+        await answer();
+      }
+      // خطأ في السؤال السادس: الرجوع إلى أول المجموعة الثانية (السؤال ٥).
+      await answer(wrong: true);
+      await t.tapAt(const Offset(20, 20));
+      await t.pumpAndSettle();
+      final group2 = verbReviewSentences.sublist(4, 8).map((s) => s.text);
+      final shown = <String?>[];
+      for (var i = 0; i < 4; i++) {
+        shown.add(quiz().currentRound.sentence);
+        await answer();
+      }
+      expect(shown.toSet(), group2.toSet());
+      // ثم المجموعة الثالثة، ولا تُعاد الأولى.
+      for (var i = 0; i < 4; i++) {
+        expect(
+          sentences.take(4),
+          isNot(contains(quiz().currentRound.sentence)),
+        );
+        await answer();
+      }
+      expect(find.byType(PageDoneMessage), findsOneWidget);
+    });
+
     testWidgets('الكتابة تراعي الهمزة: «أسكين» خطأ', (t) async {
       await open(t, 6);
       await t.tap(inPage(find.text('اسم')));

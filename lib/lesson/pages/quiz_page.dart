@@ -98,6 +98,7 @@ class QuizPage extends StatefulWidget {
     this.autoSpeak = false,
     this.restartOnError = true,
     this.reorderOnError = false,
+    this.groupSize,
     this.sentenceColor = AppColors.ink,
     this.promptColor = AppColors.blue,
     this.titleSize = 26,
@@ -128,6 +129,10 @@ class QuizPage extends StatefulWidget {
 
   /// مع [restartOnError] = false: تتبدل أماكن أسئلة الجولة بعد الخطأ.
   final bool reorderOnError;
+
+  /// الجولات في مجموعات بهذا العدد: الخطأ يعيد الطالب إلى أول مجموعته
+  /// بجولاتها نفسها بترتيب جديد، وتبقى المجموعات السابقة منجزة.
+  final int? groupSize;
 
   /// لون جملة السؤال (كلماتها المعلّمة تبقى بالأحمر).
   final Color sentenceColor;
@@ -185,7 +190,11 @@ class QuizPageState extends State<QuizPage> {
     widget.handle
       ..onHint = _hint
       ..onListen = _listen
-      ..onRuleOpened = widget.restartOnError ? _restart : null
+      ..onRuleOpened = widget.groupSize != null
+          ? _restartGroup
+          : widget.restartOnError
+          ? _restart
+          : null
       ..onEnter = widget.autoSpeak ? _listen : null;
     // عدد الأسئلة يظهر من البداية، وبه تتحدث القائمة (استمع، مساعدة).
     WidgetsBinding.instance.addPostFrameCallback(
@@ -275,6 +284,29 @@ class QuizPageState extends State<QuizPage> {
       _setupRound();
     });
     widget.handle.setProgress(0, _total);
+    if (widget.autoSpeak) _listen();
+  }
+
+  /// أول المجموعة الحالية بجولاتها نفسها بترتيب جديد ([QuizPage.groupSize]).
+  void _restartGroup() {
+    if (!_started || _done || !mounted) return;
+    final size = widget.groupSize!;
+    final start = _round - _round % size;
+    final end = min(start + size, _rounds.length);
+    setState(() {
+      _retired.addAll(_ctrls);
+      _rounds = [
+        ..._rounds.sublist(0, start),
+        ...(_rounds.sublist(start, end)..shuffle(_rnd)),
+        ..._rounds.sublist(end),
+      ];
+      _round = start;
+      _solved = _rounds.take(start).fold(0, (a, r) => a + r.items.length);
+      _generation++;
+      _busy = false;
+      _setupRound();
+    });
+    widget.handle.setProgress(_solved, _total);
     if (widget.autoSpeak) _listen();
   }
 
@@ -387,7 +419,9 @@ class QuizPageState extends State<QuizPage> {
       widget.handle.setLevel(_level);
       showFeedback(
         context,
-        widget.restartOnError
+        widget.groupSize != null
+            ? 'إجابة غير صحيحة! راجع القاعدة، ثم تبدأ هذه المجموعة من أولها'
+            : widget.restartOnError
             ? 'إجابة غير صحيحة! راجع القاعدة، ثم تبدأ من جديد بأسئلة أخرى'
             : 'إجابة غير صحيحة! راجع القاعدة، ثم أعد المحاولة',
         tone: FeedbackTone.error,
@@ -399,7 +433,11 @@ class QuizPageState extends State<QuizPage> {
           await showRuleSheet(context, content: widget.rule);
         }
         if (!mounted || _generation != generation) return;
-        widget.restartOnError ? _restart() : _retryWrong();
+        if (widget.groupSize != null) {
+          _restartGroup();
+        } else {
+          widget.restartOnError ? _restart() : _retryWrong();
+        }
       });
       return;
     }
