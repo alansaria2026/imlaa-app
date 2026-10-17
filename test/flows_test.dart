@@ -137,13 +137,13 @@ void main() {
     expect(scoreLabel('النتيجة ٩٠٪'), findsOneWidget);
     await t.pump(const Duration(milliseconds: 3600));
     await t.pumpAndSettle();
-    expect(scoreLabel('بقيت ٩ أسئلة'), findsOneWidget);
+    expect(scoreLabel('بقيت ١٠ أسئلة'), findsOneWidget);
 
     final seen = <String>[];
-    // ٩ كلمات: أربع شاشات بكلمتين ثم شاشة بكلمة.
+    // عشر كلمات: خمس شاشات بكلمتين.
     for (var round = 0; round < 5; round++) {
       final words = group();
-      expect(words.length, round < 4 ? 2 : 1);
+      expect(words.length, 2);
       seen.addAll(words);
       for (var i = 0; i < words.length; i++) {
         await t.enterText(fields.at(i), answer(words[i]));
@@ -153,7 +153,7 @@ void main() {
     }
     expect(seen.toSet(), removeAlWords.toSet());
     expect(scoreLabel('لم يبقَ شيء'), findsOneWidget);
-    expect(state.points, 81); // ٩ × ١٠ × ٩٠٪
+    expect(state.points, 90); // ١٠ × ١٠ × ٩٠٪
   });
 
   testWidgets('إضافة (الـ): أي خطأ يعيد الكلمات بترتيب جديد', (t) async {
