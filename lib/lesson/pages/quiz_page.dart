@@ -131,7 +131,8 @@ class QuizPage extends StatefulWidget {
   final bool reorderOnError;
 
   /// الجولات في مجموعات بهذا العدد: الخطأ يعيد الطالب إلى أول مجموعته
-  /// بجولاتها نفسها بترتيب جديد، وتبقى المجموعات السابقة منجزة.
+  /// بجولاتها وأسئلتها نفسها بترتيب جديد، وتبقى المجموعات السابقة منجزة.
+  /// ١ = الخطأ يعيد الشاشة نفسها.
   final int? groupSize;
 
   /// لون جملة السؤال (كلماتها المعلّمة تبقى بالأحمر).
@@ -295,9 +296,11 @@ class QuizPageState extends State<QuizPage> {
     final end = min(start + size, _rounds.length);
     setState(() {
       _retired.addAll(_ctrls);
+      // جولات المجموعة وأسئلة كل جولة بترتيب جديد.
       _rounds = [
         ..._rounds.sublist(0, start),
-        ...(_rounds.sublist(start, end)..shuffle(_rnd)),
+        for (final r in _reordered(_rounds.sublist(start, end)))
+          _withItems(r, _reordered(r.items)),
         ..._rounds.sublist(end),
       ];
       _round = start;
@@ -331,25 +334,34 @@ class QuizPageState extends State<QuizPage> {
     final r = _current;
     final perm = [for (var i = 0; i < r.items.length; i++) i]..shuffle(_rnd);
     List<T> apply<T>(List<T> list) => [for (final i in perm) list[i]];
-    _rounds = [..._rounds]
-      ..[_round] = QuizRound(
-        items: apply(r.items),
-        instruction: r.instruction,
-        sentence: r.sentence,
-        mark: r.mark,
-        answerSentence: r.answerSentence,
-        answerMark: r.answerMark,
-        spoken: r.spoken,
-        hint: r.hint,
-        marks: r.marks,
-        markLastLetter: r.markLastLetter,
-        spokenAll: r.spokenAll,
-      );
+    _rounds = [..._rounds]..[_round] = _withItems(r, apply(r.items));
     _orders = apply(_orders);
     _picked = apply(_picked);
     _states = apply(_states);
     _ctrls = apply(_ctrls);
   }
+
+  /// [items] بترتيب عشوائي يختلف عن ترتيبها الحالي.
+  List<T> _reordered<T>(List<T> items) {
+    final list = [...items]..shuffle(_rnd);
+    if (list.length > 1 && listEquals(list, items)) list.add(list.removeAt(0));
+    return list;
+  }
+
+  /// [r] بأسئلة [items] بدل أسئلتها.
+  QuizRound _withItems(QuizRound r, List<QuizItem> items) => QuizRound(
+    items: items,
+    instruction: r.instruction,
+    sentence: r.sentence,
+    mark: r.mark,
+    answerSentence: r.answerSentence,
+    answerMark: r.answerMark,
+    spoken: r.spoken,
+    hint: r.hint,
+    marks: r.marks,
+    markLastLetter: r.markLastLetter,
+    spokenAll: r.spokenAll,
+  );
 
   void _pick(int i, String option) {
     if (_busy || _states[i] == _State.right) return;

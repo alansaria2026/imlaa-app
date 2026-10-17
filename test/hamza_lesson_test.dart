@@ -413,6 +413,45 @@ void main() {
       expect(find.byType(PageDoneMessage), findsOneWidget);
     });
 
+    testWidgets('ما وزنه؟ الخطأ يعيد الشاشة نفسها، وما اجتازه يبقى', (t) async {
+      final index = buildHamzaLessonPages(
+        Random(0),
+      ).indexWhere((p) => p.title == 'ما وزنه؟');
+      await open(t, index);
+      await t.pumpAndSettle();
+      QuizPageState quiz() => t
+          .stateList<QuizPageState>(find.byType(QuizPage))
+          .firstWhere((q) => q.widget.title == 'اختر وزن الفعل');
+      Set<String?> verbs() => {
+        for (final i in quiz().currentRound.items) i.prompt,
+      };
+      Future<void> answer({bool wrong = false}) async {
+        for (final (k, item) in quiz().currentRound.items.indexed) {
+          final pick = wrong && k == 2
+              ? item.options.firstWhere((o) => !item.answers.contains(o))
+              : item.answers.single;
+          await t.tap(find.byKey(ValueKey('q$k-$pick')).hitTestable());
+        }
+        await t.tap(find.text('إدخال').hitTestable());
+        await t.pump(const Duration(milliseconds: 3600));
+        await t.pumpAndSettle();
+      }
+
+      final first = verbs();
+      await answer();
+      final second = verbs();
+      await answer(wrong: true);
+      await t.tapAt(const Offset(20, 20));
+      await t.pumpAndSettle();
+      // الشاشة الثانية نفسها بأفعالها الأربعة، لا الأولى.
+      expect(verbs(), second);
+      for (var i = 0; i < 4; i++) {
+        expect(verbs().intersection(first), isEmpty);
+        await answer();
+      }
+      expect(find.byType(PageDoneMessage), findsOneWidget);
+    });
+
     testWidgets('الكتابة تراعي الهمزة: «أسكين» خطأ', (t) async {
       await open(t, 6);
       await t.tap(inPage(find.text('اسم')));
