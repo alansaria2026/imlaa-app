@@ -181,7 +181,10 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر الإجابة الصحيحة',
-        subtitle: 'اثنا عشر سؤالًا متتاليًا بلا خطأ',
+        subtitle: 'ثلاث مجموعات، والخطأ يعيد مجموعته من أولها',
+        // الأسئلة ١–٤ ثم ٥–٨ ثم ٩–١٢: الخطأ يعيد الطالب إلى أول مجموعته
+        // بجملها نفسها بترتيب جديد.
+        groupSize: 4,
         rule: const VerbChartRule(),
         build: _classify,
       ),
