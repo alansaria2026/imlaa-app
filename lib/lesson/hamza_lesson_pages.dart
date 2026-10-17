@@ -132,7 +132,9 @@ List<LessonPageSpec> buildHamzaLessonPages([Random? random]) {
       builder: (h) => QuizPage(
         handle: h,
         title: 'اختر وزن الفعل',
-        subtitle: 'عشرون فعلًا متتاليًا بلا خطأ',
+        subtitle: 'خمس شاشات، والخطأ يعيد الشاشة نفسها',
+        // الخطأ يعيد الشاشة بأفعالها الأربعة بترتيب جديد، وما اجتازه يبقى.
+        groupSize: 1,
         rule: const WeightRule(),
         build: _weights,
       ),
